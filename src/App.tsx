@@ -98,6 +98,7 @@ export default function App() {
   const [history, setHistory] = useState<CellState[][][]>([]);
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
+  const [showVictory, setShowVictory] = useState(false);
 
   useEffect(() => {
     setCompletedIds(persistence.getCompletedStatus());
@@ -119,7 +120,19 @@ export default function App() {
     setActivePuzzle(puzzle);
     setHistory([]);
     setScreen('play');
+    setShowVictory(false);
   }, []);
+
+  const nextPuzzle = useCallback(() => {
+    if (!gameState) return;
+    const currentIndex = PUZZLES.findIndex(p => p.id === gameState.puzzle.id);
+    if (currentIndex !== -1 && currentIndex < PUZZLES.length - 1) {
+      startPuzzle(PUZZLES[currentIndex + 1]);
+    } else {
+      setScreen('home');
+      setGameState(null);
+    }
+  }, [gameState, startPuzzle]);
 
   const handleCellAction = useCallback((r: number, c: number, mouseButton?: number) => {
     if (!gameState || gameState.isSolved) return;
@@ -145,6 +158,7 @@ export default function App() {
       if (solved) {
         persistence.markCompleted(prev.puzzle.id);
         setCompletedIds(persistence.getCompletedStatus());
+        setShowVictory(true);
       }
 
       persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
@@ -187,9 +201,12 @@ export default function App() {
             <div className="relative mb-4">
               {/* Retro Glow / Grid behind Title */}
               <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] -z-10 animate-pulse" />
-              <h1 className="text-7xl md:text-9xl font-medium tracking-tighter text-center bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-zinc-600">
-                Levels
-              </h1>
+              <div className="flex flex-col items-center gap-6">
+                <img src="/favicon.png" alt="Logo" className="w-20 h-20 md:w-28 md:h-28 rounded-3xl shadow-2xl shadow-emerald-500/20" />
+                <h1 className="text-7xl md:text-9xl font-medium tracking-tighter text-center bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-zinc-600">
+                  Levels
+                </h1>
+              </div>
             </div>
             <p className="text-zinc-500 text-lg md:text-xl mb-20 font-light tracking-widest uppercase">Select a neural node to decode</p>
 
@@ -226,7 +243,11 @@ export default function App() {
                         isUnlocked ? "text-white group-hover:text-emerald-400" : "text-zinc-700"
                       )}>
                         {isUnlocked ? (
-                          <>Start Decoding <Play className="w-2.5 h-2.5 fill-current" /></>
+                          isCompleted ? (
+                            <>Revisit Data <Check className="w-2.5 h-2.5" /></>
+                          ) : (
+                            <>Start Decoding <Play className="w-2.5 h-2.5 fill-current" /></>
+                          )
                         ) : (
                           "Encrypted"
                         )}
@@ -261,9 +282,9 @@ export default function App() {
                 {gameState.puzzle.title}
               </h2>
               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", gameState.isSolved ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-emerald-500")} />
                 <p className="text-emerald-500 font-bold tracking-[0.4em] uppercase text-[9px]">
-                  {gameState.puzzle.width}x{gameState.puzzle.height} NEURAL_DECODING
+                  {gameState.puzzle.width}x{gameState.puzzle.height} {gameState.isSolved ? 'NEURAL_DECODED' : 'NEURAL_DECODING'}
                 </p>
               </div>
             </div>
@@ -307,7 +328,7 @@ export default function App() {
       </main>
 
       {/* Victory Celebration */}
-      {screen === 'play' && gameState?.isSolved && (
+      {screen === 'play' && showVictory && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in zoom-in duration-500">
           <div className="flex flex-col items-center text-center">
             <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(16,185,129,0.3)]">
@@ -315,12 +336,20 @@ export default function App() {
             </div>
             <h2 className="text-6xl font-medium mb-4 tracking-tight">Decoded</h2>
             <p className="text-zinc-500 text-xl mb-12 font-light">Level data successfully extracted.</p>
-            <button
-              onClick={() => { setScreen('home'); setGameState(null); }}
-              className="px-12 py-5 bg-white text-black text-xl font-bold rounded-full hover:scale-105 active:scale-95 transition-all tracking-tight"
-            >
-              Continue to Matrix
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => setShowVictory(false)}
+                className="px-8 py-4 bg-white/5 border border-white/10 text-white text-lg font-bold rounded-full hover:bg-white/10 transition-all tracking-tight"
+              >
+                View Grid
+              </button>
+              <button
+                onClick={nextPuzzle}
+                className="px-12 py-4 bg-white text-black text-lg font-bold rounded-full hover:scale-105 active:scale-95 transition-all tracking-tight"
+              >
+                {PUZZLES.findIndex(p => p.id === gameState?.puzzle.id) < PUZZLES.length - 1 ? 'Next Level' : 'Finish Matrix'}
+              </button>
+            </div>
           </div>
         </div>
       )}
