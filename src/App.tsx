@@ -183,19 +183,28 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 md:p-12 flex flex-col items-center relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center relative overflow-hidden">
       {/* Background System */}
       <div className="cyber-grid-bg" />
       <div className="floating-blob" style={{ top: '-10%', left: '-10%' }} />
       <div className="floating-blob" style={{ bottom: '-10%', right: '-10%', animationDelay: '-5s', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%)' }} />
 
-      <div className="w-full max-w-6xl flex justify-end mb-12 relative z-10">
-        <button className="p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95">
-          <Volume2 className="w-6 h-6" />
+      {/* Fixed top-left: Back to Matrix (play screen only) */}
+      {screen === 'play' && (
+        <button
+          onClick={() => { setScreen('home'); setGameState(null); }}
+          className="fixed top-6 left-6 z-50 flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back to Matrix
         </button>
-      </div>
+      )}
 
-      <main className="w-full max-w-6xl">
+      {/* Fixed top-right: Mute button */}
+      <button className="fixed top-6 right-6 z-50 p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95">
+        <Volume2 className="w-6 h-6" />
+      </button>
+
+      <main className="w-full max-w-6xl flex-1 flex flex-col px-6 md:px-12 py-24">
         {screen === 'home' && (
           <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 relative z-10">
             <div className="relative mb-4">
@@ -262,21 +271,14 @@ export default function App() {
         )}
 
         {screen === 'play' && gameState && (
-          <div className="flex flex-col items-center animate-in zoom-in-95 duration-500 max-w-full">
-            <div className="w-full max-w-md flex justify-between items-center mb-12">
-              <button
-                onClick={() => { setScreen('home'); setGameState(null); }}
-                className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
-              >
-                <ChevronLeft className="w-4 h-4" /> Back to Matrix
-              </button>
-              <div className="flex gap-4">
-                <button onClick={undo} className="p-3 rounded-full bg-white/5 hover:bg-white/10" title="Undo"><Undo2 className="w-5 h-5" /></button>
-                <button onClick={reset} className="p-3 rounded-full bg-white/5 hover:bg-white/10" title="Reset"><RotateCcw className="w-5 h-5" /></button>
-              </div>
+          <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full">
+            {/* Undo / Reset controls top-right area */}
+            <div className="fixed top-6 right-24 z-50 flex gap-3">
+              <button onClick={undo} className="p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Undo"><Undo2 className="w-5 h-5" /></button>
+              <button onClick={reset} className="p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Reset"><RotateCcw className="w-5 h-5" /></button>
             </div>
 
-            <div className="mb-16 text-center relative">
+            <div className="mb-10 text-center relative">
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/5 blur-[60px] rounded-full -z-10" />
               <h2 className="text-5xl md:text-7xl font-medium mb-4 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-zinc-600">
                 {gameState.puzzle.title}
