@@ -247,7 +247,7 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
               {PUZZLES.map((p, index) => {
                 const isCompleted = completedIds.includes(p.id);
-                const isUnlocked = index === 0 || completedIds.includes(PUZZLES[index - 1].id);
+                const isUnlocked = true;
 
                 return (
                   <div
