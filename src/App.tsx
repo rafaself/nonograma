@@ -160,6 +160,10 @@ export default function App() {
         play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
       }
 
+      // Snapshot which lines were already satisfied before this move
+      const rowWasDone = isLineSatisfied(prev.grid[r], prev.clues.rows[r]);
+      const colWasDone = isLineSatisfied(prev.grid.map(row => row[c]), prev.clues.cols[c]);
+
       newGrid[r][c] = targetState;
       const solved = checkWin(newGrid, prev.clues);
 
@@ -168,6 +172,12 @@ export default function App() {
         setCompletedIds(persistence.getCompletedStatus());
         setShowVictory(true);
         play(sounds.win);
+      } else {
+        const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
+        const colNowDone = isLineSatisfied(newGrid.map(row => row[c]), prev.clues.cols[c]);
+        if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
+          play(sounds.lineComplete);
+        }
       }
 
       persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);

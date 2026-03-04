@@ -52,6 +52,12 @@ export const sounds = {
     beep(200, 0.15, 'sawtooth', 0.06);
   },
 
+  lineComplete(): void {
+    // Fast happy 5-note arpeggio with a bright triangle wave
+    const notes = [523, 659, 784, 988, 1047];
+    notes.forEach((freq, i) => beep(freq, 0.12, 'triangle', 0.13, i * 0.055));
+  },
+
   win(): void {
     const notes = [523, 659, 784, 1047];
     notes.forEach((freq, i) => beep(freq, 0.18, 'sine', 0.12, i * 0.12));
