@@ -51,3 +51,4 @@ Clues are automatically derived from the `solution` at runtime.
 # nonograma
 # nonograma
 # nonograma
+# nonograma
