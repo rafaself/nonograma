@@ -48,3 +48,4 @@ Clues are automatically derived from the `solution` at runtime.
 - **In Scope**: Solving puzzles, persistence, undo, responsive UI.
 - **Out of Scope**: Puzzle generator, editor, accounts, cloud sync, hints/cheats.
 # nonograma
+# nonograma
