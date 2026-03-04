@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #000000;
+    --text-primary: #ffffff;
+    --text-secondary: #71717a;
+    --accent: #10b981;
+  }
+
+  body {
+    @apply bg-black text-white antialiased overflow-x-hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .cyber-grid-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 1) 0%, rgba(0, 0, 0, 1) 100%);
+    z-index: -2;
+  }
+
+  .cyber-grid-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(circle at 50% 50%, black, transparent);
+    z-index: -1;
+  }
+
+  .floating-blob {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    pointer-events: none;
+    animation: float 20s infinite alternate ease-in-out;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translate(-10%, -10%);
+    }
+
+    100% {
+      transform: translate(10%, 10%);
+    }
+  }
+
+  .cyber-card {
+    @apply relative bg-zinc-900/30 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 transition-all duration-500 ease-out overflow-hidden;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  }
+
+  .cyber-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.8s;
+  }
+
+  .cyber-card:hover::before {
+    transform: translateX(100%);
+  }
+
+  .cyber-card:hover:not(.locked) {
+    @apply border-white/20 bg-zinc-900/50 scale-[1.02] -translate-y-1;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+  }
+
+  .cyber-card.locked {
+    @apply opacity-30 grayscale;
+  }
+
+  .matrix-cell {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .matrix-cell::after {
+    content: "";
+    @apply absolute inset-0 bg-white/5 opacity-0 transition-opacity;
+  }
+
+  .matrix-cell:hover::after {
+    @apply opacity-100;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
