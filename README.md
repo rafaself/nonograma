@@ -49,3 +49,4 @@ Clues are automatically derived from the `solution` at runtime.
 - **Out of Scope**: Puzzle generator, editor, accounts, cloud sync, hints/cheats.
 # nonograma
 # nonograma
+# nonograma
