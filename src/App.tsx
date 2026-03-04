@@ -3,7 +3,8 @@ import type { Puzzle, GameState } from './lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from './lib/game-logic';
 import { persistence } from './lib/persistence';
 import { PUZZLES } from './data/puzzles';
-import { ChevronLeft, RotateCcw, Undo2, Play, X, Check, Lock, Grid3X3, Volume2 } from 'lucide-react';
+import { ChevronLeft, RotateCcw, Undo2, Play, X, Check, Lock, Grid3X3, Volume2, VolumeX } from 'lucide-react';
+import { sounds } from './lib/sounds';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -99,6 +100,11 @@ export default function App() {
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [showVictory, setShowVictory] = useState(false);
+  const [muted, setMuted] = useState(false);
+
+  const play = useCallback((fn: () => void) => {
+    if (!muted) fn();
+  }, [muted]);
 
   useEffect(() => {
     setCompletedIds(persistence.getCompletedStatus());
@@ -148,8 +154,10 @@ export default function App() {
       let targetState: CellState;
       if (mouseButton === 2) {
         targetState = currentCell === CellState.MARKED_X ? CellState.EMPTY : CellState.MARKED_X;
+        play(targetState === CellState.MARKED_X ? sounds.markX : sounds.erase);
       } else {
         targetState = currentCell === inputMode ? CellState.EMPTY : inputMode;
+        play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
       }
 
       newGrid[r][c] = targetState;
@@ -159,15 +167,17 @@ export default function App() {
         persistence.markCompleted(prev.puzzle.id);
         setCompletedIds(persistence.getCompletedStatus());
         setShowVictory(true);
+        play(sounds.win);
       }
 
       persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
       return { ...prev, grid: newGrid, isSolved: solved };
     });
-  }, [gameState, inputMode]);
+  }, [gameState, inputMode, play]);
 
   const undo = () => {
     if (history.length === 0 || !gameState) return;
+    play(sounds.undo);
     const [lastGrid, ...rest] = history;
     setGameState({ ...gameState, grid: lastGrid, isSolved: checkWin(lastGrid, gameState.clues) });
     setHistory(rest);
@@ -176,6 +186,7 @@ export default function App() {
 
   const reset = () => {
     if (!gameState || !window.confirm('Reset this puzzle?')) return;
+    play(sounds.reset);
     const empty = createEmptyGrid(gameState.puzzle.width, gameState.puzzle.height);
     setGameState({ ...gameState, grid: empty, isSolved: false });
     setHistory([]);
@@ -200,8 +211,12 @@ export default function App() {
       )}
 
       {/* Fixed top-right: Mute button */}
-      <button className="fixed top-6 right-6 z-50 p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95">
-        <Volume2 className="w-6 h-6" />
+      <button
+        onClick={() => setMuted(m => !m)}
+        className="fixed top-6 right-6 z-50 p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95"
+        title={muted ? 'Unmute' : 'Mute'}
+      >
+        {muted ? <VolumeX className="w-6 h-6 text-zinc-500" /> : <Volume2 className="w-6 h-6" />}
       </button>
 
       <main className="w-full max-w-6xl flex-1 flex flex-col px-6 md:px-12 py-24">
