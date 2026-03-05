@@ -38,7 +38,13 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
                 <div className={cn("w-1.5 h-1.5 rounded-full", isCompleted ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600")} />
               </div>
 
-              <h3 className="text-4xl font-medium mb-12 tracking-tight">{p.title}</h3>
+              <h3 className="text-4xl font-medium mb-12 tracking-tight">
+                {isCompleted ? p.title : (
+                  <span className="text-zinc-600 font-mono tracking-widest select-none">
+                    {'█'.repeat(p.title.length)}
+                  </span>
+                )}
+              </h3>
 
               <div className="flex justify-between items-end">
                 <div className={cn(
