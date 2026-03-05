@@ -145,13 +145,14 @@
     transition: opacity 1s ease-in-out;
   }
 
-  /* Fade out everything distracting during gameplay */
+  /* Fade out everything distracting during gameplay - Faster fade out */
   [data-screen="play"] .bg-illustration-dragon,
   [data-screen="play"] .bg-illustration-tiger,
   [data-screen="play"] .bg-illustration-crane,
   [data-screen="play"] .ink-brush {
     opacity: 0 !important;
     pointer-events: none;
+    transition-duration: 0.4s;
   }
 
   @keyframes float {
@@ -315,9 +316,10 @@
     transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Fade out during gameplay to avoid distraction */
+  /* Fade out during gameplay to avoid distraction - Faster fade out */
   [data-screen="play"] .lantern-wrapper {
     opacity: 0.25 !important;
+    transition-duration: 0.5s;
   }
 
   .lantern-wire {
