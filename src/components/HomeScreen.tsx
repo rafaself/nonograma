@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES } from '../data/puzzles';
-import { Play, ChevronRight } from 'lucide-react';
+import { Play, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
@@ -28,6 +28,17 @@ function groupBySize(puzzles: typeof PUZZLES) {
 
 export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (size: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(size)) next.delete(size);
+      else next.add(size);
+      return next;
+    });
+  };
+
   const completedCount = completedIds.length;
   const totalCount = PUZZLES.length;
   const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -49,7 +60,7 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
             </div>
           </div>
           <h1 className="text-7xl md:text-9xl font-bold text-center font-['Ma_Shan_Zheng'] bg-clip-text text-transparent bg-gradient-to-b from-[#fdf5e6] via-[#fdf5e6] to-[#c9a227] py-4 px-12">
-            Levels
+            Trails
           </h1>
         </div>
       </div>
@@ -72,83 +83,107 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
       <div className="w-full flex flex-col gap-16">
         {groups.map((group) => {
           const groupCompleted = group.puzzles.filter(p => completedIds.includes(p.id)).length;
+          const isCollapsed = collapsedGroups.has(group.size);
           return (
-            <section key={group.size}>
+            <section key={group.size} className="w-full">
               {/* Section header */}
-              <div className="flex items-center gap-6 mb-8">
+              <button
+                onClick={() => toggleGroup(group.size)}
+                className="w-full flex items-center gap-6 mb-8 group/header focus:outline-none"
+              >
                 <div className="flex items-center gap-4">
-                  <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-sm bg-[#ae2012]/10 border border-[#ae2012]/30 text-sm font-bold tabular-nums tracking-wide text-[#ae2012] font-['Ma_Shan_Zheng']">
-                    {group.size}
-                  </span>
-                  <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#7a7a7a]">
+                  <div className="relative">
+                    <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-sm bg-[#ae2012]/10 border border-[#ae2012]/30 text-sm font-bold tabular-nums tracking-wide text-[#ae2012] font-['Ma_Shan_Zheng'] group-hover/header:border-[#ae2012]/60 transition-colors">
+                      {group.size}
+                    </span>
+                    <div className={cn(
+                      "absolute -inset-1 bg-[#ae2012]/20 blur-md rounded-full -z-10 transition-opacity duration-500",
+                      isCollapsed ? "opacity-0" : "opacity-100"
+                    )} />
+                  </div>
+                  <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#7a7a7a] group-hover/header:text-[#a0a0a0] transition-colors">
                     {groupCompleted}/{group.puzzles.length} UNVEILED
                   </span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#c9a227]/30 to-transparent" />
-              </div>
+                <div className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full border border-[#c9a227]/10 text-[#c9a227]/40 group-hover/header:border-[#ae2012]/40 group-hover/header:text-[#ae2012] transition-all duration-500",
+                  isCollapsed ? "rotate-[-90deg]" : "rotate-0"
+                )}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
 
-              {/* Cards grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                {group.puzzles.map((p, idx) => {
-                  const isCompleted = completedIds.includes(p.id);
-                  return (
-                    <div
-                      key={p.id}
-                      onClick={() => onStartPuzzle(p)}
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                      className={cn(
-                        "oriental-card animate-in fade-in slide-in-from-bottom-4 flex flex-col justify-between aspect-square",
-                        isCompleted
-                          ? "border-[#ae2012]/30 hover:border-[#ae2012]/60"
-                          : "border-[#c9a227]/10"
-                      )}
-                    >
-                      {/* Level number + status */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-xs font-bold tracking-widest text-[#7a7a7a]">
-                          {String(p.globalIndex + 1).padStart(2, '0')}
-                        </span>
-                        {isCompleted && (
-                          <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
-                            <span className="font-['Ma_Shan_Zheng'] text-[10px] text-[#ae2012] leading-none text-center">
-                              SUCCESS
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Title */}
-                      <div className="flex-1 flex flex-col justify-center">
-                        <h3 className={cn(
-                          "text-xl md:text-2xl font-bold tracking-tight leading-tight",
-                          isCompleted ? "font-['Noto_Serif_JP']" : "font-mono opacity-20"
-                        )}>
-                          {isCompleted ? (
-                            <span className="text-[#fdf5e6]">{p.title}</span>
-                          ) : (
-                            <span className="text-[#a0a0a0]">
-                              {'王'.repeat(Math.min(p.title.length, 3))}
-                            </span>
+              {/* Collapsible content container */}
+              <div className={cn(
+                "collapse-grid",
+                !isCollapsed && "expanded"
+              )}>
+                <div className="collapse-content">
+                  {/* Cards grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 pb-4">
+                    {group.puzzles.map((p, idx) => {
+                      const isCompleted = completedIds.includes(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => onStartPuzzle(p)}
+                          style={{ animationDelay: `${idx * 50}ms` }}
+                          className={cn(
+                            "oriental-card animate-in fade-in slide-in-from-bottom-4 flex flex-col justify-between aspect-square",
+                            isCompleted
+                              ? "border-[#ae2012]/30 hover:border-[#ae2012]/60"
+                              : "border-[#c9a227]/10"
                           )}
-                        </h3>
-                      </div>
+                        >
+                          {/* Level number + status */}
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-xs font-bold tracking-widest text-[#7a7a7a]">
+                              {String(p.globalIndex + 1).padStart(2, '0')}
+                            </span>
+                            {isCompleted && (
+                              <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
+                                <span className="font-['Ma_Shan_Zheng'] text-[10px] text-[#ae2012] leading-none text-center">
+                                  SUCCESS
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                      {/* Action hint */}
-                      <div className={cn(
-                        "mt-4 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors",
-                        isCompleted
-                          ? "text-[#ae2012] group-hover:text-red-400"
-                          : "text-[#c9a227]/60 group-hover:text-[#c9a227]"
-                      )}>
-                        {isCompleted ? (
-                          <>TRANSCEND <ChevronRight className="w-3 h-3" /></>
-                        ) : (
-                          <>RESOLVE <Play className="w-2.5 h-2.5 fill-current" /></>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                          {/* Title */}
+                          <div className="flex-1 flex flex-col justify-center">
+                            <h3 className={cn(
+                              "text-xl md:text-2xl font-bold tracking-tight leading-tight",
+                              isCompleted ? "font-['Noto_Serif_JP']" : "font-mono opacity-20"
+                            )}>
+                              {isCompleted ? (
+                                <span className="text-[#fdf5e6]">{p.title}</span>
+                              ) : (
+                                <span className="text-[#a0a0a0]">
+                                  {'王'.repeat(Math.min(p.title.length, 3))}
+                                </span>
+                              )}
+                            </h3>
+                          </div>
+
+                          {/* Action hint */}
+                          <div className={cn(
+                            "mt-4 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors",
+                            isCompleted
+                              ? "text-[#ae2012] group-hover:text-red-400"
+                              : "text-[#c9a227]/60 group-hover:text-[#c9a227]"
+                          )}>
+                            {isCompleted ? (
+                              <>TRANSCEND <ChevronRight className="w-3 h-3" /></>
+                            ) : (
+                              <>RESOLVE <Play className="w-2.5 h-2.5 fill-current" /></>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </section>
           );

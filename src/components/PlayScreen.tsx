@@ -28,7 +28,7 @@ export function PlayScreen({
         <div className="w-8 h-8 rounded-full border border-[#c9a227]/20 flex items-center justify-center group-hover:border-[#ae2012]/50 transition-colors">
           <ChevronLeft className="w-4 h-4" />
         </div>
-        <span className="font-['Ma_Shan_Zheng'] tracking-widest uppercase hidden md:inline">Return to Trial</span>
+        <span className="font-['Ma_Shan_Zheng'] tracking-widest uppercase hidden md:inline">Return to Trails</span>
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
