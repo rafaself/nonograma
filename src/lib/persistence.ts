@@ -3,36 +3,102 @@ import { CellState } from './game-logic';
 const STORAGE_KEY_PREFIX = 'nonogram_save_';
 const COMPLETED_KEY = 'nonogram_completed';
 
-interface SaveData {
+export interface SaveData {
     grid: CellState[][];
     elapsedTime: number;
 }
 
+/** Only allow alphanumeric IDs with hyphens/underscores (max 64 chars). */
+const SAFE_ID = /^[a-zA-Z0-9_-]{1,64}$/;
+
+function sanitizeId(puzzleId: string): string {
+    if (!SAFE_ID.test(puzzleId)) {
+        throw new Error(`Invalid puzzle id: ${puzzleId}`);
+    }
+    return puzzleId;
+}
+
+const validCellValues = new Set<number>([CellState.EMPTY, CellState.FILLED, CellState.MARKED_X]);
+
+function isValidGrid(grid: unknown): grid is CellState[][] {
+    return (
+        Array.isArray(grid) &&
+        grid.length > 0 &&
+        grid.every(
+            (row) =>
+                Array.isArray(row) &&
+                row.length > 0 &&
+                row.every((cell: unknown) => typeof cell === 'number' && validCellValues.has(cell)),
+        )
+    );
+}
+
+function isValidSaveData(data: unknown): data is SaveData {
+    if (typeof data !== 'object' || data === null) return false;
+    const obj = data as Record<string, unknown>;
+    return (
+        typeof obj.elapsedTime === 'number' &&
+        obj.elapsedTime >= 0 &&
+        Number.isFinite(obj.elapsedTime) &&
+        isValidGrid(obj.grid)
+    );
+}
+
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every((v) => typeof v === 'string');
+}
+
+function safeParse(raw: string): unknown {
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return undefined;
+    }
+}
+
 export const persistence = {
     saveGame(puzzleId: string, grid: CellState[][], elapsedTime: number) {
+        const id = sanitizeId(puzzleId);
         const data: SaveData = { grid, elapsedTime };
-        localStorage.setItem(`${STORAGE_KEY_PREFIX}${puzzleId}`, JSON.stringify(data));
+        localStorage.setItem(`${STORAGE_KEY_PREFIX}${id}`, JSON.stringify(data));
     },
 
     loadGame(puzzleId: string): SaveData | null {
-        const data = localStorage.getItem(`${STORAGE_KEY_PREFIX}${puzzleId}`);
-        return data ? JSON.parse(data) : null;
+        const id = sanitizeId(puzzleId);
+        const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${id}`);
+        if (raw === null) return null;
+
+        const parsed = safeParse(raw);
+        if (!isValidSaveData(parsed)) {
+            localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
+            return null;
+        }
+        return parsed;
     },
 
     markCompleted(puzzleId: string) {
+        const id = sanitizeId(puzzleId);
         const completed = this.getCompletedStatus();
-        if (!completed.includes(puzzleId)) {
-            completed.push(puzzleId);
+        if (!completed.includes(id)) {
+            completed.push(id);
             localStorage.setItem(COMPLETED_KEY, JSON.stringify(completed));
         }
     },
 
     getCompletedStatus(): string[] {
-        const data = localStorage.getItem(COMPLETED_KEY);
-        return data ? JSON.parse(data) : [];
+        const raw = localStorage.getItem(COMPLETED_KEY);
+        if (raw === null) return [];
+
+        const parsed = safeParse(raw);
+        if (!isStringArray(parsed)) {
+            localStorage.removeItem(COMPLETED_KEY);
+            return [];
+        }
+        return parsed;
     },
 
     resetPuzzle(puzzleId: string) {
-        localStorage.removeItem(`${STORAGE_KEY_PREFIX}${puzzleId}`);
+        const id = sanitizeId(puzzleId);
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
     }
 };
