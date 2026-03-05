@@ -9,8 +9,11 @@ export default function App() {
   const game = useNonogramGame();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30">
+    <div className="min-h-screen text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30">
       <div className="oriental-bg" />
+      <div className="bg-illustration-dragon" />
+      <div className="bg-illustration-tiger" />
+      <div className="bg-illustration-crane" />
       <div className="ink-brush" style={{ top: '-10%', left: '-10%' }} />
       <div className="ink-brush" style={{ bottom: '-10%', right: '-10%', animationDelay: '-5s', background: 'radial-gradient(circle, rgba(201, 162, 39, 0.05) 0%, transparent 70%)' }} />
 
