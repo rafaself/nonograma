@@ -8,4 +8,6 @@ RUN pnpm install --frozen-lockfile=false
 
 COPY . .
 
-CMD ["pnpm", "vitest", "run", "--coverage"]
+EXPOSE 4173
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0", "--port", "4173"]

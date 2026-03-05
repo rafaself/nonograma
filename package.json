@@ -12,8 +12,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test --project=chromium",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:docker": "docker compose run --rm --build e2e",
-    "test:e2e:docker:all": "docker compose run --rm --build e2e-all"
+    "test:e2e:docker": "docker compose --profile tests run --rm --build e2e",
+    "test:e2e:docker:all": "docker compose --profile tests run --rm --build e2e-all"
   },
   "dependencies": {
     "clsx": "^2.1.1",

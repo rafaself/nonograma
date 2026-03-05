@@ -1,8 +1,17 @@
 services:
+  # ── App (default profile) ────────────────────────────────
+  app:
+    build:
+      context: .
+    ports:
+      - "4173:4173"
+    command: ["pnpm", "dev", "--host", "0.0.0.0", "--port", "4173"]
+
   # ── Unit / coverage (vitest) ─────────────────────────────
   coverage:
     build:
       context: .
+    profiles: [tests]
     command: ["pnpm", "vitest", "run", "--coverage"]
 
   # ── E2E – Chromium only (fast, good for CI) ─────────────
@@ -10,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.e2e
+    profiles: [tests]
     ipc: host
     environment:
       - CI=true
@@ -34,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.e2e
+    profiles: [tests]
     ipc: host
     environment:
       - CI=true
