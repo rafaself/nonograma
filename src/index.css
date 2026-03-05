@@ -264,4 +264,125 @@
     background-color: #c9a227;
     border-color: #ae2012;
   }
+
+  /* Lanterns */
+  .lantern-wrapper {
+    position: absolute;
+    top: -20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform-origin: top center;
+    animation: lantern-swing 4s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 1;
+    filter: drop-shadow(0 0 15px rgba(174, 32, 18, 0.3));
+  }
+
+  .lantern-wire {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, #222, #c9a227);
+  }
+
+  .lantern {
+    position: relative;
+    width: 65px;
+    height: 85px;
+    background: radial-gradient(circle at 30% 30%, #ce2415 0%, #ae2012 50%, #8a1a0f 100%);
+    border-radius: 20px / 30px;
+    box-shadow:
+      0 0 25px rgba(174, 32, 18, 0.4),
+      inset 0 0 20px rgba(253, 245, 230, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 2px solid rgba(201, 162, 39, 0.2);
+    border-right: 2px solid rgba(201, 162, 39, 0.2);
+  }
+
+  .lantern::before,
+  .lantern::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 8px;
+    background: #111;
+    border: 1px solid #c9a22744;
+    border-radius: 2px;
+  }
+
+  .lantern::before {
+    top: -2px;
+  }
+
+  .lantern::after {
+    bottom: -2px;
+  }
+
+  .lantern-kanji {
+    font-family: 'Ma Shan Zheng', 'Noto Serif JP', serif;
+    color: rgba(253, 245, 230, 0.9);
+    font-size: 1.8rem;
+    text-shadow: 0 0 12px rgba(253, 245, 230, 0.5);
+    user-select: none;
+  }
+
+  .lantern-tassel {
+    width: 2px;
+    height: 40px;
+    background: #ae2012;
+    position: relative;
+    margin-top: 2px;
+  }
+
+  .lantern-tassel::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: #c9a227;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #c9a227;
+  }
+
+  @keyframes lantern-swing {
+    0% {
+      transform: rotate(-3deg) translateX(-3px);
+    }
+
+    100% {
+      transform: rotate(3deg) translateX(3px);
+    }
+  }
+
+  /* Positions */
+  .lantern-pos-1 {
+    left: 10%;
+    animation-delay: -0.5s;
+  }
+
+  .lantern-pos-2 {
+    left: 25%;
+    animation-delay: -2.3s;
+    scale: 0.8;
+    top: -45px;
+    opacity: 0.8;
+  }
+
+  .lantern-pos-3 {
+    right: 10%;
+    animation-delay: -1.2s;
+  }
+
+  .lantern-pos-4 {
+    right: 28%;
+    animation-delay: -3.7s;
+    scale: 0.85;
+    top: -35px;
+    opacity: 0.9;
+  }
 }

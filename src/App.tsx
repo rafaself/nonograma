@@ -17,6 +17,39 @@ export default function App() {
       <div className="ink-brush" style={{ top: '-10%', left: '-10%' }} />
       <div className="ink-brush" style={{ bottom: '-10%', right: '-10%', animationDelay: '-5s', background: 'radial-gradient(circle, rgba(201, 162, 39, 0.05) 0%, transparent 70%)' }} />
 
+      {/* Decorative Lanterns */}
+      <div className="lantern-wrapper lantern-pos-1">
+        <div className="lantern-wire" />
+        <div className="lantern">
+          <span className="lantern-kanji">龍</span>
+        </div>
+        <div className="lantern-tassel" />
+      </div>
+
+      <div className="lantern-wrapper lantern-pos-2">
+        <div className="lantern-wire" style={{ height: '80px' }} />
+        <div className="lantern">
+          <span className="lantern-kanji">福</span>
+        </div>
+        <div className="lantern-tassel" />
+      </div>
+
+      <div className="lantern-wrapper lantern-pos-3">
+        <div className="lantern-wire" />
+        <div className="lantern">
+          <span className="lantern-kanji">虎</span>
+        </div>
+        <div className="lantern-tassel" />
+      </div>
+
+      <div className="lantern-wrapper lantern-pos-4">
+        <div className="lantern-wire" style={{ height: '70px' }} />
+        <div className="lantern">
+          <span className="lantern-kanji">寿</span>
+        </div>
+        <div className="lantern-tassel" />
+      </div>
+
       <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-2 md:gap-3">
         {game.screen === 'play' && (
           <>
