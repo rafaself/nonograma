@@ -1,5 +1,56 @@
 services:
+  # ── Unit / coverage (vitest) ─────────────────────────────
   coverage:
     build:
       context: .
     command: ["pnpm", "vitest", "run", "--coverage"]
+
+  # ── E2E – Chromium only (fast, good for CI) ─────────────
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    ipc: host
+    environment:
+      - CI=true
+    # Bind-mount source so rebuilds aren't needed after code changes.
+    # The node_modules inside the image are preserved via anonymous volume.
+    volumes:
+      - ./src:/app/src:ro
+      - ./e2e:/app/e2e:ro
+      - ./public:/app/public:ro
+      - ./index.html:/app/index.html:ro
+      - ./playwright.config.ts:/app/playwright.config.ts:ro
+      - ./vite.config.ts:/app/vite.config.ts:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tsconfig.app.json:/app/tsconfig.app.json:ro
+      - ./tsconfig.node.json:/app/tsconfig.node.json:ro
+      - ./tailwind.config.js:/app/tailwind.config.js:ro
+      - ./postcss.config.js:/app/postcss.config.js:ro
+    # Default CMD from Dockerfile.e2e → pnpm test:e2e:ci
+
+  # ── E2E – all browsers (chromium + firefox + webkit + mobile) ──
+  e2e-all:
+    build:
+      context: .
+      dockerfile: Dockerfile.e2e
+    ipc: host
+    environment:
+      - CI=true
+    volumes:
+      - ./src:/app/src:ro
+      - ./e2e:/app/e2e:ro
+      - ./public:/app/public:ro
+      - ./index.html:/app/index.html:ro
+      - ./playwright.config.ts:/app/playwright.config.ts:ro
+      - ./vite.config.ts:/app/vite.config.ts:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./tsconfig.app.json:/app/tsconfig.app.json:ro
+      - ./tsconfig.node.json:/app/tsconfig.node.json:ro
+      - ./tailwind.config.js:/app/tailwind.config.js:ro
+      - ./postcss.config.js:/app/postcss.config.js:ro
+    command: >
+      sh -c "
+        pnpm exec playwright install --with-deps firefox webkit &&
+        pnpm test:e2e
+      "

@@ -22,7 +22,12 @@ A fully-featured, mobile-responsive Nonogram web app built with React, TypeScrip
 1. Install dependencies: `pnpm install`
 2. Run development server: `pnpm dev`
 3. Run tests: `pnpm test`
-4. Build for production: `pnpm build`
+4. Run E2E tests (Playwright): `pnpm test:e2e`
+5. Build for production: `pnpm build`
+
+## Docker
+- Unit test coverage: `docker compose run --rm coverage`
+- E2E tests (Playwright + Chromium): `docker compose run --rm e2e`
 
 ## Project Structure
 - `src/lib/game-logic.ts`: Pure logic forNonogram rules, clue generation, and win checks.
