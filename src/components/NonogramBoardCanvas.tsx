@@ -76,7 +76,14 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     canvas.width = cellSize * cols * dpr;
     canvas.height = cellSize * rows * dpr;
 
-    renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors });
+    renderBoard({
+      ctx,
+      grid,
+      cellSize,
+      isSolved,
+      dpr,
+      ...(resultColors ? { resultColors } : {}),
+    });
   }, [grid, cellSize, isSolved, cols, rows, resultColors]);
   /* c8 ignore stop */
 

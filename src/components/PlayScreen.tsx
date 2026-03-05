@@ -41,7 +41,7 @@ export function PlayScreen({
             }}
             isSolved={gameState.isSolved}
             inputMode={inputMode}
-            resultColors={gameState.puzzle.resultColors}
+            {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}
           />
         </div>
 

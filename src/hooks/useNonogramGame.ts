@@ -63,6 +63,8 @@ export function useNonogramGame() {
     if (!gameState || gameState.isSolved) return;
 
     setGameState(prev => {
+      if (!prev) return null;
+
       setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
       setRedoHistory([]);
 

@@ -16,9 +16,10 @@
 
     /* Linting */
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
