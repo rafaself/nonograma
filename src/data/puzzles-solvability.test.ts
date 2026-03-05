@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PUZZLES } from '../data/puzzles';
-import { CellState, checkWin, deriveClues } from './game-logic';
+import { PUZZLES } from './puzzles';
+import { CellState, checkWin, deriveClues } from '../lib/game-logic';
 
 describe('puzzle solvability', () => {
     it('every level has a structurally valid solution grid', () => {

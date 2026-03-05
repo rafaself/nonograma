@@ -9,13 +9,13 @@ vi.mock('./hooks/useNonogramGame', () => ({
   useNonogramGame: () => useNonogramGameMock(),
 }));
 
-vi.mock('./components/HomeScreen', () => ({
+vi.mock('./screens/HomeScreen', () => ({
   HomeScreen: ({ onStartPuzzle }: { onStartPuzzle: () => void }) => (
     <button onClick={onStartPuzzle}>home-screen</button>
   ),
 }));
 
-vi.mock('./components/PlayScreen', () => ({
+vi.mock('./screens/PlayScreen', () => ({
   PlayScreen: ({ onBack, onCellAction, onSetInputMode }: { onBack: () => void; onCellAction: () => void; onSetInputMode: (m: CellState.FILLED | CellState.MARKED_X) => void }) => (
     <div>
       <button onClick={onBack}>play-back</button>

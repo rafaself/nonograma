@@ -2,7 +2,7 @@ import type { GameState } from '../lib/game-logic';
 import { CellState } from '../lib/game-logic';
 import { ChevronLeft, X, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { NonogramBoardCanvas } from './NonogramBoardCanvas';
+import { NonogramBoardCanvas } from '../components/NonogramBoardCanvas';
 
 interface PlayScreenProps {
   gameState: GameState;

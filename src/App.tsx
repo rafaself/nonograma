@@ -1,7 +1,7 @@
 import { Volume2, VolumeX, Undo2, Redo2, RotateCcw } from 'lucide-react';
 import { useNonogramGame } from './hooks/useNonogramGame';
-import { HomeScreen } from './components/HomeScreen';
-import { PlayScreen } from './components/PlayScreen';
+import { HomeScreen } from './screens/HomeScreen';
+import { PlayScreen } from './screens/PlayScreen';
 import { VictoryModal } from './components/VictoryModal';
 
 export default function App() {

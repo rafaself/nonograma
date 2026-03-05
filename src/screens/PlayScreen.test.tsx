@@ -5,7 +5,7 @@ import { PlayScreen } from './PlayScreen';
 
 const canvasPropsSpy = vi.fn();
 
-vi.mock('./NonogramBoardCanvas', () => ({
+vi.mock('../components/NonogramBoardCanvas', () => ({
   NonogramBoardCanvas: (props: { onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void; resultColors?: (string | null)[][] }) => {
     canvasPropsSpy(props);
     return (
