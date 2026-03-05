@@ -1,4 +1,5 @@
 import { Undo2, Redo2, RotateCcw } from 'lucide-react';
+import { SmokeSimulation } from './components/SmokeSimulation';
 import { VolumeControl } from './components/VolumeControl';
 import { useNonogramGame } from './hooks/useNonogramGame';
 import { HomeScreen } from './screens/HomeScreen';
@@ -14,6 +15,7 @@ export default function App() {
       data-screen={game.screen}
     >
       <div className="oriental-bg" />
+      <SmokeSimulation />
       <div className="bg-illustration-dragon" />
       <div className="bg-illustration-tiger" />
       <div className="bg-illustration-crane" />
