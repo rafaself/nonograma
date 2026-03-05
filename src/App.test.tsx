@@ -34,10 +34,16 @@ vi.mock('./components/VictoryModal', () => ({
   ),
 }));
 
+vi.mock('./components/VolumeControl', () => ({
+  VolumeControl: ({ muted, onToggleMute }: { muted: boolean; onToggleMute: () => void }) => (
+    <button onClick={onToggleMute}>{muted ? 'Unmute' : 'Mute'}</button>
+  ),
+}));
+
 describe('App', () => {
   it('renders home flow and mute toggle', () => {
     const startPuzzle = vi.fn();
-    const setMuted = vi.fn((updater: (m: boolean) => boolean) => updater(false));
+    const toggleMuted = vi.fn();
 
     useNonogramGameMock.mockReturnValue({
       screen: 'home',
@@ -48,7 +54,9 @@ describe('App', () => {
       showVictory: false,
       setShowVictory: vi.fn(),
       muted: false,
-      setMuted,
+      volume: 0.5,
+      toggleMuted,
+      changeVolume: vi.fn(),
       startPuzzle,
       goHome: vi.fn(),
       nextPuzzle: vi.fn(),
@@ -67,7 +75,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
 
     expect(startPuzzle).toHaveBeenCalledTimes(1);
-    expect(setMuted).toHaveBeenCalledTimes(1);
+    expect(toggleMuted).toHaveBeenCalledTimes(1);
   });
 
   it('renders play controls and victory modal actions', () => {
@@ -93,7 +101,9 @@ describe('App', () => {
       showVictory: true,
       setShowVictory,
       muted: true,
-      setMuted: vi.fn(),
+      volume: 0.5,
+      toggleMuted: vi.fn(),
+      changeVolume: vi.fn(),
       startPuzzle: vi.fn(),
       goHome,
       nextPuzzle,

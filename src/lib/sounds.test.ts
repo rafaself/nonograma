@@ -39,12 +39,12 @@ describe('sounds', () => {
   });
 
   it('plays all sound effects without throwing', () => {
-    expect(() => sounds.fill()).not.toThrow();
-    expect(() => sounds.markX()).not.toThrow();
-    expect(() => sounds.erase()).not.toThrow();
-    expect(() => sounds.undo()).not.toThrow();
-    expect(() => sounds.reset()).not.toThrow();
-    expect(() => sounds.lineComplete()).not.toThrow();
-    expect(() => sounds.win()).not.toThrow();
+    expect(() => sounds.fill(0.5)).not.toThrow();
+    expect(() => sounds.markX(0.5)).not.toThrow();
+    expect(() => sounds.erase(0.5)).not.toThrow();
+    expect(() => sounds.undo(0.5)).not.toThrow();
+    expect(() => sounds.reset(0.5)).not.toThrow();
+    expect(() => sounds.lineComplete(0.5)).not.toThrow();
+    expect(() => sounds.win(0.5)).not.toThrow();
   });
 });

@@ -85,6 +85,10 @@ vi.mock('../lib/persistence', () => ({
     markCompleted: (...args: Parameters<typeof mocks.markCompleted>) => mocks.markCompleted(...args),
     getCompletedStatus: () => mocks.getCompletedStatus(),
     resetPuzzle: (...args: Parameters<typeof mocks.resetPuzzle>) => mocks.resetPuzzle(...args),
+    getMuted: () => false,
+    setMuted: vi.fn(),
+    getVolume: () => 0.5,
+    setVolume: vi.fn(),
   },
 }));
 
@@ -202,7 +206,7 @@ describe('useNonogramGame', () => {
   it('respects muted mode for sound playback', () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.setMuted(true));
+    act(() => result.current.toggleMuted());
     act(() => result.current.startPuzzle(mocks.puzzleA));
     act(() => result.current.handleCellAction(0, 0));
 
