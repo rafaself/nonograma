@@ -48,12 +48,12 @@
 
   .bg-illustration-dragon {
     position: fixed;
-    top: 5%;
-    right: -10%;
-    width: 80vw;
-    height: 80vw;
-    max-width: 800px;
-    max-height: 800px;
+    top: -3%;
+    right: -15%;
+    width: 100vw;
+    height: 100vw;
+    max-width: 1000px;
+    max-height: 1000px;
     background-image: url("/images/bg-dragon.png");
     background-size: contain;
     background-repeat: no-repeat;
@@ -112,9 +112,9 @@
 
   @media (min-width: 768px) {
     .bg-illustration-dragon {
-      width: 60vw;
-      height: 60vw;
-      right: -5%;
+      width: 80vw;
+      height: 80vw;
+      right: -10%;
       opacity: 0.06;
     }
 
