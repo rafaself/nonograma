@@ -86,34 +86,8 @@
     transform: translateX(100%);
   }
 
-  .cyber-card:hover:not(.locked) {
+  .cyber-card:hover {
     @apply border-white/20 bg-zinc-900/50 scale-[1.02] -translate-y-1;
     box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
-  }
-
-  .cyber-card.locked {
-    @apply opacity-30 grayscale;
-  }
-
-  .matrix-cell {
-    @apply relative overflow-hidden transition-all duration-300;
-  }
-
-  .matrix-cell::after {
-    content: "";
-    @apply absolute inset-0 bg-white/5 opacity-0 transition-opacity;
-  }
-
-  .matrix-cell:hover::after {
-    @apply opacity-100;
-  }
-
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 }

@@ -1,15 +1,8 @@
-export interface BoardLayout {
-  cellSize: number;
-  canvasWidth: number;
-  canvasHeight: number;
-  dpr: number;
-}
-
 /**
- * Computes cell size and canvas dimensions to fit the available space.
- * cellSize is clamped to [minCell, maxCell] CSS pixels.
+ * Computes the optimal cell size (in CSS pixels) to fit the board in the available space.
+ * Result is clamped to [minCell, maxCell].
  */
-export function computeBoardLayout(
+export function computeCellSize(
   containerWidth: number,
   availableHeight: number,
   gridCols: number,
@@ -18,18 +11,10 @@ export function computeBoardLayout(
   colClueHeight: number,
   minCell = 20,
   maxCell = 48,
-): BoardLayout {
+): number {
   const availW = containerWidth - rowClueWidth;
   const availH = availableHeight - colClueHeight;
   const sizeFromW = availW / gridCols;
   const sizeFromH = availH / gridRows;
-  const cellSize = Math.max(minCell, Math.min(maxCell, Math.floor(Math.min(sizeFromW, sizeFromH))));
-  const dpr = window.devicePixelRatio || 1;
-
-  return {
-    cellSize,
-    canvasWidth: cellSize * gridCols,
-    canvasHeight: cellSize * gridRows,
-    dpr,
-  };
+  return Math.max(minCell, Math.min(maxCell, Math.floor(Math.min(sizeFromW, sizeFromH))));
 }

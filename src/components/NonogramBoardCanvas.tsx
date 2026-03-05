@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { CellState, isLineSatisfied } from '../lib/game-logic';
 import type { Clues } from '../lib/game-logic';
-import { computeBoardLayout } from '../lib/canvasSizing';
+import { computeCellSize } from '../lib/canvasSizing';
 import { renderBoard, hitTest } from '../lib/boardRender';
 import { cn } from '../lib/utils';
 
@@ -49,8 +49,7 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     const compute = () => {
       const availW = el.clientWidth;
       const availH = window.innerHeight - 180;
-      const layout = computeBoardLayout(availW, availH, cols, rows, rowClueWidth, colClueHeight);
-      setCellSize(layout.cellSize);
+      setCellSize(computeCellSize(availW, availH, cols, rows, rowClueWidth, colClueHeight));
     };
 
     compute();
