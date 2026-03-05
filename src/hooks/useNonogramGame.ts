@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { Puzzle, GameState } from '../lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from '../lib/game-logic';
 import { persistence } from '../lib/persistence';
@@ -11,17 +11,13 @@ export function useNonogramGame() {
   const [undoHistory, setUndoHistory] = useState<CellState[][][]>([]);
   const [redoHistory, setRedoHistory] = useState<CellState[][][]>([]);
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
+  const [completedIds, setCompletedIds] = useState<string[]>(() => persistence.getCompletedStatus());
   const [showVictory, setShowVictory] = useState(false);
   const [muted, setMuted] = useState(false);
 
   const play = useCallback((fn: () => void) => {
     if (!muted) fn();
   }, [muted]);
-
-  useEffect(() => {
-    setCompletedIds(persistence.getCompletedStatus());
-  }, []);
 
   const startPuzzle = useCallback((puzzle: Puzzle) => {
     const clues = deriveClues(puzzle.solution);

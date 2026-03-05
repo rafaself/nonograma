@@ -15,7 +15,6 @@ async function clickCell(page: Page, row: number, col: number) {
     throw new Error('Cannot read canvas dimensions from style');
 
   const canvasW = Number(wMatch[1]);
-  const canvasH = Number(hMatch[1]);
   const cols = Math.round(
     box.width / (canvasW / Math.round(box.width / (canvasW / 5))),
   );

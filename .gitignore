@@ -30,3 +30,11 @@ playwright-report/
 test-results/
 .playwright/
 blob-report/
+
+# Secrets & environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
