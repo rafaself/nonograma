@@ -90,8 +90,9 @@
 
   .bg-illustration-crane {
     position: fixed;
-    top: 60%;
-    right: -5%;
+    top: 50%;
+    left: 40%;
+    transform: translate(-50%, -50%);
     width: 50vw;
     height: 50vw;
     max-width: 500px;
@@ -100,8 +101,8 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    opacity: 0.06;
-    filter: grayscale(1) invert(1) contrast(200%) brightness(1.2);
+    opacity: 0.05;
+    filter: grayscale(1) invert(1) contrast(150%) brightness(1.5);
     mix-blend-mode: screen;
     z-index: -1;
     pointer-events: none;
@@ -127,7 +128,7 @@
     .bg-illustration-crane {
       width: 35vw;
       height: 35vw;
-      right: 5%;
+      left: 45%;
       opacity: 0.04;
     }
   }
