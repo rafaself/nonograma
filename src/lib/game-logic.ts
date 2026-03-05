@@ -10,8 +10,8 @@ export interface Puzzle {
     width: number;
     height: number;
     solution: boolean[][]; // [row][col]
-    resultColors?: (string | null)[][]; // [row][col], hex or color name
-    backgroundColors?: (string | null)[][]; // [row][col], solved-state backdrop colors
+    resultColors?: (string | null)[][]; // [row][col], normalized #rrggbb hex or null
+    backgroundColors?: (string | null)[][]; // [row][col], solved-state backdrop colors (#rrggbb or null)
 }
 
 export interface Clues {

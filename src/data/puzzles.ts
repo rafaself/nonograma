@@ -1,12 +1,75 @@
 import type { Puzzle } from '../lib/game-logic';
 
+type RawPuzzle = Omit<Puzzle, 'width' | 'height'> & {
+    width?: number;
+    height?: number;
+};
+
 const DEFAULT_RESULT_COLOR = '#c9a227';
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const PUZZLE_ID_RE = /^\d+x\d+-\d+$/;
+const MAX_GRID_SIZE = 25;
+
+function normalizeHexColor(color: string): string {
+    return color.toLowerCase();
+}
+
+function deriveSolutionDimensions(puzzle: RawPuzzle): { width: number; height: number } {
+    if (puzzle.solution.length === 0) {
+        throw new Error(`${puzzle.id}: solution must have at least one row.`);
+    }
+
+    const width = puzzle.solution[0].length;
+    if (width === 0) {
+        throw new Error(`${puzzle.id}: solution rows must have at least one column.`);
+    }
+
+    if (width > MAX_GRID_SIZE || puzzle.solution.length > MAX_GRID_SIZE) {
+        throw new Error(`${puzzle.id}: puzzle dimensions exceed ${MAX_GRID_SIZE}x${MAX_GRID_SIZE}.`);
+    }
+
+    for (let r = 0; r < puzzle.solution.length; r++) {
+        const row = puzzle.solution[r];
+        if (row.length !== width) {
+            throw new Error(`${puzzle.id}: solution row width (${row.length}) does not match derived width (${width}) at row ${r}.`);
+        }
+
+        for (let c = 0; c < row.length; c++) {
+            if (typeof row[c] !== 'boolean') {
+                throw new Error(`${puzzle.id}: solution cell at (${r}, ${c}) must be boolean.`);
+            }
+        }
+    }
+
+    return { width, height: puzzle.solution.length };
+}
+
+function validateColorGridShape(
+    puzzleId: string,
+    gridName: 'resultColors' | 'backgroundColors',
+    grid: (string | null)[][],
+    width: number,
+    height: number
+): void {
+    if (grid.length !== height) {
+        throw new Error(`${puzzleId}: ${gridName} height (${grid.length}) does not match derived height (${height}).`);
+    }
+
+    for (let r = 0; r < grid.length; r++) {
+        const row = grid[r];
+        if (row.length !== width) {
+            throw new Error(`${puzzleId}: ${gridName} row width (${row.length}) does not match derived width (${width}) at row ${r}.`);
+        }
+    }
+}
 
 function buildResultColors(puzzle: Puzzle): (string | null)[][] {
     return puzzle.solution.map((row, r) =>
         row.map((isFilled, c) =>
             isFilled
-                ? (puzzle.resultColors?.[r]?.[c] ?? DEFAULT_RESULT_COLOR)
+                ? (typeof puzzle.resultColors?.[r]?.[c] === 'string'
+                    ? normalizeHexColor(puzzle.resultColors[r][c] as string)
+                    : DEFAULT_RESULT_COLOR)
                 : null
         )
     );
@@ -18,57 +81,97 @@ function buildBackgroundColors(puzzle: Puzzle): (string | null)[][] | undefined 
     }
 
     return puzzle.solution.map((row, r) =>
-        row.map((_, c) => puzzle.backgroundColors?.[r]?.[c] ?? null)
+        row.map((_, c) => {
+            const color = puzzle.backgroundColors?.[r]?.[c];
+            return typeof color === 'string' ? normalizeHexColor(color) : null;
+        })
     );
 }
 
-function validatePuzzleShape(puzzle: Puzzle, seenIds: Set<string>): void {
+function validatePuzzleShape(puzzle: RawPuzzle, seenIds: Set<string>): { width: number; height: number } {
     if (!puzzle.id.trim()) {
         throw new Error('Puzzle with empty id found.');
+    }
+    if (!PUZZLE_ID_RE.test(puzzle.id)) {
+        throw new Error(`${puzzle.id}: id must match ${PUZZLE_ID_RE.source}.`);
     }
     if (seenIds.has(puzzle.id)) {
         throw new Error(`Duplicate puzzle id: ${puzzle.id}`);
     }
     seenIds.add(puzzle.id);
 
-    if (puzzle.solution.length !== puzzle.height) {
-        throw new Error(`${puzzle.id}: solution height (${puzzle.solution.length}) does not match declared height (${puzzle.height}).`);
+    if (!puzzle.title.trim()) {
+        throw new Error(`${puzzle.id}: title cannot be empty.`);
     }
 
-    for (const row of puzzle.solution) {
-        if (row.length !== puzzle.width) {
-            throw new Error(`${puzzle.id}: solution row width (${row.length}) does not match declared width (${puzzle.width}).`);
+    const { width, height } = deriveSolutionDimensions(puzzle);
+
+    if (typeof puzzle.width === 'number' && puzzle.width !== width) {
+        throw new Error(`${puzzle.id}: declared width (${puzzle.width}) does not match derived width (${width}).`);
+    }
+
+    if (typeof puzzle.height === 'number' && puzzle.height !== height) {
+        throw new Error(`${puzzle.id}: declared height (${puzzle.height}) does not match derived height (${height}).`);
+    }
+
+    if (puzzle.resultColors) {
+        validateColorGridShape(puzzle.id, 'resultColors', puzzle.resultColors, width, height);
+
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                const color = puzzle.resultColors[r][c];
+                if (color === null) {
+                    continue;
+                }
+                if (!HEX_COLOR_RE.test(color)) {
+                    throw new Error(`${puzzle.id}: resultColors[${r}][${c}] must be a 6-digit hex color (#rrggbb).`);
+                }
+                if (!puzzle.solution[r][c]) {
+                    throw new Error(`${puzzle.id}: resultColors[${r}][${c}] must be null for empty solution cells.`);
+                }
+            }
         }
     }
 
     if (puzzle.backgroundColors) {
-        if (puzzle.backgroundColors.length !== puzzle.height) {
-            throw new Error(`${puzzle.id}: backgroundColors height (${puzzle.backgroundColors.length}) does not match declared height (${puzzle.height}).`);
-        }
+        validateColorGridShape(puzzle.id, 'backgroundColors', puzzle.backgroundColors, width, height);
 
-        for (const row of puzzle.backgroundColors) {
-            if (row.length !== puzzle.width) {
-                throw new Error(`${puzzle.id}: backgroundColors row width (${row.length}) does not match declared width (${puzzle.width}).`);
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                const color = puzzle.backgroundColors[r][c];
+                if (color === null) {
+                    continue;
+                }
+                if (!HEX_COLOR_RE.test(color)) {
+                    throw new Error(`${puzzle.id}: backgroundColors[${r}][${c}] must be a 6-digit hex color (#rrggbb).`);
+                }
             }
         }
     }
+
+    return { width, height };
 }
 
-function normalizePuzzles(puzzles: Puzzle[]): Puzzle[] {
+function normalizePuzzles(puzzles: RawPuzzle[]): Puzzle[] {
     const seenIds = new Set<string>();
 
     return puzzles.map((puzzle) => {
-        validatePuzzleShape(puzzle, seenIds);
+        const { width, height } = validatePuzzleShape(puzzle, seenIds);
+        const puzzleWithDerivedDimensions: Puzzle = {
+            ...puzzle,
+            width,
+            height,
+        };
 
         return {
-            ...puzzle,
-            resultColors: buildResultColors(puzzle),
-            ...(puzzle.backgroundColors ? { backgroundColors: buildBackgroundColors(puzzle) } : {}),
+            ...puzzleWithDerivedDimensions,
+            resultColors: buildResultColors(puzzleWithDerivedDimensions),
+            ...(puzzle.backgroundColors ? { backgroundColors: buildBackgroundColors(puzzleWithDerivedDimensions) } : {}),
         };
     });
 }
 
-const RAW_PUZZLES: Puzzle[] = [
+const RAW_PUZZLES: RawPuzzle[] = [
     { id: '5x5-1', title: 'Heart', width: 5, height: 5, solution: [[false, true, false, true, false], [true, true, true, true, true], [true, true, true, true, true], [false, true, true, true, false], [false, false, true, false, false]], resultColors: [[null, '#e63941', null, '#e63941', null], ['#e63941', '#e63941', '#e63941', '#e63941', '#e63941'], ['#e63941', '#e63941', '#e63941', '#e63941', '#e63941'], [null, '#e63941', '#e63941', '#e63941', null], [null, null, '#e63941', null, null]] },
     { id: '5x5-2', title: 'Smiley', width: 5, height: 5, solution: [[false, true, false, true, false], [false, false, false, false, false], [true, false, false, false, true], [false, true, true, true, false], [false, false, false, false, false]], resultColors: [[null, '#ffb703', null, '#ffb703', null], [null, null, null, null, null], ['#ffb703', null, null, null, '#ffb703'], [null, '#ffb703', '#ffb703', '#ffb703', null], [null, null, null, null, null]] },
     { id: '5x5-3', title: 'Cross', width: 5, height: 5, solution: [[false, false, true, false, false], [false, false, true, false, false], [true, true, true, true, true], [false, false, true, false, false], [false, false, true, false, false]], resultColors: [[null, null, "#D4A017", null, null], [null, null, "#D4A017", null, null], ["#D4A017", "#D4A017", "#D4A017", "#D4A017", "#D4A017"], [null, null, "#D4A017", null, null], [null, null, "#D4A017", null, null]] },

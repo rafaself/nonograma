@@ -46,6 +46,28 @@ describe('puzzle solvability', () => {
         }
     });
 
+    it('normalizes all exported colors to lowercase 6-digit hex values', () => {
+        const hexColor = /^#[0-9a-f]{6}$/;
+
+        for (const puzzle of PUZZLES) {
+            for (const row of puzzle.resultColors ?? []) {
+                for (const color of row) {
+                    if (color !== null) {
+                        expect(hexColor.test(color), `${puzzle.id}: non-canonical result color ${color}`).toBe(true);
+                    }
+                }
+            }
+
+            for (const row of puzzle.backgroundColors ?? []) {
+                for (const color of row) {
+                    if (color !== null) {
+                        expect(hexColor.test(color), `${puzzle.id}: non-canonical background color ${color}`).toBe(true);
+                    }
+                }
+            }
+        }
+    });
+
     it('backgroundColors grids align with puzzle dimensions when present', () => {
         for (const puzzle of PUZZLES) {
             if (!puzzle.backgroundColors) {
