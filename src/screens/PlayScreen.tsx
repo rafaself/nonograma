@@ -1,3 +1,4 @@
+import { useCallback, memo } from 'react';
 import type { GameState } from '../lib/game-logic';
 import { CellState } from '../lib/game-logic';
 import { ChevronLeft, X, Square } from 'lucide-react';
@@ -12,13 +13,20 @@ interface PlayScreenProps {
   onBack: () => void;
 }
 
-export function PlayScreen({
+export const PlayScreen = memo(function PlayScreen({
   gameState,
   inputMode,
   onSetInputMode,
   onCellAction,
   onBack,
 }: PlayScreenProps) {
+  const handleBoardAction = useCallback(
+    (row: number, col: number, action: 'fill' | 'mark_x') => {
+      onCellAction(row, col, action === 'mark_x' ? 2 : 0);
+    },
+    [onCellAction],
+  );
+
   return (
     <>
       <button
@@ -36,9 +44,7 @@ export function PlayScreen({
           <NonogramBoardCanvas
             grid={gameState.grid}
             clues={gameState.clues}
-            onCellAction={(row, col, action) => {
-              onCellAction(row, col, action === 'mark_x' ? 2 : 0);
-            }}
+            onCellAction={handleBoardAction}
             isSolved={gameState.isSolved}
             inputMode={inputMode}
             {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}
@@ -90,4 +96,4 @@ export function PlayScreen({
       </div>
     </>
   );
-}
+});

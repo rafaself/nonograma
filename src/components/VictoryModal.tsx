@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Check } from 'lucide-react';
 
 interface VictoryModalProps {
@@ -6,7 +7,7 @@ interface VictoryModalProps {
   onNext: () => void;
 }
 
-export function VictoryModal({ isLastPuzzle, onViewGrid, onNext }: VictoryModalProps) {
+export const VictoryModal = memo(function VictoryModal({ isLastPuzzle, onViewGrid, onNext }: VictoryModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0a0a0a]/95 backdrop-blur-3xl animate-in fade-in zoom-in duration-700">
       <div className="absolute inset-0 bg-radial-gradient from-[#ae2012]/10 to-transparent pointer-events-none" />
@@ -35,4 +36,4 @@ export function VictoryModal({ isLastPuzzle, onViewGrid, onNext }: VictoryModalP
       </div>
     </div>
   );
-}
+});

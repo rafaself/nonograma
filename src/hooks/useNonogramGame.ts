@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Puzzle, GameState } from '../lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from '../lib/game-logic';
 import { persistence } from '../lib/persistence';
@@ -89,23 +89,26 @@ export function useNonogramGame() {
       play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
     }
 
+    const col = prev.grid.map(row => row[c]);
     const rowWasDone = isLineSatisfied(prev.grid[r], prev.clues.rows[r]);
-    const colWasDone = isLineSatisfied(prev.grid.map(row => row[c]), prev.clues.cols[c]);
+    const colWasDone = isLineSatisfied(col, prev.clues.cols[c]);
 
     newGrid[r][c] = targetState;
-    const solved = checkWin(newGrid, prev.clues);
+    col[r] = targetState;
+
+    const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
+    const colNowDone = isLineSatisfied(col, prev.clues.cols[c]);
+
+    // Skip expensive full-grid check when the edited row or column isn't satisfied
+    const solved = rowNowDone && colNowDone && checkWin(newGrid, prev.clues);
 
     if (solved) {
       persistence.markCompleted(prev.puzzle.id);
       setCompletedIds(persistence.getCompletedStatus());
       setShowVictory(true);
       play(sounds.win);
-    } else {
-      const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
-      const colNowDone = isLineSatisfied(newGrid.map(row => row[c]), prev.clues.cols[c]);
-      if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
-        play(sounds.lineComplete);
-      }
+    } else if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
+      play(sounds.lineComplete);
     }
 
     persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
@@ -142,9 +145,9 @@ export function useNonogramGame() {
     persistence.resetPuzzle(gameState.puzzle.id);
   }, [gameState, play]);
 
-  const isLastPuzzle = gameState
+  const isLastPuzzle = useMemo(() => gameState
     ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
-    : false;
+    : false, [gameState?.puzzle.id]);
 
   const canUndo = undoHistory.length > 0;
   const canRedo = redoHistory.length > 0;

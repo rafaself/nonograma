@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES } from '../data/puzzles';
 import { Play, ChevronRight, ChevronDown } from 'lucide-react';
@@ -26,7 +26,7 @@ function groupBySize(puzzles: typeof PUZZLES) {
   return groups;
 }
 
-export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
+export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -191,4 +191,4 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
       </div>
     </div>
   );
-}
+});

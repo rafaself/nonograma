@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
 interface VolumeControlProps {
@@ -8,7 +8,7 @@ interface VolumeControlProps {
     onVolumeChange: (volume: number) => void;
 }
 
-export const VolumeControl: React.FC<VolumeControlProps> = ({
+const VolumeControlBase: React.FC<VolumeControlProps> = ({
     muted,
     volume,
     onToggleMute,
@@ -103,3 +103,5 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
         </div>
     );
 };
+
+export const VolumeControl = memo(VolumeControlBase);

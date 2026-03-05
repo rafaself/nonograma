@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 
 const VERTEX_SHADER = `
 precision mediump float;
@@ -240,7 +240,7 @@ type SmokeSimulationProps = {
   active?: boolean;
 };
 
-export function SmokeSimulation({ active = true }: SmokeSimulationProps) {
+export const SmokeSimulation = memo(function SmokeSimulation({ active = true }: SmokeSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glRef = useRef<{
     gl: WebGLRenderingContext;
@@ -389,4 +389,4 @@ export function SmokeSimulation({ active = true }: SmokeSimulationProps) {
       }}
     />
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { CellState, isLineSatisfied } from '../lib/game-logic';
 import type { Clues } from '../lib/game-logic';
 import { computeCellSize } from '../lib/canvasSizing';
@@ -20,7 +20,7 @@ interface DragState {
   visitedCells: Set<string>;
 }
 
-export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
+const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   grid,
   clues,
   onCellAction,
@@ -34,15 +34,21 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
 
   const rows = grid.length;
   const cols = grid[0].length;
-  const maxRowClueCount = Math.max(...clues.rows.map(r => r.length));
-  const maxColClueCount = Math.max(...clues.cols.map(c => c.length));
 
   const [cellSize, setCellSize] = useState(32);
 
-  const fontSize = Math.max(10, Math.min(18, cellSize * 0.45));
-  const spacing = 5;
-  const rowClueWidth = maxRowClueCount * (fontSize * 1.2 + spacing) + 8;
-  const colClueHeight = maxColClueCount * (fontSize * 1.2 + spacing) + 6;
+  const { fontSize, spacing, rowClueWidth, colClueHeight } = useMemo(() => {
+    const maxRowLen = Math.max(...clues.rows.map(r => r.length));
+    const maxColLen = Math.max(...clues.cols.map(c => c.length));
+    const fs = Math.max(10, Math.min(18, cellSize * 0.45));
+    const sp = 5;
+    return {
+      fontSize: fs,
+      spacing: sp,
+      rowClueWidth: maxRowLen * (fs * 1.2 + sp) + 8,
+      colClueHeight: maxColLen * (fs * 1.2 + sp) + 6,
+    };
+  }, [clues, cellSize]);
 
   // --- Resize ---
   /* c8 ignore start */
@@ -57,8 +63,16 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     };
 
     compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
+    let rafId = 0;
+    const onResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(compute);
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onResize);
+    };
   }, [cols, rows, rowClueWidth, colClueHeight]);
   /* c8 ignore stop */
 
@@ -245,3 +259,5 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     </div>
   );
 };
+
+export const NonogramBoardCanvas = memo(NonogramBoardCanvasBase);

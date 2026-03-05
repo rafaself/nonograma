@@ -103,16 +103,18 @@ export function isLineSatisfied(cells: CellState[], clues: number[]): boolean {
  * Checks if the entire grid satisfies all clues.
  */
 export function checkWin(grid: CellState[][], clues: Clues): boolean {
+    const height = grid.length;
     // Check rows
-    for (let r = 0; r < grid.length; r++) {
+    for (let r = 0; r < height; r++) {
         if (!isLineSatisfied(grid[r], clues.rows[r])) return false;
     }
 
-    // Check columns
+    // Check columns – reuse a single buffer to avoid allocating an array per column
     const width = grid[0].length;
+    const colBuffer: CellState[] = new Array(height);
     for (let c = 0; c < width; c++) {
-        const colCells = grid.map(row => row[c]);
-        if (!isLineSatisfied(colCells, clues.cols[c])) return false;
+        for (let r = 0; r < height; r++) colBuffer[r] = grid[r][c];
+        if (!isLineSatisfied(colBuffer, clues.cols[c])) return false;
     }
 
     return true;
