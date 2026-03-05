@@ -55,8 +55,8 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
               alt="Logo"
               className="w-20 h-20 md:w-28 md:h-28 rounded-3xl shadow-2xl shadow-red-950/40 border border-[#c9a227]/30"
             />
-            <div className="absolute -bottom-2 -right-2 bg-[#ae2012] text-white px-2 py-1 text-[10px] font-bold rounded shadow-lg border border-[#c9a227]/40 rotate-12">
-              NONO
+            <div className="absolute -bottom-2 -right-2 bg-[#ae2012] text-white px-2 py-1 text-xs font-bold rounded shadow-lg border border-[#c9a227]/40 rotate-12 font-['Ma_Shan_Zheng']">
+              乃々
             </div>
           </div>
           <h1 className="text-7xl md:text-9xl font-bold text-center font-['Ma_Shan_Zheng'] bg-clip-text text-transparent bg-gradient-to-b from-[#fdf5e6] via-[#fdf5e6] to-[#c9a227] py-4 px-12">
