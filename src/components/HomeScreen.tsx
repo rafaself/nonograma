@@ -48,7 +48,7 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
               NONO
             </div>
           </div>
-          <h1 className="text-7xl md:text-9xl font-bold tracking-tighter text-center font-['Ma_Shan_Zheng'] bg-clip-text text-transparent bg-gradient-to-b from-[#fdf5e6] via-[#fdf5e6] to-[#c9a227]">
+          <h1 className="text-7xl md:text-9xl font-bold text-center font-['Ma_Shan_Zheng'] bg-clip-text text-transparent bg-gradient-to-b from-[#fdf5e6] via-[#fdf5e6] to-[#c9a227] py-4 px-12">
             Levels
           </h1>
         </div>

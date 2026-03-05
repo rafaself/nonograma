@@ -16,7 +16,7 @@ export function VictoryModal({ isLastPuzzle, onViewGrid, onNext }: VictoryModalP
             <Check className="w-14 h-14 text-[#fdf5e6]" strokeWidth={4} />
           </div>
         </div>
-        <h2 className="text-7xl md:text-8xl font-bold mb-4 tracking-tighter text-[#fdf5e6] font-['Ma_Shan_Zheng']">Achieved</h2>
+        <h2 className="text-7xl md:text-8xl font-bold mb-4 tracking-tight text-[#fdf5e6] font-['Ma_Shan_Zheng'] py-2">Achieved</h2>
         <p className="text-[#a0a0a0] text-xl mb-14 font-['Noto_Serif_JP'] tracking-wide">The path is clear. Enlightenment attained.</p>
         <div className="flex flex-col sm:flex-row gap-6">
           <button
