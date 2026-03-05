@@ -103,6 +103,14 @@ export function useNonogramGame() {
     const solved = rowNowDone && colNowDone && checkWin(newGrid, prev.clues);
 
     if (solved) {
+      // Fill all remaining empty cells with X
+      for (let row = 0; row < newGrid.length; row++) {
+        for (let col2 = 0; col2 < newGrid[row].length; col2++) {
+          if (newGrid[row][col2] === CellState.EMPTY) {
+            newGrid[row][col2] = CellState.MARKED_X;
+          }
+        }
+      }
       persistence.markCompleted(prev.puzzle.id);
       setCompletedIds(persistence.getCompletedStatus());
       setShowVictory(true);
