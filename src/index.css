@@ -64,6 +64,7 @@
     z-index: -1;
     pointer-events: none;
     animation: float-dragon 50s infinite alternate ease-in-out;
+    transition: opacity 1s ease-in-out;
   }
 
   .bg-illustration-tiger {
@@ -84,6 +85,7 @@
     z-index: -1;
     pointer-events: none;
     animation: float-tiger 60s infinite alternate ease-in-out;
+    transition: opacity 1s ease-in-out;
   }
 
   .bg-illustration-crane {
@@ -104,6 +106,7 @@
     z-index: -1;
     pointer-events: none;
     animation: float-crane 45s infinite alternate ease-in-out;
+    transition: opacity 1s ease-in-out;
   }
 
   @media (min-width: 768px) {
@@ -139,6 +142,16 @@
     z-index: -1;
     pointer-events: none;
     animation: float 25s infinite alternate ease-in-out;
+    transition: opacity 1s ease-in-out;
+  }
+
+  /* Fade out everything distracting during gameplay */
+  [data-screen="play"] .bg-illustration-dragon,
+  [data-screen="play"] .bg-illustration-tiger,
+  [data-screen="play"] .bg-illustration-crane,
+  [data-screen="play"] .ink-brush {
+    opacity: 0 !important;
+    pointer-events: none;
   }
 
   @keyframes float {
