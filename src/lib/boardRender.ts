@@ -41,14 +41,24 @@ function drawCell(
 ): void {
   if (state === CellState.FILLED) {
     const inset = 1;
-    ctx.fillStyle = isSolved ? '#10b981' : '#ffffff';
+    ctx.fillStyle = isSolved ? '#c9a227' : '#ae2012';
+    // Add a slight roundness or "brush" feel by using a smaller rect with rounded corners if possible
+    // simplified for now with updated colors
     ctx.fillRect(x + inset, y + inset, size - inset * 2, size - inset * 2);
+
+    // Aesthetic inner glow for solved cells
+    if (isSolved) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 2, y + 2, size - 4, size - 4);
+    }
   } else if (state === CellState.MARKED_X) {
-    const pad = Math.max(4, size * 0.22);
-    ctx.strokeStyle = '#3f3f46';
-    ctx.lineWidth = Math.max(2, size * 0.08);
+    const pad = Math.max(4, size * 0.25);
+    ctx.strokeStyle = '#5a4d41'; // Ink-like brown
+    ctx.lineWidth = Math.max(1.5, size * 0.06);
     ctx.lineCap = 'round';
     ctx.beginPath();
+    // Slightly randomized "brush" stroke feel
     ctx.moveTo(x + pad, y + pad);
     ctx.lineTo(x + size - pad, y + size - pad);
     ctx.moveTo(x + size - pad, y + pad);
@@ -66,11 +76,10 @@ function drawGridLines(
   h: number,
 ): void {
   // Thin lines (1px) for every cell boundary
-  ctx.strokeStyle = '#27272a';
+  ctx.strokeStyle = '#251e16';
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let r = 0; r <= rows; r++) {
-    // Skip positions where thick lines will be drawn
     if (r % 5 === 0 && r !== 0 && r !== rows) continue;
     const y = r * cellSize + 0.5;
     ctx.moveTo(0, y);
@@ -85,7 +94,7 @@ function drawGridLines(
   ctx.stroke();
 
   // Thick lines (2px) every 5 cells (interior only)
-  ctx.strokeStyle = '#52525b';
+  ctx.strokeStyle = '#c9a22733'; // Faded Gold
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let r = 5; r < rows; r += 5) {
@@ -99,6 +108,11 @@ function drawGridLines(
     ctx.lineTo(x, h);
   }
   ctx.stroke();
+
+  // Border
+  ctx.strokeStyle = '#c9a22766';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, w, h);
 }
 
 /**

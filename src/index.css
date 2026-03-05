@@ -4,15 +4,19 @@
 
 @layer base {
   :root {
-    --bg-primary: #000000;
-    --text-primary: #ffffff;
-    --text-secondary: #71717a;
-    --accent: #10b981;
+    --bg-primary: #0a0a0a;
+    --bg-paper: #f4f1ea;
+    --text-primary: #fdf5e6;
+    --text-secondary: #a0a0a0;
+    --accent: #ae2012;
+    /* Cinnabar Red */
+    --accent-gold: #c9a227;
+    --ink: #1a1a1a;
   }
 
   body {
-    @apply bg-black text-white antialiased overflow-x-hidden;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-[#0a0a0a] text-[#fdf5e6] antialiased overflow-x-hidden;
+    font-family: 'Noto Serif JP', 'Inter', system-ui, serif;
   }
 
   button {
@@ -21,77 +25,84 @@
 }
 
 @layer components {
-  .cyber-grid-bg {
+  .oriental-bg {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background:
-      radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 1) 0%, rgba(0, 0, 0, 1) 100%);
+      radial-gradient(circle at 50% 50%, #1a1510 0%, #0a0a0a 100%);
     z-index: -2;
   }
 
-  .cyber-grid-bg::after {
+  .oriental-bg::after {
     content: "";
     position: absolute;
     inset: 0;
-    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-    mask-image: radial-gradient(circle at 50% 50%, black, transparent);
+    background-image: url("https://www.transparenttextures.com/patterns/p6.png");
+    /* Subtle paper/canvas texture */
+    opacity: 0.15;
     z-index: -1;
   }
 
-  .floating-blob {
+  .ink-brush {
     position: fixed;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(174, 32, 18, 0.08) 0%, transparent 70%);
     border-radius: 50%;
-    filter: blur(80px);
+    filter: blur(100px);
     z-index: -1;
     pointer-events: none;
-    animation: float 20s infinite alternate ease-in-out;
+    animation: float 25s infinite alternate ease-in-out;
   }
 
   @keyframes float {
     0% {
-      transform: translate(-10%, -10%);
+      transform: translate(-5%, -5%) rotate(0deg);
     }
 
     100% {
-      transform: translate(10%, 10%);
+      transform: translate(10%, 10%) rotate(5deg);
     }
   }
 
-  .cyber-card {
-    @apply relative bg-zinc-900/30 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 transition-all duration-500 ease-out overflow-hidden cursor-pointer;
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  .oriental-card {
+    @apply relative bg-[#1a1510]/60 backdrop-blur-sm border border-[#c9a227]/20 rounded-lg p-8 transition-all duration-500 ease-out overflow-hidden cursor-pointer;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
   }
 
-  .cyber-card::before {
+  .oriental-card::before {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-    transform: translateX(-100%);
-    transition: transform 0.8s;
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.05), transparent);
+    pointer-events: none;
   }
 
-  .cyber-card:hover::before {
-    transform: translateX(100%);
+  .oriental-card:hover {
+    @apply border-[#c9a227]/50 bg-[#251e16]/80 -translate-y-1;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(174, 32, 18, 0.1);
   }
 
-  .cyber-card:hover {
-    @apply border-white/20 bg-zinc-900/50 scale-[1.02] -translate-y-1;
-    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+  .stamp-locked {
+    @apply border-2 border-[#333] text-[#333] opacity-40 grayscale;
+    font-family: 'Ma Shan Zheng', cursive;
+    writing-mode: vertical-rl;
   }
 
-  /* Ensure staggered animate-in cards respect their delay */
+  .stamp-completed {
+    @apply border-2 border-[#ae2012] text-[#ae2012] opacity-80;
+    font-family: 'Ma Shan Zheng', cursive;
+    writing-mode: vertical-rl;
+    transform: rotate(-15deg);
+    box-shadow: inset 0 0 5px rgba(174, 32, 18, 0.3);
+  }
+
   .animate-in {
     animation-fill-mode: both;
   }

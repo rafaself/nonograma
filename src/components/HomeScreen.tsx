@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES } from '../data/puzzles';
-import { Check, Play, Lock, ChevronRight } from 'lucide-react';
+import { Play, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
@@ -35,92 +35,99 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
   return (
     <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 relative z-10">
       {/* ── Header ── */}
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] -z-10 animate-pulse" />
-        <div className="flex flex-col items-center gap-5">
-          <img
-            src="/favicon.png"
-            alt="Logo"
-            className="w-16 h-16 md:w-24 md:h-24 rounded-2xl shadow-2xl shadow-emerald-500/20 ring-1 ring-white/10"
-          />
-          <h1 className="text-6xl md:text-8xl font-semibold tracking-tighter text-center bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-zinc-600">
+      <div className="relative mb-10">
+        <div className="absolute inset-0 bg-[#ae2012]/20 blur-[100px] -z-10 animate-pulse" />
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <img
+              src="/favicon.png"
+              alt="Logo"
+              className="w-20 h-20 md:w-28 md:h-28 rounded-3xl shadow-2xl shadow-red-950/40 border border-[#c9a227]/30"
+            />
+            <div className="absolute -bottom-2 -right-2 bg-[#ae2012] text-white px-2 py-1 text-[10px] font-bold rounded shadow-lg border border-[#c9a227]/40 rotate-12">
+              NONO
+            </div>
+          </div>
+          <h1 className="text-7xl md:text-9xl font-bold tracking-tighter text-center font-['Ma_Shan_Zheng'] bg-clip-text text-transparent bg-gradient-to-b from-[#fdf5e6] via-[#fdf5e6] to-[#c9a227]">
             Levels
           </h1>
         </div>
       </div>
 
       {/* ── Progress bar ── */}
-      <div className="w-full max-w-xs mb-14 flex flex-col items-center gap-2">
-        <div className="flex items-center justify-between w-full text-[11px] font-bold tracking-[0.25em] uppercase text-zinc-500">
-          <span>Progress</span>
-          <span className="tabular-nums">{completedCount}/{totalCount}</span>
+      <div className="w-full max-w-xs mb-16 flex flex-col items-center gap-3">
+        <div className="flex items-center justify-between w-full text-[11px] font-bold tracking-[0.3em] uppercase text-[#a0a0a0]">
+          <span>Enlightenment</span>
+          <span className="tabular-nums text-[#ae2012]">{completedCount}/{totalCount}</span>
         </div>
-        <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+        <div className="w-full h-2 rounded-full bg-[#1a1510] border border-[#c9a227]/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-[#ae2012] via-[#ae2012] to-[#c9a227] transition-all duration-1000 ease-out"
             style={{ width: `${pct}%` }}
           />
         </div>
       </div>
 
       {/* ── Puzzle sections grouped by size ── */}
-      <div className="w-full flex flex-col gap-14">
+      <div className="w-full flex flex-col gap-16">
         {groups.map((group) => {
           const groupCompleted = group.puzzles.filter(p => completedIds.includes(p.id)).length;
           return (
             <section key={group.size}>
               {/* Section header */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center justify-center px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-sm font-bold tabular-nums tracking-wide text-zinc-300">
+              <div className="flex items-center gap-6 mb-8">
+                <div className="flex items-center gap-4">
+                  <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-sm bg-[#ae2012]/10 border border-[#ae2012]/30 text-sm font-bold tabular-nums tracking-wide text-[#ae2012] font-['Ma_Shan_Zheng']">
                     {group.size}
                   </span>
-                  <span className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-600">
-                    {groupCompleted}/{group.puzzles.length} decoded
+                  <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#7a7a7a]">
+                    {groupCompleted}/{group.puzzles.length} UNVEILED
                   </span>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-zinc-800 to-transparent" />
+                <div className="flex-1 h-px bg-gradient-to-r from-[#c9a227]/30 to-transparent" />
               </div>
 
               {/* Cards grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                 {group.puzzles.map((p, idx) => {
                   const isCompleted = completedIds.includes(p.id);
                   return (
                     <div
                       key={p.id}
                       onClick={() => onStartPuzzle(p)}
-                      style={{ animationDelay: `${idx * 40}ms` }}
+                      style={{ animationDelay: `${idx * 50}ms` }}
                       className={cn(
-                        "relative flex flex-col justify-between rounded-2xl p-4 md:p-5 cursor-pointer transition-all duration-300 ease-out overflow-hidden group",
-                        "border backdrop-blur-md animate-in fade-in slide-in-from-bottom-4",
+                        "oriental-card animate-in fade-in slide-in-from-bottom-4 flex flex-col justify-between aspect-square",
                         isCompleted
-                          ? "bg-emerald-500/[0.04] border-emerald-500/15 hover:border-emerald-500/30 hover:bg-emerald-500/[0.08]"
-                          : "bg-zinc-900/40 border-white/[0.06] hover:border-white/15 hover:bg-zinc-900/60"
+                          ? "border-[#ae2012]/30 hover:border-[#ae2012]/60"
+                          : "border-[#c9a227]/10"
                       )}
                     >
                       {/* Level number + status */}
-                      <div className="flex items-center justify-between mb-5">
-                        <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold tracking-widest text-[#7a7a7a]">
                           {String(p.globalIndex + 1).padStart(2, '0')}
                         </span>
-                        {isCompleted ? (
-                          <div className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                            <Check className="w-3 h-3 text-emerald-400" strokeWidth={3} />
+                        {isCompleted && (
+                          <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
+                            <span className="font-['Ma_Shan_Zheng'] text-[10px] text-[#ae2012] leading-none text-center">
+                              SUCCESS
+                            </span>
                           </div>
-                        ) : (
-                          <Lock className="w-3.5 h-3.5 text-zinc-700" />
                         )}
                       </div>
 
                       {/* Title */}
-                      <div className="mb-4">
-                        <h3 className="text-lg md:text-xl font-semibold tracking-tight leading-tight">
+                      <div className="flex-1 flex flex-col justify-center">
+                        <h3 className={cn(
+                          "text-xl md:text-2xl font-bold tracking-tight leading-tight",
+                          isCompleted ? "font-['Noto_Serif_JP']" : "font-mono opacity-20"
+                        )}>
                           {isCompleted ? (
-                            <span className="text-white">{p.title}</span>
+                            <span className="text-[#fdf5e6]">{p.title}</span>
                           ) : (
-                            <span className="text-zinc-700 font-mono tracking-wider select-none text-base">
-                              {'█'.repeat(Math.min(p.title.length, 6))}
+                            <span className="text-[#a0a0a0]">
+                              {'王'.repeat(Math.min(p.title.length, 3))}
                             </span>
                           )}
                         </h3>
@@ -128,22 +135,17 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
 
                       {/* Action hint */}
                       <div className={cn(
-                        "flex items-center gap-1.5 text-[10px] font-bold tracking-[0.15em] uppercase transition-colors",
+                        "mt-4 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors",
                         isCompleted
-                          ? "text-emerald-500/60 group-hover:text-emerald-400"
-                          : "text-zinc-600 group-hover:text-zinc-400"
+                          ? "text-[#ae2012] group-hover:text-red-400"
+                          : "text-[#c9a227]/60 group-hover:text-[#c9a227]"
                       )}>
                         {isCompleted ? (
-                          <>Replay <ChevronRight className="w-3 h-3" /></>
+                          <>TRANSCEND <ChevronRight className="w-3 h-3" /></>
                         ) : (
-                          <>Decode <Play className="w-2.5 h-2.5 fill-current" /></>
+                          <>RESOLVE <Play className="w-2.5 h-2.5 fill-current" /></>
                         )}
                       </div>
-
-                      {/* Completed shimmer edge */}
-                      {isCompleted && (
-                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
-                      )}
                     </div>
                   );
                 })}

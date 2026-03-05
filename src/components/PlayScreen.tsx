@@ -23,13 +23,16 @@ export function PlayScreen({
     <>
       <button
         onClick={onBack}
-        className="fixed top-3 left-3 md:top-6 md:left-6 z-50 flex items-center gap-1 text-zinc-500 hover:text-white transition-colors text-xs md:text-sm"
+        className="fixed top-4 left-4 md:top-8 md:left-8 z-50 flex items-center gap-2 text-[#a0a0a0] hover:text-[#ae2012] transition-colors text-xs md:text-sm group"
       >
-        <ChevronLeft className="w-4 h-4" /> Back to Matrix
+        <div className="w-8 h-8 rounded-full border border-[#c9a227]/20 flex items-center justify-center group-hover:border-[#ae2012]/50 transition-colors">
+          <ChevronLeft className="w-4 h-4" />
+        </div>
+        <span className="font-['Ma_Shan_Zheng'] tracking-widest uppercase">Return to Trial</span>
       </button>
 
-      <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0">
-        <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 px-2 md:px-4 overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
+        <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 px-4 md:px-8 overflow-hidden">
           <NonogramBoardCanvas
             grid={gameState.grid}
             clues={gameState.clues}
@@ -41,45 +44,48 @@ export function PlayScreen({
           />
         </div>
 
-        <button
-          onClick={() =>
-            onSetInputMode(
-              inputMode === CellState.FILLED
-                ? CellState.MARKED_X
-                : CellState.FILLED
-            )
-          }
-          className="mt-4 md:mt-8 mb-4 relative flex items-center w-28 h-12 md:w-32 md:h-14 rounded-full bg-white/5 border border-white/10 p-1.5 cursor-pointer backdrop-blur-md transition-all hover:bg-white/10 active:scale-95 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-          aria-label={`Switch to ${inputMode === CellState.FILLED ? 'mark' : 'fill'} mode`}
-        >
-          {/* Sliding thumb */}
-          <span
-            className={cn(
-              "absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] rounded-full shadow-lg transition-all duration-300 ease-in-out bg-white",
-              inputMode === CellState.FILLED
-                ? "translate-x-[calc(100%+0px)]"
-                : "translate-x-0"
-            )}
-          />
-          {/* X icon – left side */}
-          <span
-            className={cn(
-              "relative z-10 flex items-center justify-center w-1/2 h-full transition-colors duration-300",
-              inputMode === CellState.MARKED_X ? "text-zinc-900" : "text-zinc-500 group-hover:text-zinc-400"
-            )}
+        <div className="mt-6 md:mt-10 mb-6 flex flex-col items-center gap-4">
+          <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#7a7a7a]">Instruction</span>
+          <button
+            onClick={() =>
+              onSetInputMode(
+                inputMode === CellState.FILLED
+                  ? CellState.MARKED_X
+                  : CellState.FILLED
+              )
+            }
+            className="relative flex items-center w-32 h-14 md:w-40 md:h-16 rounded-sm bg-[#1a1510] border-2 border-[#c9a227]/20 p-2 cursor-pointer backdrop-blur-md transition-all hover:border-[#c9a227]/50 active:scale-95 group focus:outline-none"
+            aria-label={`Switch to ${inputMode === CellState.FILLED ? 'mark' : 'fill'} mode`}
           >
-            <X className="w-5 h-5 md:w-6 md:h-6" strokeWidth={3} />
-          </span>
-          {/* Fill icon – right side */}
-          <span
-            className={cn(
-              "relative z-10 flex items-center justify-center w-1/2 h-full transition-colors duration-300",
-              inputMode === CellState.FILLED ? "text-zinc-900" : "text-zinc-500 group-hover:text-zinc-400"
-            )}
-          >
-            <Square className="w-4 h-4 md:w-5 md:h-5 fill-current" />
-          </span>
-        </button>
+            {/* Sliding thumb */}
+            <span
+              className={cn(
+                "absolute top-2 bottom-2 w-[calc(50%-12px)] rounded-sm shadow-xl transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) bg-[#ae2012]",
+                inputMode === CellState.FILLED
+                  ? "translate-x-[calc(100%+8px)]"
+                  : "translate-x-0"
+              )}
+            />
+            {/* X icon – left side */}
+            <span
+              className={cn(
+                "relative z-10 flex items-center justify-center w-1/2 h-full transition-colors duration-500",
+                inputMode === CellState.MARKED_X ? "text-[#fdf5e6]" : "text-[#7a7a7a]"
+              )}
+            >
+              <X className="w-6 h-6 md:w-7 md:h-7" strokeWidth={3} />
+            </span>
+            {/* Fill icon – right side */}
+            <span
+              className={cn(
+                "relative z-10 flex items-center justify-center w-1/2 h-full transition-colors duration-500",
+                inputMode === CellState.FILLED ? "text-[#fdf5e6]" : "text-[#7a7a7a]"
+              )}
+            >
+              <Square className="w-5 h-5 md:w-6 md:h-6 fill-current" />
+            </span>
+          </button>
+        </div>
       </div>
     </>
   );

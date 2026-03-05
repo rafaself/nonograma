@@ -161,16 +161,19 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
               <div
                 key={c}
                 className={cn(
-                  'flex flex-col justify-end items-center',
-                  c % 5 === 4 && c !== cols - 1 && 'border-r-2 border-r-zinc-600',
-                  satisfied ? 'text-zinc-600' : 'text-white',
+                  'flex flex-col justify-end items-center transition-colors',
+                  c % 5 === 4 && c !== cols - 1 && 'border-r border-r-[#c9a227]/20',
+                  satisfied ? 'text-[#5a4d41]' : 'text-[#ae2012]',
                 )}
                 style={{ width: cellSize, fontSize, paddingBottom: 2 }}
               >
                 {colClues.map((clue, i) => (
                   <span
                     key={i}
-                    className="font-bold leading-tight"
+                    className={cn(
+                      "font-bold leading-tight font-['Noto_Serif_JP'] transition-colors",
+                      satisfied ? "text-[#5a4d41]" : "text-[#ae2012]"
+                    )}
                     style={{ marginBottom: i < colClues.length - 1 ? spacing : 0 }}
                   >
                     {clue > 0 ? clue : ''}
@@ -191,17 +194,19 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
               <div
                 key={r}
                 className={cn(
-                  'flex justify-end items-center',
-                  r % 5 === 4 && r !== rows - 1 && 'border-b-2 border-b-zinc-600',
-                  satisfied ? 'text-zinc-600' : 'text-white',
+                  'flex justify-end items-center px-2 transition-colors',
+                  r % 5 === 4 && r !== rows - 1 && 'border-b border-b-[#c9a227]/20',
+                  satisfied ? 'text-[#5a4d41]' : 'text-[#ae2012]',
                 )}
                 style={{ height: cellSize, paddingRight: 4, fontSize, gap: spacing }}
               >
-                {rowClues.map((clue, i) => (
-                  <span key={i} className="font-bold">
-                    {clue > 0 ? clue : ''}
-                  </span>
-                ))}
+                <div className="flex gap-2">
+                  {rowClues.map((clue, i) => (
+                    <span key={i} className="font-bold font-['Noto_Serif_JP']">
+                      {clue > 0 ? clue : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
             );
           })}
