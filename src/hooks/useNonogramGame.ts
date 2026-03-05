@@ -13,11 +13,25 @@ export function useNonogramGame() {
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
   const [completedIds, setCompletedIds] = useState<string[]>(() => persistence.getCompletedStatus());
   const [showVictory, setShowVictory] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(() => persistence.getMuted());
+  const [volume, setVolume] = useState(() => persistence.getVolume());
 
-  const play = useCallback((fn: () => void) => {
-    if (!muted) fn();
-  }, [muted]);
+  const play = useCallback((fn: (v: number) => void) => {
+    if (!muted) fn(volume);
+  }, [muted, volume]);
+
+  const toggleMuted = useCallback(() => {
+    setMuted((m: boolean) => {
+      const next = !m;
+      persistence.setMuted(next);
+      return next;
+    });
+  }, []);
+
+  const changeVolume = useCallback((v: number) => {
+    setVolume(v);
+    persistence.setVolume(v);
+  }, []);
 
   const startPuzzle = useCallback((puzzle: Puzzle) => {
     const clues = deriveClues(puzzle.solution);
@@ -144,7 +158,9 @@ export function useNonogramGame() {
     showVictory,
     setShowVictory,
     muted,
-    setMuted,
+    volume,
+    toggleMuted,
+    changeVolume,
     startPuzzle,
     goHome,
     nextPuzzle,

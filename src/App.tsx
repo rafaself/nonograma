@@ -1,4 +1,5 @@
-import { Volume2, VolumeX, Undo2, Redo2, RotateCcw } from 'lucide-react';
+import { Undo2, Redo2, RotateCcw } from 'lucide-react';
+import { VolumeControl } from './components/VolumeControl';
 import { useNonogramGame } from './hooks/useNonogramGame';
 import { HomeScreen } from './screens/HomeScreen';
 import { PlayScreen } from './screens/PlayScreen';
@@ -41,17 +42,12 @@ export default function App() {
             </button>
           </>
         )}
-        <button
-          onClick={() => game.setMuted(m => !m)}
-          className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
-          title={game.muted ? 'Unmute' : 'Mute'}
-        >
-          {game.muted ? (
-            <VolumeX className="w-4 h-4 md:w-6 md:h-6 text-[#5a4d41]" />
-          ) : (
-            <Volume2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
-          )}
-        </button>
+        <VolumeControl
+          muted={game.muted}
+          volume={game.volume}
+          onToggleMute={game.toggleMuted}
+          onVolumeChange={game.changeVolume}
+        />
       </div>
 
       <main className="w-full max-w-6xl flex-1 flex flex-col px-2 md:px-12 py-14 md:py-24">

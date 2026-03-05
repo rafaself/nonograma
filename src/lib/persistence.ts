@@ -100,5 +100,22 @@ export const persistence = {
     resetPuzzle(puzzleId: string) {
         const id = sanitizeId(puzzleId);
         localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
+    },
+
+    getMuted(): boolean {
+        return localStorage.getItem('nonogram_muted') === 'true';
+    },
+
+    setMuted(muted: boolean) {
+        localStorage.setItem('nonogram_muted', muted.toString());
+    },
+
+    getVolume(): number {
+        const val = localStorage.getItem('nonogram_volume');
+        return val ? parseFloat(val) : 0.5;
+    },
+
+    setVolume(volume: number) {
+        localStorage.setItem('nonogram_volume', volume.toString());
     }
 };

@@ -124,4 +124,53 @@
   .collapse-content {
     overflow: hidden;
   }
+
+  /* Volume Slider Styles */
+  input[type="range"].volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type="range"].volume-slider::-webkit-slider-runnable-track {
+    background: rgba(201, 162, 39, 0.2);
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  input[type="range"].volume-slider::-moz-range-track {
+    background: rgba(201, 162, 39, 0.2);
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  input[type="range"].volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px; /* Center thumb on track */
+    background-color: #ae2012;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    border: 2px solid #c9a227;
+    box-shadow: 0 0 10px rgba(174, 32, 18, 0.5);
+    transition: all 0.2s ease;
+  }
+
+  input[type="range"].volume-slider::-moz-range-thumb {
+    background-color: #ae2012;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    border: 2px solid #c9a227;
+    box-shadow: 0 0 10px rgba(174, 32, 18, 0.5);
+    transition: all 0.2s ease;
+  }
+
+  input[type="range"].volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background-color: #c9a227;
+    border-color: #ae2012;
+  }
 }
