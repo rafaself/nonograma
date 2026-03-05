@@ -107,10 +107,10 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#c9a227]/30 to-transparent" />
                 <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-full border border-[#c9a227]/10 text-[#c9a227]/40 group-hover/header:border-[#ae2012]/40 group-hover/header:text-[#ae2012] transition-all duration-500",
+                  "flex items-center justify-center w-8 h-8 rounded-full border border-[#c9a227]/30 bg-[#c9a227]/5 text-[#c9a227]/60 group-hover/header:border-[#ae2012]/60 group-hover/header:text-[#ae2012] group-hover/header:bg-[#ae2012]/10 transition-all duration-500",
                   isCollapsed ? "rotate-[-90deg]" : "rotate-0"
                 )}>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-5 h-5" />
                 </div>
               </button>
 
