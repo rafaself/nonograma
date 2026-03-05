@@ -247,6 +247,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
         {/* Canvas grid */}
         <canvas
           ref={canvasRef}
+          data-testid="nonogram-canvas"
           style={{
             width: cellSize * cols,
             height: cellSize * rows,
