@@ -43,7 +43,8 @@ const gameState: GameState = {
 describe('PlayScreen', () => {
   it('forwards color grids only when present', () => {
     canvasPropsSpy.mockClear();
-    const { resultColors: _resultColors, backgroundColors: _backgroundColors, ...puzzleWithoutColors } = gameState.puzzle;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { resultColors, backgroundColors, ...puzzleWithoutColors } = gameState.puzzle;
 
     const noColorsState: GameState = {
       ...gameState,

@@ -155,7 +155,7 @@ export function useNonogramGame() {
 
   const isLastPuzzle = useMemo(() => gameState
     ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
-    : false, [gameState?.puzzle.id]);
+    : false, [gameState]);
 
   const canUndo = undoHistory.length > 0;
   const canRedo = redoHistory.length > 0;
