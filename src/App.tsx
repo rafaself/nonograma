@@ -1,125 +1,12 @@
-import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Puzzle, GameState } from './lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from './lib/game-logic';
 import { persistence } from './lib/persistence';
 import { PUZZLES } from './data/puzzles';
-import { ChevronLeft, RotateCcw, Undo2, Play, X, Check, Lock, Grid3X3, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, RotateCcw, Undo2, Play, Check, Lock, Grid3X3, Volume2, VolumeX } from 'lucide-react';
 import { sounds } from './lib/sounds';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-// --- Components ---
-
-interface GridProps {
-  grid: CellState[][];
-  clues: { rows: number[][]; cols: number[][] };
-  onCellClick: (r: number, c: number, button: number) => void;
-  isSolved: boolean;
-}
-
-const Grid = ({ grid, clues, onCellClick, isSolved }: GridProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [cellSize, setCellSize] = useState(32);
-  const height = grid.length;
-  const width = grid[0].length;
-
-  const maxRowClueCount = Math.max(...clues.rows.map(r => r.length));
-  const maxColClueCount = Math.max(...clues.cols.map(c => c.length));
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const compute = () => {
-      const availW = el.clientWidth;
-      // Use viewport height minus space for header (~100px) and controls (~80px)
-      const availH = window.innerHeight - 180;
-      const fontSize = 12;
-      const rowClueW = maxRowClueCount * fontSize * 1.2 + 12;
-      const colClueH = maxColClueCount * fontSize * 1.3 + 8;
-      const sizeFromW = (availW - rowClueW) / width;
-      const sizeFromH = (availH - colClueH) / height;
-      const size = Math.floor(Math.min(sizeFromW, sizeFromH));
-      setCellSize(Math.max(20, Math.min(48, size)));
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, [width, height, maxRowClueCount, maxColClueCount]);
-
-  const fontSize = Math.max(8, Math.min(14, cellSize * 0.35));
-  const iconSize = Math.max(12, cellSize * 0.55);
-  const rowClueWidth = maxRowClueCount * (fontSize * 1.4) + 8;
-  const colClueHeight = maxColClueCount * (fontSize * 1.4) + 6;
-
-  return (
-    <div ref={containerRef} className="flex items-center justify-center select-none w-full">
-      <div className="grid gap-0" style={{
-        gridTemplateColumns: `${rowClueWidth}px repeat(${width}, ${cellSize}px)`,
-        gridTemplateRows: `${colClueHeight}px repeat(${height}, ${cellSize}px)`
-      }}>
-        <div />
-
-        {clues.cols.map((colClues, c) => {
-          const isSatisfied = isLineSatisfied(grid.map(row => row[c]), colClues);
-          const isEmpty = colClues.length === 1 && colClues[0] === 0;
-          return (
-            <div key={`col-${c}`} className={cn(
-              "flex flex-col justify-end items-center border-l border-zinc-800",
-              c % 5 === 4 && c !== width - 1 ? "border-r-2 border-r-zinc-600" : "border-r border-zinc-800",
-              isSatisfied && !isEmpty ? "text-zinc-600" : "text-white"
-            )} style={{ paddingBottom: 2, fontSize }}>
-              {colClues.map((clue, i) => (
-                <span key={i} className="font-bold leading-tight">{clue > 0 ? clue : ''}</span>
-              ))}
-            </div>
-          );
-        })}
-
-        {grid.map((row, r) => (
-          <Fragment key={`row-frag-${r}`}>
-            <div className={cn(
-              "flex justify-end items-center border-t border-zinc-800",
-              r % 5 === 4 && r !== height - 1 ? "border-b-2 border-b-zinc-600" : "border-b border-zinc-800",
-              isLineSatisfied(row, clues.rows[r]) && !(clues.rows[r].length === 1 && clues.rows[r][0] === 0)
-                ? "text-zinc-600" : "text-white"
-            )} style={{ paddingRight: 4, fontSize, gap: 2 }}>
-              {clues.rows[r].map((clue, i) => (
-                <span key={i} className="font-bold">{clue > 0 ? clue : ''}</span>
-              ))}
-            </div>
-
-            {row.map((cell, c) => (
-              <button
-                key={`${r}-${c}`}
-                onClick={() => onCellClick(r, c, 0)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  onCellClick(r, c, 2);
-                }}
-                disabled={isSolved}
-                className={cn(
-                  "border border-zinc-800 flex items-center justify-center relative active:scale-90 transition-transform",
-                  r % 5 === 4 && r !== height - 1 && "border-b-zinc-500",
-                  c % 5 === 4 && c !== width - 1 && "border-r-zinc-500",
-                  cell === CellState.EMPTY && "bg-transparent hover:bg-zinc-800/50",
-                  cell === CellState.FILLED && "bg-white",
-                  isSolved && cell === CellState.FILLED && "bg-emerald-500"
-                )}
-                style={{ width: cellSize, height: cellSize }}
-              >
-                {cell === CellState.MARKED_X && <X style={{ width: iconSize, height: iconSize }} className="text-zinc-700" strokeWidth={3} />}
-              </button>
-            ))}
-          </Fragment>
-        ))}
-      </div>
-    </div>
-  );
-};
+import { cn } from './lib/utils';
+import { NonogramBoardCanvas } from './components/NonogramBoardCanvas';
 
 // --- App Root ---
 
@@ -344,11 +231,14 @@ export default function App() {
             </div>
 
             <div className="flex-1 w-full min-h-0 px-2 md:px-4">
-              <Grid
+              <NonogramBoardCanvas
                 grid={gameState.grid}
                 clues={gameState.clues}
-                onCellClick={handleCellAction}
+                onCellAction={(row, col, action) => {
+                  handleCellAction(row, col, action === 'mark_x' ? 2 : 0);
+                }}
                 isSolved={gameState.isSolved}
+                inputMode={inputMode}
               />
             </div>
 
