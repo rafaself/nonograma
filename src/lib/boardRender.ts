@@ -6,12 +6,13 @@ export interface RenderParams {
   cellSize: number;
   isSolved: boolean;
   dpr: number;
+  resultColors?: (string | null)[][];
 }
 
 /**
  * Full board redraw. Call whenever grid state, size, or solved status changes.
  */
-export function renderBoard({ ctx, grid, cellSize, isSolved, dpr }: RenderParams): void {
+export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors }: RenderParams): void {
   const rows = grid.length;
   const cols = grid[0].length;
   const w = cellSize * cols;
@@ -23,7 +24,8 @@ export function renderBoard({ ctx, grid, cellSize, isSolved, dpr }: RenderParams
   // Draw cells
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      drawCell(ctx, grid[r][c], c * cellSize, r * cellSize, cellSize, isSolved);
+      const cellResultColor = resultColors?.[r]?.[c];
+      drawCell(ctx, grid[r][c], c * cellSize, r * cellSize, cellSize, isSolved, cellResultColor);
     }
   }
 
@@ -38,10 +40,11 @@ function drawCell(
   y: number,
   size: number,
   isSolved: boolean,
+  resultColor?: string | null,
 ): void {
   if (state === CellState.FILLED) {
     const inset = 1;
-    ctx.fillStyle = isSolved ? '#c9a227' : '#ae2012';
+    ctx.fillStyle = isSolved ? (resultColor || '#c9a227') : '#ae2012';
     // Add a slight roundness or "brush" feel by using a smaller rect with rounded corners if possible
     // simplified for now with updated colors
     ctx.fillRect(x + inset, y + inset, size - inset * 2, size - inset * 2);

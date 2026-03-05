@@ -11,6 +11,7 @@ export interface NonogramBoardCanvasProps {
   onCellAction: (row: number, col: number, action: 'fill' | 'mark_x') => void;
   isSolved: boolean;
   inputMode: CellState.FILLED | CellState.MARKED_X;
+  resultColors?: (string | null)[][];
 }
 
 interface DragState {
@@ -25,6 +26,7 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
   onCellAction,
   isSolved,
   inputMode,
+  resultColors,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,8 +71,8 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     canvas.width = cellSize * cols * dpr;
     canvas.height = cellSize * rows * dpr;
 
-    renderBoard({ ctx, grid, cellSize, isSolved, dpr });
-  }, [grid, cellSize, isSolved, cols, rows]);
+    renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors });
+  }, [grid, cellSize, isSolved, cols, rows, resultColors]);
 
   // --- Pointer event helpers ---
   const getCell = useCallback(

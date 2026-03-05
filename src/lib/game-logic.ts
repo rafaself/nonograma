@@ -10,6 +10,7 @@ export interface Puzzle {
     width: number;
     height: number;
     solution: boolean[][]; // [row][col]
+    resultColors?: (string | null)[][]; // [row][col], hex or color name
 }
 
 export interface Clues {
