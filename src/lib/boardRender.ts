@@ -18,6 +18,7 @@ export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors, 
   const cols = grid[0].length;
   const w = cellSize * cols;
   const h = cellSize * rows;
+  const hasScenicBackground = isSolved && Boolean(backgroundColors?.some((row) => row.some((color) => color !== null)));
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
@@ -32,7 +33,7 @@ export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors, 
   }
 
   // Draw grid lines on top
-  drawGridLines(ctx, rows, cols, cellSize, w, h);
+  drawGridLines(ctx, rows, cols, cellSize, w, h, hasScenicBackground);
 }
 
 function drawCell(
@@ -52,14 +53,15 @@ function drawCell(
 
   if (state === CellState.FILLED) {
     const inset = 1;
-    ctx.fillStyle = isSolved ? (resultColor || '#c9a227') : '#ae2012';
+    const solvedFillColor = resultColor || '#c9a227';
+    ctx.fillStyle = isSolved ? solvedFillColor : '#ae2012';
     // Add a slight roundness or "brush" feel by using a smaller rect with rounded corners if possible
     // simplified for now with updated colors
     ctx.fillRect(x + inset, y + inset, size - inset * 2, size - inset * 2);
 
     // Aesthetic inner glow for solved cells
     if (isSolved) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = getSolvedInsetStroke(solvedFillColor);
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 2, y + 2, size - 4, size - 4);
     }
@@ -85,9 +87,10 @@ function drawGridLines(
   cellSize: number,
   w: number,
   h: number,
+  hasScenicBackground: boolean,
 ): void {
   // Thin lines (1px) for every cell boundary
-  ctx.strokeStyle = '#251e16';
+  ctx.strokeStyle = hasScenicBackground ? 'rgba(37, 30, 22, 0.72)' : '#251e16';
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let r = 0; r <= rows; r++) {
@@ -105,7 +108,7 @@ function drawGridLines(
   ctx.stroke();
 
   // Thick lines (2px) every 5 cells (interior only)
-  ctx.strokeStyle = '#c9a22733'; // Faded Gold
+  ctx.strokeStyle = hasScenicBackground ? 'rgba(184, 150, 68, 0.18)' : '#c9a22733';
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let r = 5; r < rows; r += 5) {
@@ -124,6 +127,35 @@ function drawGridLines(
   ctx.strokeStyle = '#c9a22766';
   ctx.lineWidth = 2;
   ctx.strokeRect(0, 0, w, h);
+}
+
+function getSolvedInsetStroke(fillColor: string): string {
+  const luminance = getRelativeLuminance(fillColor);
+  return luminance < 0.45 ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 0, 0, 0.18)';
+}
+
+function getRelativeLuminance(color: string): number {
+  const hex = color.trim().replace(/^#/, '');
+  const normalized = hex.length === 3
+    ? hex.split('').map((char) => char + char).join('')
+    : hex;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return 0.5;
+  }
+
+  const channels = [
+    Number.parseInt(normalized.slice(0, 2), 16),
+    Number.parseInt(normalized.slice(2, 4), 16),
+    Number.parseInt(normalized.slice(4, 6), 16),
+  ].map((channel) => {
+    const srgb = channel / 255;
+    return srgb <= 0.03928
+      ? srgb / 12.92
+      : ((srgb + 0.055) / 1.055) ** 2.4;
+  });
+
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
 
 /**

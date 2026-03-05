@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PUZZLES } from './puzzles';
+import { __puzzlesInternals, PUZZLES } from './puzzles';
 import { CellState, checkWin, deriveClues } from '../lib/game-logic';
 
 describe('puzzle solvability', () => {
@@ -58,6 +58,33 @@ describe('puzzle solvability', () => {
                 const colorRow = puzzle.backgroundColors[r] ?? [];
                 expect(colorRow.length, `${puzzle.id}: backgroundColors row width mismatch at row ${r}`).toBe(puzzle.width);
             }
+        }
+    });
+
+    it('ships authored non-default finish palettes for the upgraded major levels', () => {
+        const upgradedIds = new Set(['10x10-8', '15x15-1', '15x15-2', '15x15-3', '15x15-4', '15x15-5']);
+
+        for (const puzzle of PUZZLES) {
+            if (!upgradedIds.has(puzzle.id)) {
+                continue;
+            }
+
+            const flatColors = puzzle.resultColors?.flat().filter((color): color is string => typeof color === 'string') ?? [];
+            expect(flatColors.length, `${puzzle.id}: expected solved colors`).toBeGreaterThan(0);
+            expect(
+                flatColors.every((color) => color !== __puzzlesInternals.DEFAULT_RESULT_COLOR),
+                `${puzzle.id}: still uses default solved color`,
+            ).toBe(true);
+        }
+    });
+
+    it('exports scenic background palettes for the intended scene-based puzzles', () => {
+        const scenicIds = ['5x5-5', '10x10-2', '10x10-5', '10x10-6', '10x10-10', '15x15-1', '15x15-2', '15x15-3', '15x15-4', '15x15-5'];
+
+        for (const id of scenicIds) {
+            const puzzle = PUZZLES.find((entry) => entry.id === id);
+            expect(puzzle, `${id}: puzzle missing`).toBeDefined();
+            expect(puzzle?.backgroundColors, `${id}: missing backgroundColors`).toBeDefined();
         }
     });
 });
