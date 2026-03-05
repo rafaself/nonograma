@@ -11,6 +11,7 @@ export interface Puzzle {
     height: number;
     solution: boolean[][]; // [row][col]
     resultColors?: (string | null)[][]; // [row][col], hex or color name
+    backgroundColors?: (string | null)[][]; // [row][col], solved-state backdrop colors
 }
 
 export interface Clues {

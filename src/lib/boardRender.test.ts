@@ -3,19 +3,30 @@ import { CellState } from './game-logic';
 import { hitTest, renderBoard } from './boardRender';
 
 function createMockCtx() {
+  const fillOperations: Array<{ fillStyle: string; args: [number, number, number, number] }> = [];
+  let currentFillStyle = '';
+
   return {
     setTransform: vi.fn(),
     clearRect: vi.fn(),
-    fillRect: vi.fn(),
+    fillRect: vi.fn((x: number, y: number, w: number, h: number) => {
+      fillOperations.push({ fillStyle: currentFillStyle, args: [x, y, w, h] });
+    }),
     strokeRect: vi.fn(),
     beginPath: vi.fn(),
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     stroke: vi.fn(),
-    fillStyle: '',
+    get fillStyle() {
+      return currentFillStyle;
+    },
+    set fillStyle(value: string) {
+      currentFillStyle = value;
+    },
     strokeStyle: '',
     lineWidth: 0,
     lineCap: 'butt' as CanvasLineCap,
+    __fillOperations: fillOperations,
   } as unknown as CanvasRenderingContext2D;
 }
 
@@ -59,6 +70,31 @@ describe('boardRender', () => {
     });
 
     expect(ctx.fillRect).toHaveBeenCalledWith(1, 1, 14, 14);
+  });
+
+  it('renders solved background colors behind empty cells', () => {
+    const ctx = createMockCtx() as CanvasRenderingContext2D & {
+      __fillOperations: Array<{ fillStyle: string; args: [number, number, number, number] }>;
+    };
+
+    renderBoard({
+      ctx,
+      grid: [[CellState.EMPTY, CellState.FILLED]],
+      cellSize: 16,
+      isSolved: true,
+      dpr: 1,
+      resultColors: [[null, '#2d6a4f']],
+      backgroundColors: [['#1d4e89', '#1d4e89']],
+    });
+
+    expect(ctx.__fillOperations).toContainEqual({
+      fillStyle: '#1d4e89',
+      args: [0, 0, 16, 16],
+    });
+    expect(ctx.__fillOperations).toContainEqual({
+      fillStyle: '#2d6a4f',
+      args: [17, 1, 14, 14],
+    });
   });
 
   it('draws thick separator lines for boards larger than 5x5', () => {

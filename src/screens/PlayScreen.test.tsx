@@ -6,7 +6,11 @@ import { PlayScreen } from './PlayScreen';
 const canvasPropsSpy = vi.fn();
 
 vi.mock('../components/NonogramBoardCanvas', () => ({
-  NonogramBoardCanvas: (props: { onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void; resultColors?: (string | null)[][] }) => {
+  NonogramBoardCanvas: (props: {
+    onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void;
+    resultColors?: (string | null)[][];
+    backgroundColors?: (string | null)[][];
+  }) => {
     canvasPropsSpy(props);
     return (
       <div>
@@ -25,6 +29,7 @@ const gameState: GameState = {
     height: 1,
     solution: [[true]],
     resultColors: [['#111']],
+    backgroundColors: [['#1d4e89']],
   },
   clues: {
     rows: [[1]],
@@ -36,10 +41,9 @@ const gameState: GameState = {
 };
 
 describe('PlayScreen', () => {
-  it('forwards resultColors only when present', () => {
+  it('forwards color grids only when present', () => {
     canvasPropsSpy.mockClear();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { resultColors: _, ...puzzleWithoutColors } = gameState.puzzle;
+    const { resultColors: _resultColors, backgroundColors: _backgroundColors, ...puzzleWithoutColors } = gameState.puzzle;
 
     const noColorsState: GameState = {
       ...gameState,
@@ -56,8 +60,12 @@ describe('PlayScreen', () => {
       />,
     );
 
-    const lastCallProps = canvasPropsSpy.mock.calls.at(-1)?.[0] as { resultColors?: (string | null)[][] };
+    const lastCallProps = canvasPropsSpy.mock.calls.at(-1)?.[0] as {
+      resultColors?: (string | null)[][];
+      backgroundColors?: (string | null)[][];
+    };
     expect(lastCallProps.resultColors).toBeUndefined();
+    expect(lastCallProps.backgroundColors).toBeUndefined();
     unmount();
   });
 

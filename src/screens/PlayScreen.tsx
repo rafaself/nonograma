@@ -48,6 +48,7 @@ export const PlayScreen = memo(function PlayScreen({
             isSolved={gameState.isSolved}
             inputMode={inputMode}
             {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}
+            {...(gameState.puzzle.backgroundColors ? { backgroundColors: gameState.puzzle.backgroundColors } : {})}
           />
         </div>
 

@@ -12,6 +12,7 @@ export interface NonogramBoardCanvasProps {
   isSolved: boolean;
   inputMode: CellState.FILLED | CellState.MARKED_X;
   resultColors?: (string | null)[][];
+  backgroundColors?: (string | null)[][];
 }
 
 interface DragState {
@@ -27,6 +28,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   isSolved,
   inputMode,
   resultColors,
+  backgroundColors,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,8 +99,9 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       isSolved,
       dpr,
       ...(resultColors ? { resultColors } : {}),
+      ...(backgroundColors ? { backgroundColors } : {}),
     });
-  }, [grid, cellSize, isSolved, cols, rows, resultColors]);
+  }, [grid, cellSize, isSolved, cols, rows, resultColors, backgroundColors]);
   /* c8 ignore stop */
 
   // --- Pointer event helpers ---

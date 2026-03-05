@@ -38,6 +38,22 @@ describe('puzzles internals', () => {
     ]);
   });
 
+  it('normalizes backgroundColors when provided', () => {
+    const puzzle: Puzzle = {
+      ...basePuzzle,
+      id: 'bg',
+      backgroundColors: [
+        ['#1d4e89', '#1d4e89'],
+        ['#1d4e89', null],
+      ],
+    };
+
+    expect(__puzzlesInternals.buildBackgroundColors(puzzle)).toEqual([
+      ['#1d4e89', '#1d4e89'],
+      ['#1d4e89', null],
+    ]);
+  });
+
   it('throws for empty id', () => {
     expect(() => __puzzlesInternals.validatePuzzleShape({ ...basePuzzle, id: '  ' }, new Set())).toThrow(
       'Puzzle with empty id found.',
@@ -67,6 +83,16 @@ describe('puzzles internals', () => {
     expect(() => __puzzlesInternals.validatePuzzleShape(invalid, new Set())).toThrow(
       'w: solution row width (1) does not match declared width (2).',
     );
+  });
+
+  it('throws for backgroundColors height mismatch', () => {
+    expect(() =>
+      __puzzlesInternals.validatePuzzleShape({
+        ...basePuzzle,
+        id: 'bg-h',
+        backgroundColors: [['#1d4e89', '#1d4e89']],
+      }, new Set()),
+    ).toThrow('bg-h: backgroundColors height (1) does not match declared height (2).');
   });
 
   it('exports a non-empty normalized puzzle list', () => {

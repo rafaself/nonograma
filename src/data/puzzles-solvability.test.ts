@@ -45,4 +45,19 @@ describe('puzzle solvability', () => {
             }
         }
     });
+
+    it('backgroundColors grids align with puzzle dimensions when present', () => {
+        for (const puzzle of PUZZLES) {
+            if (!puzzle.backgroundColors) {
+                continue;
+            }
+
+            expect(puzzle.backgroundColors.length, `${puzzle.id}: backgroundColors height mismatch`).toBe(puzzle.height);
+
+            for (let r = 0; r < puzzle.height; r++) {
+                const colorRow = puzzle.backgroundColors[r] ?? [];
+                expect(colorRow.length, `${puzzle.id}: backgroundColors row width mismatch at row ${r}`).toBe(puzzle.width);
+            }
+        }
+    });
 });

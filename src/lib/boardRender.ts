@@ -7,12 +7,13 @@ export interface RenderParams {
   isSolved: boolean;
   dpr: number;
   resultColors?: (string | null)[][];
+  backgroundColors?: (string | null)[][];
 }
 
 /**
  * Full board redraw. Call whenever grid state, size, or solved status changes.
  */
-export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors }: RenderParams): void {
+export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors, backgroundColors }: RenderParams): void {
   const rows = grid.length;
   const cols = grid[0].length;
   const w = cellSize * cols;
@@ -25,7 +26,8 @@ export function renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors }
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const cellResultColor = resultColors?.[r]?.[c];
-      drawCell(ctx, grid[r][c], c * cellSize, r * cellSize, cellSize, isSolved, cellResultColor);
+      const cellBackgroundColor = backgroundColors?.[r]?.[c];
+      drawCell(ctx, grid[r][c], c * cellSize, r * cellSize, cellSize, isSolved, cellResultColor, cellBackgroundColor);
     }
   }
 
@@ -41,7 +43,13 @@ function drawCell(
   size: number,
   isSolved: boolean,
   resultColor?: string | null,
+  backgroundColor?: string | null,
 ): void {
+  if (isSolved && backgroundColor) {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(x, y, size, size);
+  }
+
   if (state === CellState.FILLED) {
     const inset = 1;
     ctx.fillStyle = isSolved ? (resultColor || '#c9a227') : '#ae2012';

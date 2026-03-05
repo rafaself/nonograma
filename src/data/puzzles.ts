@@ -12,6 +12,16 @@ function buildResultColors(puzzle: Puzzle): (string | null)[][] {
     );
 }
 
+function buildBackgroundColors(puzzle: Puzzle): (string | null)[][] | undefined {
+    if (!puzzle.backgroundColors) {
+        return undefined;
+    }
+
+    return puzzle.solution.map((row, r) =>
+        row.map((_, c) => puzzle.backgroundColors?.[r]?.[c] ?? null)
+    );
+}
+
 function validatePuzzleShape(puzzle: Puzzle, seenIds: Set<string>): void {
     if (!puzzle.id.trim()) {
         throw new Error('Puzzle with empty id found.');
@@ -30,6 +40,18 @@ function validatePuzzleShape(puzzle: Puzzle, seenIds: Set<string>): void {
             throw new Error(`${puzzle.id}: solution row width (${row.length}) does not match declared width (${puzzle.width}).`);
         }
     }
+
+    if (puzzle.backgroundColors) {
+        if (puzzle.backgroundColors.length !== puzzle.height) {
+            throw new Error(`${puzzle.id}: backgroundColors height (${puzzle.backgroundColors.length}) does not match declared height (${puzzle.height}).`);
+        }
+
+        for (const row of puzzle.backgroundColors) {
+            if (row.length !== puzzle.width) {
+                throw new Error(`${puzzle.id}: backgroundColors row width (${row.length}) does not match declared width (${puzzle.width}).`);
+            }
+        }
+    }
 }
 
 function normalizePuzzles(puzzles: Puzzle[]): Puzzle[] {
@@ -41,6 +63,7 @@ function normalizePuzzles(puzzles: Puzzle[]): Puzzle[] {
         return {
             ...puzzle,
             resultColors: buildResultColors(puzzle),
+            ...(puzzle.backgroundColors ? { backgroundColors: buildBackgroundColors(puzzle) } : {}),
         };
     });
 }
@@ -50,7 +73,7 @@ const RAW_PUZZLES: Puzzle[] = [
     { id: '5x5-2', title: 'Smiley', width: 5, height: 5, solution: [[false, true, false, true, false], [false, false, false, false, false], [true, false, false, false, true], [false, true, true, true, false], [false, false, false, false, false]], resultColors: [[null, '#ffb703', null, '#ffb703', null], [null, null, null, null, null], ['#ffb703', null, null, null, '#ffb703'], [null, '#ffb703', '#ffb703', '#ffb703', null], [null, null, null, null, null]] },
     { id: '5x5-3', title: 'Cross', width: 5, height: 5, solution: [[false, false, true, false, false], [false, false, true, false, false], [true, true, true, true, true], [false, false, true, false, false], [false, false, true, false, false]], resultColors: [[null, null, "#4cc9f0", null, null], [null, null, "#4cc9f0", null, null], ["#4cc9f0", "#4cc9f0", "#4cc9f0", "#4cc9f0", "#4cc9f0"], [null, null, "#4cc9f0", null, null], [null, null, "#4cc9f0", null, null]] },
     { id: '5x5-4', title: 'Square', width: 5, height: 5, solution: [[true, true, true, true, true], [true, false, false, false, true], [true, false, false, false, true], [true, false, false, false, true], [true, true, true, true, true]], resultColors: [["#7209b7", "#7209b7", "#7209b7", "#7209b7", "#7209b7"], ["#7209b7", null, null, null, "#7209b7"], ["#7209b7", null, null, null, "#7209b7"], ["#7209b7", null, null, null, "#7209b7"], ["#7209b7", "#7209b7", "#7209b7", "#7209b7", "#7209b7"]] },
-    { id: '5x5-5', title: 'Tree', width: 5, height: 5, solution: [[false, false, true, false, false], [false, true, true, true, false], [true, true, true, true, true], [false, false, true, false, false], [false, false, true, false, false]], resultColors: [[null, null, '#2d6a4f', null, null], [null, '#2d6a4f', '#2d6a4f', '#2d6a4f', null], ['#2d6a4f', '#2d6a4f', '#2d6a4f', '#2d6a4f', '#2d6a4f'], [null, null, '#78350f', null, null], [null, null, '#78350f', null, null]] },
+    { id: '5x5-5', title: 'Tree', width: 5, height: 5, solution: [[false, false, true, false, false], [false, true, true, true, false], [true, true, true, true, true], [false, false, true, false, false], [false, false, true, false, false]], resultColors: [[null, null, '#2d6a4f', null, null], [null, '#2d6a4f', '#2d6a4f', '#2d6a4f', null], ['#2d6a4f', '#2d6a4f', '#2d6a4f', '#2d6a4f', '#2d6a4f'], [null, null, '#78350f', null, null], [null, null, '#78350f', null, null]], backgroundColors: [['#1d4e89', '#1d4e89', null, '#1d4e89', '#1d4e89'], ['#1d4e89', null, null, null, '#1d4e89'], [null, null, null, null, null], ['#1d4e89', '#1d4e89', null, '#1d4e89', '#1d4e89'], ['#1d4e89', '#1d4e89', null, '#1d4e89', '#1d4e89']] },
     { id: '5x5-6', title: 'Check', width: 5, height: 5, solution: [[false, false, false, false, true], [false, false, false, true, true], [true, false, true, true, false], [true, true, true, false, false], [false, true, false, false, false]], resultColors: [[null, null, null, null, "#4caf50"], [null, null, null, "#4caf50", "#4caf50"], ["#4caf50", null, "#4caf50", "#4caf50", null], ["#4caf50", "#4caf50", "#4caf50", null, null], [null, "#4caf50", null, null, null]] },
     { id: '5x5-7', title: 'Stairs', width: 5, height: 5, solution: [[false, false, false, false, true], [false, false, false, true, true], [false, false, true, true, true], [false, true, true, true, true], [true, true, true, true, true]], resultColors: [[null, null, null, null, "#ced4da"], [null, null, null, "#ced4da", "#ced4da"], [null, null, "#ced4da", "#ced4da", "#ced4da"], [null, "#ced4da", "#ced4da", "#ced4da", "#ced4da"], ["#ced4da", "#ced4da", "#ced4da", "#ced4da", "#ced4da"]] },
     { id: '5x5-8', title: 'Inv Stairs', width: 5, height: 5, solution: [[true, true, true, true, true], [true, true, true, true, false], [true, true, true, false, false], [true, true, false, false, false], [true, false, false, false, false]], resultColors: [["#adb5bd", "#adb5bd", "#adb5bd", "#adb5bd", "#adb5bd"], ["#adb5bd", "#adb5bd", "#adb5bd", "#adb5bd", null], ["#adb5bd", "#adb5bd", "#adb5bd", null, null], ["#adb5bd", "#adb5bd", null, null, null], ["#adb5bd", null, null, null, null]] },
@@ -84,6 +107,7 @@ export const PUZZLES: Puzzle[] = normalizePuzzles(RAW_PUZZLES);
 export const __puzzlesInternals = {
     DEFAULT_RESULT_COLOR,
     buildResultColors,
+    buildBackgroundColors,
     validatePuzzleShape,
     normalizePuzzles,
 };
