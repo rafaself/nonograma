@@ -1,9 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { CellState } from './lib/game-logic';
 
 const useNonogramGameMock = vi.fn();
+const smokeSimulationMock = vi.fn();
 
 vi.mock('./hooks/useNonogramGame', () => ({
   useNonogramGame: () => useNonogramGameMock(),
@@ -40,7 +41,81 @@ vi.mock('./components/VolumeControl', () => ({
   ),
 }));
 
+vi.mock('./components/SmokeSimulation', () => ({
+  SmokeSimulation: (props: { active: boolean }) => {
+    smokeSimulationMock(props);
+    return <div data-testid="smoke-simulation" />;
+  },
+}));
+
 describe('App', () => {
+  beforeEach(() => {
+    useNonogramGameMock.mockReset();
+    smokeSimulationMock.mockClear();
+  });
+
+  it('keeps smoke active on home and disables it on play', () => {
+    useNonogramGameMock.mockReturnValue({
+      screen: 'home',
+      gameState: null,
+      inputMode: CellState.FILLED,
+      setInputMode: vi.fn(),
+      completedIds: [],
+      showVictory: false,
+      setShowVictory: vi.fn(),
+      muted: false,
+      volume: 0.5,
+      toggleMuted: vi.fn(),
+      changeVolume: vi.fn(),
+      startPuzzle: vi.fn(),
+      goHome: vi.fn(),
+      nextPuzzle: vi.fn(),
+      handleCellAction: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
+      reset: vi.fn(),
+      canUndo: false,
+      canRedo: false,
+      isLastPuzzle: false,
+    });
+
+    const { rerender } = render(<App />);
+    expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: true });
+
+    useNonogramGameMock.mockReturnValue({
+      screen: 'play',
+      gameState: {
+        puzzle: { id: 'p', title: 'P', width: 1, height: 1, solution: [[true]] },
+        clues: { rows: [[1]], cols: [[1]] },
+        grid: [[CellState.EMPTY]],
+        isSolved: false,
+        elapsedTime: 0,
+      },
+      inputMode: CellState.FILLED,
+      setInputMode: vi.fn(),
+      completedIds: [],
+      showVictory: false,
+      setShowVictory: vi.fn(),
+      muted: false,
+      volume: 0.5,
+      toggleMuted: vi.fn(),
+      changeVolume: vi.fn(),
+      startPuzzle: vi.fn(),
+      goHome: vi.fn(),
+      nextPuzzle: vi.fn(),
+      handleCellAction: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
+      reset: vi.fn(),
+      canUndo: false,
+      canRedo: false,
+      isLastPuzzle: false,
+    });
+
+    rerender(<App />);
+    expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: false });
+  });
+
   it('renders home flow and mute toggle', () => {
     const startPuzzle = vi.fn();
     const toggleMuted = vi.fn();

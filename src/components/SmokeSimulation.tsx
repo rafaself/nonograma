@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 const VERTEX_SHADER = `
-precision highp float;
+precision mediump float;
 attribute vec2 a_position;
 varying vec2 v_uv;
 void main() {
@@ -10,7 +10,7 @@ void main() {
 }`;
 
 const FRAGMENT_SHADER = `
-precision highp float;
+precision mediump float;
 
 uniform float u_time;
 uniform vec2 u_resolution;
@@ -18,9 +18,9 @@ uniform vec2 u_resolution;
 varying vec2 v_uv;
 
 // --- Simplex 3D Noise (Ashima Arts, public domain) ---
-vec4 mod289v4(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 mod289v3(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec4 permute(vec4 x) { return mod289v4(((x * 34.0) + 10.0) * x); }
+vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec4 permute(vec4 x) { return mod289(((x * 34.0) + 10.0) * x); }
 vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
 float snoise(vec3 v) {
@@ -39,7 +39,7 @@ float snoise(vec3 v) {
   vec3 x2 = x0 - i2 + C.yyy;
   vec3 x3 = x0 - D.yyy;
 
-  i = mod289v3(i);
+  i = mod289(i);
   vec4 p = permute(permute(permute(
     i.z + vec4(0.0, i1.z, i2.z, 1.0))
     + i.y + vec4(0.0, i1.y, i2.y, 1.0))
@@ -80,13 +80,13 @@ float snoise(vec3 v) {
   return 105.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
 }
 
-// --- fBM with rotation per octave ---
-float fbm(vec3 pos) {
+// 4-octave fBM with rotation per octave
+float fbm4(vec3 pos) {
   float value = 0.0;
   float amplitude = 0.5;
   float frequency = 1.0;
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 4; i++) {
     value += amplitude * snoise(pos * frequency);
     vec2 rotXY = vec2(pos.x * 0.8 - pos.y * 0.6, pos.x * 0.6 + pos.y * 0.8);
     vec2 rotYZ = vec2(pos.y * 0.8 - pos.z * 0.6, pos.y * 0.6 + pos.z * 0.8);
@@ -97,14 +97,12 @@ float fbm(vec3 pos) {
   return value;
 }
 
-// --- Curl noise for vorticity distortion ---
-vec2 curlNoise(vec3 pos) {
-  float eps = 0.01;
-  float n1 = fbm(pos + vec3(eps, 0.0, 0.0));
-  float n2 = fbm(pos - vec3(eps, 0.0, 0.0));
-  float n3 = fbm(pos + vec3(0.0, eps, 0.0));
-  float n4 = fbm(pos - vec3(0.0, eps, 0.0));
-  return vec2((n3 - n4), -(n1 - n2)) / (2.0 * eps);
+// Cheap 2-octave fBM for volumetric scattering samples
+float fbm2(vec3 pos) {
+  float v = 0.5 * snoise(pos);
+  vec2 r = vec2(pos.x * 0.8 - pos.y * 0.6, pos.x * 0.6 + pos.y * 0.8);
+  v += 0.25 * snoise(vec3(r, pos.z) * 2.0);
+  return v;
 }
 
 void main() {
@@ -122,53 +120,47 @@ void main() {
 
   // Buoyancy: slow upward drift
   float drift = t * 0.015;
-  float drift2 = (t - loopPeriod) * 0.015;
 
-  // Base smoke coordinates (lower frequency = wider spread)
+  // Base smoke coordinates
   vec3 pos1 = vec3(coord * 1.2, t * 0.04 + drift);
-  vec3 pos2 = vec3(coord * 1.2, (t - loopPeriod) * 0.04 + drift2);
 
-  // Apply curl noise for vorticity
-  vec2 curl1 = curlNoise(pos1 * 0.5) * 0.08;
-  vec2 curl2 = curlNoise(pos2 * 0.5) * 0.08;
-  pos1.xy += curl1;
-  pos2.xy += curl2;
+  // Cheap sin-based vorticity (replaces expensive curl noise)
+  float swirl = sin(coord.x * 3.0 + t * 0.1) * cos(coord.y * 2.5 - t * 0.08);
+  pos1.x += swirl * 0.06;
+  pos1.y += drift + cos(coord.x * 2.0 + t * 0.12) * 0.04;
 
-  // Add vertical buoyancy offset
-  pos1.y += drift;
-  pos2.y += drift2;
+  // Density via 4-octave fBM
+  float density = fbm4(pos1) * 0.5 + 0.5;
 
-  // Compute density via fBM (crossfaded for seamless loop)
-  float density1 = fbm(pos1) * 0.5 + 0.5;
-  float density2 = fbm(pos2) * 0.5 + 0.5;
-  float density = mix(density1, density2, blend);
+  // Crossfade only during the blend window
+  if (blend > 0.0) {
+    float drift2 = (t - loopPeriod) * 0.015;
+    vec3 pos2 = vec3(coord * 1.2, (t - loopPeriod) * 0.04 + drift2);
+    pos2.x += swirl * 0.06;
+    pos2.y += drift2 + cos(coord.x * 2.0 + (t - loopPeriod) * 0.12) * 0.04;
+    float density2 = fbm4(pos2) * 0.5 + 0.5;
+    density = mix(density, density2, blend);
+  }
 
-  // Vertical gradient: more density at bottom, fading upward
+  // Vertical gradient: more density at bottom
   float vertGrad = smoothstep(0.0, 0.7, 1.0 - uv.y);
   density *= mix(0.3, 1.0, vertGrad);
 
-  // No edge fade — smoke fills the entire viewport
-
-
-  // --- Volumetric light scattering (chiaroscuro) ---
+  // --- Volumetric light scattering (4 steps, cheap fbm2) ---
   vec2 lightDir = lightPos - uv;
   float lightDist = length(lightDir);
-  vec2 rayStep = lightDir / 8.0;
+  vec2 rayStep = lightDir * 0.25;
 
   float illumination = 1.0;
   vec2 sampleUV = uv;
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 4; i++) {
     sampleUV += rayStep;
     vec2 sCoord = vec2((sampleUV.x - 0.5) * aspect, sampleUV.y - 0.5);
-    vec3 sp = vec3(sCoord * 2.0, t * 0.04 + t * 0.015);
-    sp.y += t * 0.015;
-    float sDensity = fbm(sp) * 0.5 + 0.5;
-
-    illumination *= 1.0 - sDensity * 0.12;
+    float sDensity = fbm2(vec3(sCoord * 2.0, t * 0.055)) * 0.5 + 0.5;
+    illumination *= 1.0 - sDensity * 0.15;
   }
 
-  // Light falloff from source
   float lightFalloff = 1.0 - smoothstep(0.0, 1.2, lightDist);
   illumination *= lightFalloff;
 
@@ -177,7 +169,6 @@ void main() {
   luminance = pow(luminance, 1.2);
 
   // Warm monochrome matching the background illustrations
-  // (cream/parchment tones like the inverted bg images)
   vec3 colorDark = vec3(0.06, 0.055, 0.04);
   vec3 colorLight = vec3(0.85, 0.78, 0.65);
   vec3 color = mix(colorDark, colorLight, luminance);
@@ -245,7 +236,11 @@ const QUAD_VERTS = new Float32Array([
   -1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1,
 ]);
 
-export function SmokeSimulation() {
+type SmokeSimulationProps = {
+  active?: boolean;
+};
+
+export function SmokeSimulation({ active = true }: SmokeSimulationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glRef = useRef<{
     gl: WebGLRenderingContext;
@@ -260,8 +255,9 @@ export function SmokeSimulation() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Reuse existing GL context if available (survives StrictMode remount)
     let state = glRef.current;
+
+    if (!state && !active) return;
 
     if (!state) {
       const gl = canvas.getContext('webgl', {
@@ -270,10 +266,7 @@ export function SmokeSimulation() {
         antialias: false,
         powerPreference: 'low-power',
       }) as WebGLRenderingContext | null;
-      if (!gl) return;
-
-      // Check if context is usable (not lost)
-      if (gl.isContextLost()) return;
+      if (!gl || gl.isContextLost()) return;
 
       const program = createProgram(gl, VERTEX_SHADER, FRAGMENT_SHADER);
       if (!program) return;
@@ -299,9 +292,16 @@ export function SmokeSimulation() {
 
     const { gl, program, vbo, aPosition, uTime, uResolution } = state;
 
+    gl.useProgram(program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.enableVertexAttribArray(aPosition);
+    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+
     let rafId = 0;
     let startTime = performance.now();
     let pausedAt = 0;
+    let lastDrawAt = 0;
+    const targetFrameMs = 1000 / 30;
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -311,46 +311,65 @@ export function SmokeSimulation() {
       gl.viewport(0, 0, canvas.width, canvas.height);
     };
 
-    const render = () => {
+    const stopLoop = () => {
+      if (rafId !== 0) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+    };
+
+    const render = (now: number) => {
       if (gl.isContextLost()) return;
-      const elapsed = (performance.now() - startTime) / 1000;
+      if (!active || document.hidden) {
+        stopLoop();
+        return;
+      }
+      if (lastDrawAt !== 0 && now - lastDrawAt < targetFrameMs) {
+        rafId = requestAnimationFrame(render);
+        return;
+      }
+      lastDrawAt = now;
+      const elapsed = (now - startTime) / 1000;
       gl.useProgram(program);
       gl.uniform1f(uTime, elapsed);
       gl.uniform2f(uResolution, canvas.width, canvas.height);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-      gl.enableVertexAttribArray(aPosition);
-      gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       rafId = requestAnimationFrame(render);
     };
 
+    const startLoop = () => {
+      if (active && !document.hidden && rafId === 0) {
+        rafId = requestAnimationFrame(render);
+      }
+    };
+
     const onVisibility = () => {
-      if (document.hidden) {
+      if (document.hidden || !active) {
         pausedAt = performance.now();
-        cancelAnimationFrame(rafId);
+        stopLoop();
       } else {
         if (pausedAt > 0) {
           startTime += performance.now() - pausedAt;
           pausedAt = 0;
         }
-        rafId = requestAnimationFrame(render);
+        startLoop();
       }
     };
 
     resize();
     window.addEventListener('resize', resize);
     document.addEventListener('visibilitychange', onVisibility);
-    rafId = requestAnimationFrame(render);
+    if (active && !document.hidden) {
+      startLoop();
+    }
 
     return () => {
-      cancelAnimationFrame(rafId);
+      stopLoop();
       window.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', onVisibility);
-      // Don't destroy GL resources — they survive StrictMode remount.
-      // Browser GCs them when canvas is removed from DOM.
     };
-  }, []);
+  }, [active]);
 
   return (
     <canvas
@@ -364,7 +383,7 @@ export function SmokeSimulation() {
         height: '100vh',
         zIndex: -1,
         pointerEvents: 'none',
-        opacity: 0.35,
+        opacity: active ? 0.35 : 0,
         mixBlendMode: 'screen',
         transition: 'opacity 1s ease-in-out',
       }}

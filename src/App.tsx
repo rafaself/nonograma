@@ -15,7 +15,7 @@ export default function App() {
       data-screen={game.screen}
     >
       <div className="oriental-bg" />
-      <SmokeSimulation />
+      <SmokeSimulation active={game.screen === 'home'} />
       <div className="bg-illustration-dragon" />
       <div className="bg-illustration-tiger" />
       <div className="bg-illustration-crane" />
