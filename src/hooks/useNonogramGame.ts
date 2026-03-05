@@ -62,46 +62,44 @@ export function useNonogramGame() {
   const handleCellAction = useCallback((r: number, c: number, mouseButton?: number) => {
     if (!gameState || gameState.isSolved) return;
 
-    setGameState(prev => {
-      if (!prev) return null;
+    const prev = gameState;
 
-      setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
-      setRedoHistory([]);
+    setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
+    setRedoHistory([]);
 
-      const newGrid = prev.grid.map(row => [...row]);
-      const currentCell = newGrid[r][c];
+    const newGrid = prev.grid.map(row => [...row]);
+    const currentCell = newGrid[r][c];
 
-      let targetState: CellState;
-      if (mouseButton === 2) {
-        targetState = currentCell === CellState.MARKED_X ? CellState.EMPTY : CellState.MARKED_X;
-        play(targetState === CellState.MARKED_X ? sounds.markX : sounds.erase);
-      } else {
-        targetState = currentCell === inputMode ? CellState.EMPTY : inputMode;
-        play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
+    let targetState: CellState;
+    if (mouseButton === 2) {
+      targetState = currentCell === CellState.MARKED_X ? CellState.EMPTY : CellState.MARKED_X;
+      play(targetState === CellState.MARKED_X ? sounds.markX : sounds.erase);
+    } else {
+      targetState = currentCell === inputMode ? CellState.EMPTY : inputMode;
+      play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
+    }
+
+    const rowWasDone = isLineSatisfied(prev.grid[r], prev.clues.rows[r]);
+    const colWasDone = isLineSatisfied(prev.grid.map(row => row[c]), prev.clues.cols[c]);
+
+    newGrid[r][c] = targetState;
+    const solved = checkWin(newGrid, prev.clues);
+
+    if (solved) {
+      persistence.markCompleted(prev.puzzle.id);
+      setCompletedIds(persistence.getCompletedStatus());
+      setShowVictory(true);
+      play(sounds.win);
+    } else {
+      const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
+      const colNowDone = isLineSatisfied(newGrid.map(row => row[c]), prev.clues.cols[c]);
+      if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
+        play(sounds.lineComplete);
       }
+    }
 
-      const rowWasDone = isLineSatisfied(prev.grid[r], prev.clues.rows[r]);
-      const colWasDone = isLineSatisfied(prev.grid.map(row => row[c]), prev.clues.cols[c]);
-
-      newGrid[r][c] = targetState;
-      const solved = checkWin(newGrid, prev.clues);
-
-      if (solved) {
-        persistence.markCompleted(prev.puzzle.id);
-        setCompletedIds(persistence.getCompletedStatus());
-        setShowVictory(true);
-        play(sounds.win);
-      } else {
-        const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
-        const colNowDone = isLineSatisfied(newGrid.map(row => row[c]), prev.clues.cols[c]);
-        if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
-          play(sounds.lineComplete);
-        }
-      }
-
-      persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
-      return { ...prev, grid: newGrid, isSolved: solved };
-    });
+    persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
+    setGameState({ ...prev, grid: newGrid, isSolved: solved });
   }, [gameState, inputMode, play]);
 
   const undo = useCallback(() => {

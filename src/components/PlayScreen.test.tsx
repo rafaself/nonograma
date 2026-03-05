@@ -3,13 +3,18 @@ import { describe, expect, it, vi } from 'vitest';
 import { CellState, type GameState } from '../lib/game-logic';
 import { PlayScreen } from './PlayScreen';
 
+const canvasPropsSpy = vi.fn();
+
 vi.mock('./NonogramBoardCanvas', () => ({
-  NonogramBoardCanvas: ({ onCellAction }: { onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void }) => (
-    <div>
-      <button onClick={() => onCellAction(1, 2, 'fill')}>fill cell</button>
-      <button onClick={() => onCellAction(3, 4, 'mark_x')}>mark cell</button>
-    </div>
-  ),
+  NonogramBoardCanvas: (props: { onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void; resultColors?: (string | null)[][] }) => {
+    canvasPropsSpy(props);
+    return (
+      <div>
+        <button onClick={() => props.onCellAction(1, 2, 'fill')}>fill cell</button>
+        <button onClick={() => props.onCellAction(3, 4, 'mark_x')}>mark cell</button>
+      </div>
+    );
+  },
 }));
 
 const gameState: GameState = {
@@ -31,6 +36,30 @@ const gameState: GameState = {
 };
 
 describe('PlayScreen', () => {
+  it('forwards resultColors only when present', () => {
+    canvasPropsSpy.mockClear();
+    const { resultColors: _ignored, ...puzzleWithoutColors } = gameState.puzzle;
+
+    const noColorsState: GameState = {
+      ...gameState,
+      puzzle: puzzleWithoutColors,
+    };
+
+    const { unmount } = render(
+      <PlayScreen
+        gameState={noColorsState}
+        inputMode={CellState.FILLED}
+        onSetInputMode={() => {}}
+        onCellAction={() => {}}
+        onBack={() => {}}
+      />,
+    );
+
+    const lastCallProps = canvasPropsSpy.mock.calls.at(-1)?.[0] as { resultColors?: (string | null)[][] };
+    expect(lastCallProps.resultColors).toBeUndefined();
+    unmount();
+  });
+
   it('maps board actions and handles mode toggle/back', () => {
     const onBack = vi.fn();
     const onCellAction = vi.fn();
