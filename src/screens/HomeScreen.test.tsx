@@ -15,8 +15,8 @@ describe('HomeScreen', () => {
     const onStartPuzzle = vi.fn();
     const { container } = render(<HomeScreen completedIds={['a']} onStartPuzzle={onStartPuzzle} />);
 
-    expect(screen.getByText('5×5')).toBeInTheDocument();
-    expect(screen.getByText('10×10')).toBeInTheDocument();
+    expect(screen.getByText('Trail of the Panda')).toBeInTheDocument();
+    expect(screen.getByText('Trail of the Tiger')).toBeInTheDocument();
     expect(screen.getByText('1/3')).toBeInTheDocument();
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(screen.getAllByText(/王+/).length).toBeGreaterThan(0);
@@ -30,7 +30,7 @@ describe('HomeScreen', () => {
 
   it('collapses and expands a size group', async () => {
     render(<HomeScreen completedIds={[]} onStartPuzzle={() => {}} />);
-    const headerLabel = screen.getAllByText('5×5')[0];
+    const headerLabel = screen.getAllByText('Trail of the Panda')[0];
     const header = headerLabel.closest('button') as HTMLButtonElement;
     const section = header.closest('section') as HTMLElement;
     const collapse = section.querySelector('.collapse-grid') as HTMLElement;

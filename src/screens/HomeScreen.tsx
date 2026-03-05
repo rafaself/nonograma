@@ -9,6 +9,12 @@ interface HomeScreenProps {
   onStartPuzzle: (puzzle: Puzzle) => void;
 }
 
+const TRAIL_NAMES: Record<string, string> = {
+  '5×5': 'Trail of the Panda',
+  '10×10': 'Trail of the Tiger',
+  '15×15': 'Trail of the Dragon',
+};
+
 /** Group puzzles by grid size for visual sections */
 function groupBySize(puzzles: typeof PUZZLES) {
   const groups: { label: string; size: string; puzzles: (typeof PUZZLES[number] & { globalIndex: number })[] }[] = [];
@@ -17,7 +23,8 @@ function groupBySize(puzzles: typeof PUZZLES) {
   puzzles.forEach((p, i) => {
     const key = `${p.width}×${p.height}`;
     if (!map.has(key)) {
-      const group = { label: key, size: key, puzzles: [] as (typeof PUZZLES[number] & { globalIndex: number })[] };
+      const label = TRAIL_NAMES[key] ?? key;
+      const group = { label, size: key, puzzles: [] as (typeof PUZZLES[number] & { globalIndex: number })[] };
       map.set(key, group);
       groups.push(group);
     }
@@ -94,7 +101,7 @@ export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-sm bg-[#ae2012]/10 border border-[#ae2012]/30 text-sm font-bold tabular-nums tracking-wide text-[#ae2012] font-['Ma_Shan_Zheng'] group-hover/header:border-[#ae2012]/60 transition-colors">
-                      {group.size}
+                      {group.label}
                     </span>
                     <div className={cn(
                       "absolute -inset-1 bg-[#ae2012]/20 blur-md rounded-full -z-10 transition-opacity duration-500",
@@ -102,7 +109,7 @@ export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle
                     )} />
                   </div>
                   <span className="text-xs font-bold tracking-[0.25em] uppercase text-[#7a7a7a] group-hover/header:text-[#a0a0a0] transition-colors">
-                    {groupCompleted}/{group.puzzles.length} UNVEILED
+                    {groupCompleted}/{group.puzzles.length}
                   </span>
                 </div>
                 <div className="flex-1 h-px bg-gradient-to-r from-[#c9a227]/30 to-transparent" />
@@ -143,8 +150,8 @@ export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle
                             </span>
                             {isCompleted && (
                               <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
-                                <span className="font-['Ma_Shan_Zheng'] text-[10px] text-[#ae2012] leading-none text-center">
-                                  SUCCESS
+                                <span className="font-['Ma_Shan_Zheng'] text-xl text-[#ae2012] leading-none text-center">
+                                  成功
                                 </span>
                               </div>
                             )}
