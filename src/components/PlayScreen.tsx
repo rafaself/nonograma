@@ -59,30 +59,45 @@ export function PlayScreen({
           />
         </div>
 
-        <div className="mt-3 md:mt-8 mb-2 flex gap-2 p-1 bg-zinc-900 rounded-2xl border border-white/5">
-          <button
-            onClick={() => onSetInputMode(CellState.FILLED)}
-            className={cn(
-              "px-6 py-3 md:px-8 md:py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
+        <button
+          onClick={() =>
+            onSetInputMode(
               inputMode === CellState.FILLED
-                ? "bg-white text-black shadow-lg"
-                : "text-zinc-500 hover:text-zinc-300"
-            )}
-          >
-            FILL
-          </button>
-          <button
-            onClick={() => onSetInputMode(CellState.MARKED_X)}
+                ? CellState.MARKED_X
+                : CellState.FILLED
+            )
+          }
+          className="mt-3 md:mt-8 mb-2 relative flex items-center w-[88px] h-11 md:w-[100px] md:h-12 rounded-full bg-zinc-800 border border-white/5 p-1 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          aria-label={`Switch to ${inputMode === CellState.FILLED ? 'mark' : 'fill'} mode`}
+        >
+          {/* Sliding thumb */}
+          <span
             className={cn(
-              "px-6 py-3 md:px-8 md:py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
-              inputMode === CellState.MARKED_X
-                ? "bg-zinc-700 text-white"
-                : "text-zinc-500 hover:text-zinc-300"
+              "absolute top-1 h-[calc(100%-8px)] aspect-square rounded-full shadow-lg transition-all duration-300 ease-in-out",
+              inputMode === CellState.FILLED
+                ? "left-1 bg-white"
+                : "left-[calc(100%-4px)] -translate-x-full bg-zinc-600"
+            )}
+          />
+          {/* X icon – left side */}
+          <span
+            className={cn(
+              "relative z-10 flex items-center justify-center w-1/2 h-full text-sm font-bold transition-colors duration-300",
+              inputMode === CellState.MARKED_X ? "text-white" : "text-zinc-600"
             )}
           >
-            MARK X
-          </button>
-        </div>
+            ✕
+          </span>
+          {/* Fill icon – right side */}
+          <span
+            className={cn(
+              "relative z-10 flex items-center justify-center w-1/2 h-full transition-colors duration-300",
+              inputMode === CellState.FILLED ? "text-zinc-900" : "text-zinc-600"
+            )}
+          >
+            <span className="block w-4 h-4 md:w-[18px] md:h-[18px] rounded-[3px] bg-current" />
+          </span>
+        </button>
       </div>
     </>
   );

@@ -38,8 +38,9 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
   const [cellSize, setCellSize] = useState(32);
 
   const fontSize = Math.max(8, Math.min(14, cellSize * 0.35));
-  const rowClueWidth = maxRowClueCount * (fontSize * 1.4) + 8;
-  const colClueHeight = maxColClueCount * (fontSize * 1.4) + 6;
+  const spacing = 4;
+  const rowClueWidth = maxRowClueCount * (fontSize * 1.2 + spacing) + 8;
+  const colClueHeight = maxColClueCount * (fontSize * 1.2 + spacing) + 6;
 
   // --- Resize ---
   useEffect(() => {
@@ -167,7 +168,11 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
                 style={{ width: cellSize, fontSize, paddingBottom: 2 }}
               >
                 {colClues.map((clue, i) => (
-                  <span key={i} className="font-bold leading-tight">
+                  <span
+                    key={i}
+                    className="font-bold leading-tight"
+                    style={{ marginBottom: i < colClues.length - 1 ? spacing : 0 }}
+                  >
                     {clue > 0 ? clue : ''}
                   </span>
                 ))}
@@ -190,7 +195,7 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
                   r % 5 === 4 && r !== rows - 1 && 'border-b-2 border-b-zinc-600',
                   satisfied ? 'text-zinc-600' : 'text-white',
                 )}
-                style={{ height: cellSize, paddingRight: 4, fontSize, gap: 2 }}
+                style={{ height: cellSize, paddingRight: 4, fontSize, gap: spacing }}
               >
                 {rowClues.map((clue, i) => (
                   <span key={i} className="font-bold">
