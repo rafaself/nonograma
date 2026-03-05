@@ -37,8 +37,8 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
 
   const [cellSize, setCellSize] = useState(32);
 
-  const fontSize = Math.max(8, Math.min(14, cellSize * 0.35));
-  const spacing = 4;
+  const fontSize = Math.max(10, Math.min(18, cellSize * 0.45));
+  const spacing = 5;
   const rowClueWidth = maxRowClueCount * (fontSize * 1.2 + spacing) + 8;
   const colClueHeight = maxColClueCount * (fontSize * 1.2 + spacing) + 6;
 
