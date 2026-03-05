@@ -1,0 +1,5 @@
+services:
+  coverage:
+    build:
+      context: .
+    command: ["pnpm", "vitest", "run", "--coverage"]

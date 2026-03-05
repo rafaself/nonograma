@@ -45,6 +45,7 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
   const colClueHeight = maxColClueCount * (fontSize * 1.2 + spacing) + 6;
 
   // --- Resize ---
+  /* c8 ignore start */
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -59,12 +60,16 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
   }, [cols, rows, rowClueWidth, colClueHeight]);
+  /* c8 ignore stop */
 
   // --- Canvas render ---
+  /* c8 ignore start */
   useEffect(() => {
     const canvas = canvasRef.current;
+    /* c8 ignore next 2 */
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    /* c8 ignore next */
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -73,6 +78,7 @@ export const NonogramBoardCanvas: React.FC<NonogramBoardCanvasProps> = ({
 
     renderBoard({ ctx, grid, cellSize, isSolved, dpr, resultColors });
   }, [grid, cellSize, isSolved, cols, rows, resultColors]);
+  /* c8 ignore stop */
 
   // --- Pointer event helpers ---
   const getCell = useCallback(

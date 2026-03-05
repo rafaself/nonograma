@@ -49,6 +49,17 @@ describe('game-logic', () => {
             const clues = [0];
             expect(isLineSatisfied(cells, clues)).toBe(true);
         });
+
+        it('should fail when clue lengths differ', () => {
+            const cells = [CellState.FILLED, CellState.EMPTY, CellState.FILLED];
+            const clues = [2];
+            expect(isLineSatisfied(cells, clues)).toBe(false);
+        });
+
+        it('normalizes empty clues array as zero', () => {
+            const cells = [CellState.EMPTY, CellState.MARKED_X];
+            expect(isLineSatisfied(cells, [])).toBe(true);
+        });
     });
 
     describe('checkWin', () => {
@@ -68,6 +79,18 @@ describe('game-logic', () => {
             const grid = [
                 [CellState.FILLED, CellState.FILLED],
                 [CellState.EMPTY, CellState.FILLED],
+            ];
+            const clues = {
+                rows: [[1], [1]],
+                cols: [[1], [1]],
+            };
+            expect(checkWin(grid, clues)).toBe(false);
+        });
+
+        it('should return false when a column is not satisfied', () => {
+            const grid = [
+                [CellState.FILLED, CellState.EMPTY],
+                [CellState.FILLED, CellState.EMPTY],
             ];
             const clues = {
                 rows: [[1], [1]],

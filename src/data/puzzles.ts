@@ -80,3 +80,10 @@ const RAW_PUZZLES: Puzzle[] = [
 ];
 
 export const PUZZLES: Puzzle[] = normalizePuzzles(RAW_PUZZLES);
+
+export const __puzzlesInternals = {
+    DEFAULT_RESULT_COLOR,
+    buildResultColors,
+    validatePuzzleShape,
+    normalizePuzzles,
+};
