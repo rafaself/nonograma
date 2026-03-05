@@ -40,8 +40,8 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("https://www.transparenttextures.com/patterns/p6.png");
-    /* Subtle paper/canvas texture */
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAQAAABuBnYAAAAAPUlEQVR4AWPYLH0s6hiQPOK1WXozw2EHBhgDJgFEhx0OM0AgiMWA4EC1HIsCq4GbAmPAJeBKYVphhsENBwDC4Ta30oUu8AAAAABJRU5ErkJggg==");
+    /* Subtle paper/canvas texture (inlined 8×8 p6.png from transparenttextures.com) */
     opacity: 0.15;
     z-index: -1;
   }

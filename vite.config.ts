@@ -1,6 +1,25 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
+const cspBase = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "worker-src 'none'",
+  "manifest-src 'self'",
+];
+
+const devCsp = cspBase
+  .map(d => d.startsWith("script-src ") ? "script-src 'self' 'unsafe-inline'" : d)
+  .concat("connect-src 'self' ws: wss:")
+  .join('; ');
+const previewCsp = [...cspBase, "connect-src 'self'", 'upgrade-insecure-requests'].join('; ');
+
 const securityHeaders: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
@@ -11,10 +30,16 @@ const securityHeaders: Record<string, string> = {
 export default defineConfig({
   plugins: [react()],
   server: {
-    headers: securityHeaders,
+    headers: {
+      ...securityHeaders,
+      'Content-Security-Policy': devCsp,
+    },
   },
   preview: {
-    headers: securityHeaders,
+    headers: {
+      ...securityHeaders,
+      'Content-Security-Policy': previewCsp,
+    },
   },
   test: {
     environment: 'jsdom',
