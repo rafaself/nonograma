@@ -32,13 +32,13 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
               className="cyber-card group"
             >
               <div className="flex justify-between items-center mb-8">
-                <span className="text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
+                <span className="text-zinc-400 font-medium uppercase tracking-widest text-base">
                   LEVEL {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className={cn("w-1.5 h-1.5 rounded-full", isCompleted ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-zinc-600")} />
               </div>
 
-              <h3 className="text-4xl font-medium mb-12 tracking-tight">
+              <h3 className="text-5xl font-medium mb-12 tracking-tight">
                 {isCompleted ? p.title : (
                   <span className="text-zinc-600 font-mono tracking-widest select-none">
                     {'█'.repeat(p.title.length)}
@@ -48,7 +48,7 @@ export function HomeScreen({ completedIds, onStartPuzzle }: HomeScreenProps) {
 
               <div className="flex justify-between items-end">
                 <div className={cn(
-                  "flex items-center gap-2 font-bold text-[10px] tracking-[0.2em] uppercase transition-colors",
+                  "flex items-center gap-2 font-bold text-xs tracking-[0.2em] uppercase transition-colors",
                   "text-white group-hover:text-emerald-400"
                 )}>
                   {isCompleted ? (
