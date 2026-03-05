@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import type { Puzzle, GameState } from './lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from './lib/game-logic';
 import { persistence } from './lib/persistence';
@@ -22,28 +22,58 @@ interface GridProps {
 }
 
 const Grid = ({ grid, clues, onCellClick, isSolved }: GridProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState(32);
   const height = grid.length;
   const width = grid[0].length;
 
+  const maxRowClueCount = Math.max(...clues.rows.map(r => r.length));
+  const maxColClueCount = Math.max(...clues.cols.map(c => c.length));
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const compute = () => {
+      const availW = el.clientWidth;
+      // Use viewport height minus space for header (~100px) and controls (~80px)
+      const availH = window.innerHeight - 180;
+      const fontSize = 12;
+      const rowClueW = maxRowClueCount * fontSize * 1.2 + 12;
+      const colClueH = maxColClueCount * fontSize * 1.3 + 8;
+      const sizeFromW = (availW - rowClueW) / width;
+      const sizeFromH = (availH - colClueH) / height;
+      const size = Math.floor(Math.min(sizeFromW, sizeFromH));
+      setCellSize(Math.max(20, Math.min(48, size)));
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [width, height, maxRowClueCount, maxColClueCount]);
+
+  const fontSize = Math.max(8, Math.min(14, cellSize * 0.35));
+  const iconSize = Math.max(12, cellSize * 0.55);
+  const rowClueWidth = maxRowClueCount * (fontSize * 1.4) + 8;
+  const colClueHeight = maxColClueCount * (fontSize * 1.4) + 6;
+
   return (
-    <div className="flex flex-col items-center select-none">
+    <div ref={containerRef} className="flex items-center justify-center select-none w-full">
       <div className="grid gap-0" style={{
-        gridTemplateColumns: `auto repeat(${width}, minmax(0, 1fr))`,
-        gridTemplateRows: `auto repeat(${height}, minmax(0, 1fr))`
+        gridTemplateColumns: `${rowClueWidth}px repeat(${width}, ${cellSize}px)`,
+        gridTemplateRows: `${colClueHeight}px repeat(${height}, ${cellSize}px)`
       }}>
-        <div className="w-12 h-12 md:w-20 md:h-20" />
+        <div />
 
         {clues.cols.map((colClues, c) => {
           const isSatisfied = isLineSatisfied(grid.map(row => row[c]), colClues);
           const isEmpty = colClues.length === 1 && colClues[0] === 0;
           return (
             <div key={`col-${c}`} className={cn(
-              "flex flex-col justify-end items-center pb-2 border-l border-zinc-800",
+              "flex flex-col justify-end items-center border-l border-zinc-800",
               c % 5 === 4 && c !== width - 1 ? "border-r-2 border-r-zinc-600" : "border-r border-zinc-800",
               isSatisfied && !isEmpty ? "text-zinc-600" : "text-white"
-            )}>
+            )} style={{ paddingBottom: 2, fontSize }}>
               {colClues.map((clue, i) => (
-                <span key={i} className="text-[10px] md:text-sm font-bold leading-tight">{clue > 0 ? clue : ''}</span>
+                <span key={i} className="font-bold leading-tight">{clue > 0 ? clue : ''}</span>
               ))}
             </div>
           );
@@ -52,13 +82,13 @@ const Grid = ({ grid, clues, onCellClick, isSolved }: GridProps) => {
         {grid.map((row, r) => (
           <Fragment key={`row-frag-${r}`}>
             <div className={cn(
-              "flex justify-end items-center pr-3 border-t border-zinc-800",
+              "flex justify-end items-center border-t border-zinc-800",
               r % 5 === 4 && r !== height - 1 ? "border-b-2 border-b-zinc-600" : "border-b border-zinc-800",
               isLineSatisfied(row, clues.rows[r]) && !(clues.rows[r].length === 1 && clues.rows[r][0] === 0)
                 ? "text-zinc-600" : "text-white"
-            )}>
+            )} style={{ paddingRight: 4, fontSize, gap: 2 }}>
               {clues.rows[r].map((clue, i) => (
-                <span key={i} className="text-[10px] md:text-sm font-bold mx-0.5">{clue > 0 ? clue : ''}</span>
+                <span key={i} className="font-bold">{clue > 0 ? clue : ''}</span>
               ))}
             </div>
 
@@ -72,15 +102,16 @@ const Grid = ({ grid, clues, onCellClick, isSolved }: GridProps) => {
                 }}
                 disabled={isSolved}
                 className={cn(
-                  "w-8 h-8 md:w-12 md:h-12 border border-zinc-800 flex items-center justify-center relative active:scale-90 transition-transform",
+                  "border border-zinc-800 flex items-center justify-center relative active:scale-90 transition-transform",
                   r % 5 === 4 && r !== height - 1 && "border-b-zinc-500",
                   c % 5 === 4 && c !== width - 1 && "border-r-zinc-500",
                   cell === CellState.EMPTY && "bg-transparent hover:bg-zinc-800/50",
                   cell === CellState.FILLED && "bg-white",
                   isSolved && cell === CellState.FILLED && "bg-emerald-500"
                 )}
+                style={{ width: cellSize, height: cellSize }}
               >
-                {cell === CellState.MARKED_X && <X className="w-5 h-5 text-zinc-700" strokeWidth={3} />}
+                {cell === CellState.MARKED_X && <X style={{ width: iconSize, height: iconSize }} className="text-zinc-700" strokeWidth={3} />}
               </button>
             ))}
           </Fragment>
@@ -214,7 +245,7 @@ export default function App() {
       {screen === 'play' && (
         <button
           onClick={() => { setScreen('home'); setGameState(null); }}
-          className="fixed top-6 left-6 z-50 flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm"
+          className="fixed top-3 left-3 md:top-6 md:left-6 z-50 flex items-center gap-1 text-zinc-500 hover:text-white transition-colors text-xs md:text-sm"
         >
           <ChevronLeft className="w-4 h-4" /> Back to Matrix
         </button>
@@ -223,13 +254,13 @@ export default function App() {
       {/* Fixed top-right: Mute button */}
       <button
         onClick={() => setMuted(m => !m)}
-        className="fixed top-6 right-6 z-50 p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95"
+        className="fixed top-3 right-3 md:top-6 md:right-6 z-50 p-2.5 md:p-4 rounded-full bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-all active:scale-95"
         title={muted ? 'Unmute' : 'Mute'}
       >
-        {muted ? <VolumeX className="w-6 h-6 text-zinc-500" /> : <Volume2 className="w-6 h-6" />}
+        {muted ? <VolumeX className="w-5 h-5 md:w-6 md:h-6 text-zinc-500" /> : <Volume2 className="w-5 h-5 md:w-6 md:h-6" />}
       </button>
 
-      <main className="w-full max-w-6xl flex-1 flex flex-col px-6 md:px-12 py-24">
+      <main className="w-full max-w-6xl flex-1 flex flex-col px-2 md:px-12 py-14 md:py-24">
         {screen === 'home' && (
           <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 relative z-10">
             <div className="relative mb-4">
@@ -296,18 +327,14 @@ export default function App() {
         )}
 
         {screen === 'play' && gameState && (
-          <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full">
-            {/* Undo / Reset controls top-right area */}
-            <div className="fixed top-6 right-24 z-50 flex gap-3">
-              <button onClick={undo} className="p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Undo"><Undo2 className="w-5 h-5" /></button>
-              <button onClick={reset} className="p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Reset"><RotateCcw className="w-5 h-5" /></button>
+          <div className="flex-1 flex flex-col items-center animate-in zoom-in-95 duration-500 max-w-full min-h-0">
+            {/* Top bar: back + title badge + undo/reset + mute are handled via fixed buttons */}
+            <div className="flex items-center justify-center gap-3 mb-2 md:mb-4">
+              <button onClick={undo} className="p-2.5 md:p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Undo"><Undo2 className="w-4 h-4 md:w-5 md:h-5" /></button>
+              <button onClick={reset} className="p-2.5 md:p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/5" title="Reset"><RotateCcw className="w-4 h-4 md:w-5 md:h-5" /></button>
             </div>
 
-            <div className="mb-10 text-center relative">
-              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 bg-emerald-500/5 blur-[60px] rounded-full -z-10" />
-              <h2 className="text-5xl md:text-7xl font-medium mb-4 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-zinc-600">
-                {gameState.puzzle.title}
-              </h2>
+            <div className="mb-2 md:mb-6 text-center relative">
               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
                 <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", gameState.isSolved ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-emerald-500")} />
                 <p className="text-emerald-500 font-bold tracking-[0.4em] uppercase text-[9px]">
@@ -316,7 +343,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="overflow-auto max-w-full pb-8 px-4 scrollbar-hide">
+            <div className="flex-1 w-full min-h-0 px-2 md:px-4">
               <Grid
                 grid={gameState.grid}
                 clues={gameState.clues}
@@ -326,11 +353,11 @@ export default function App() {
             </div>
 
             {/* Matrix Stylized Controls */}
-            <div className="mt-8 flex gap-2 p-1 bg-zinc-900 rounded-2xl border border-white/5">
+            <div className="mt-3 md:mt-8 mb-2 flex gap-2 p-1 bg-zinc-900 rounded-2xl border border-white/5">
               <button
                 onClick={() => setInputMode(CellState.FILLED)}
                 className={cn(
-                  "px-8 py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
+                  "px-6 py-3 md:px-8 md:py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
                   inputMode === CellState.FILLED
                     ? "bg-white text-black shadow-lg"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -341,7 +368,7 @@ export default function App() {
               <button
                 onClick={() => setInputMode(CellState.MARKED_X)}
                 className={cn(
-                  "px-8 py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
+                  "px-6 py-3 md:px-8 md:py-4 rounded-xl transition-all font-bold tracking-[0.2em] text-[10px]",
                   inputMode === CellState.MARKED_X
                     ? "bg-zinc-700 text-white"
                     : "text-zinc-500 hover:text-zinc-300"
