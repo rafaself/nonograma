@@ -1,22 +1,25 @@
 # ── E2E test image ──────────────────────────────────────────
-# Based on the official Playwright image (includes OS-level
-# browser deps). Layers are ordered for maximum cache reuse.
+# Based on the official Playwright image which ships with ALL
+# browsers (chromium, firefox, webkit) pre-installed at
+# /ms-playwright.  We skip re-downloading them and only
+# install JS dependencies.
 # ────────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/playwright:v1.58.2-noble
 
 WORKDIR /app
+
+# Prevent playwright's npm postinstall from re-downloading browsers
+# that are already baked into the base image.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # 1 ─ Enable pnpm via corepack (comes with Node ≥ 16)
 RUN corepack enable
 
 # 2 ─ Install JS deps (cached unless lock-file changes)
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile=false
+RUN pnpm install --frozen-lockfile
 
-# 3 ─ Install Playwright browsers (cached with the image)
-RUN pnpm exec playwright install --with-deps chromium
-
-# 4 ─ Copy project source
+# 3 ─ Copy project source
 COPY . .
 
 # Default: run E2E on chromium only (fastest in CI)

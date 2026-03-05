@@ -1,16 +1,34 @@
+# Shared bind-mounts for E2E services — source is read-only so
+# code changes don't require an image rebuild.
+x-e2e-volumes: &e2e-volumes
+  - ./src:/app/src:ro
+  - ./e2e:/app/e2e:ro
+  - ./public:/app/public:ro
+  - ./index.html:/app/index.html:ro
+  - ./playwright.config.ts:/app/playwright.config.ts:ro
+  - ./vite.config.ts:/app/vite.config.ts:ro
+  - ./tsconfig.json:/app/tsconfig.json:ro
+  - ./tsconfig.app.json:/app/tsconfig.app.json:ro
+  - ./tsconfig.node.json:/app/tsconfig.node.json:ro
+  - ./tailwind.config.js:/app/tailwind.config.js:ro
+  - ./postcss.config.js:/app/postcss.config.js:ro
+
 services:
   # ── App (default profile) ────────────────────────────────
+  # Multi-stage build → nginx serving static assets (~25 MB).
   app:
     build:
       context: .
+      target: production
     ports:
-      - "4173:4173"
-    command: ["pnpm", "dev", "--host", "0.0.0.0", "--port", "4173"]
+      - "4173:80"
 
   # ── Unit / coverage (vitest) ─────────────────────────────
+  # Targets the "dev" stage which has source + all devDeps.
   coverage:
     build:
       context: .
+      target: dev
     profiles: [tests]
     command: ["pnpm", "vitest", "run", "--coverage"]
 
@@ -23,23 +41,11 @@ services:
     ipc: host
     environment:
       - CI=true
-    # Bind-mount source so rebuilds aren't needed after code changes.
-    # The node_modules inside the image are preserved via anonymous volume.
-    volumes:
-      - ./src:/app/src:ro
-      - ./e2e:/app/e2e:ro
-      - ./public:/app/public:ro
-      - ./index.html:/app/index.html:ro
-      - ./playwright.config.ts:/app/playwright.config.ts:ro
-      - ./vite.config.ts:/app/vite.config.ts:ro
-      - ./tsconfig.json:/app/tsconfig.json:ro
-      - ./tsconfig.app.json:/app/tsconfig.app.json:ro
-      - ./tsconfig.node.json:/app/tsconfig.node.json:ro
-      - ./tailwind.config.js:/app/tailwind.config.js:ro
-      - ./postcss.config.js:/app/postcss.config.js:ro
-    # Default CMD from Dockerfile.e2e → pnpm test:e2e:ci
+    volumes: *e2e-volumes
 
   # ── E2E – all browsers (chromium + firefox + webkit + mobile) ──
+  # All browsers are pre-installed in the Playwright base image,
+  # so no runtime install is needed — just override the command.
   e2e-all:
     build:
       context: .
@@ -48,20 +54,5 @@ services:
     ipc: host
     environment:
       - CI=true
-    volumes:
-      - ./src:/app/src:ro
-      - ./e2e:/app/e2e:ro
-      - ./public:/app/public:ro
-      - ./index.html:/app/index.html:ro
-      - ./playwright.config.ts:/app/playwright.config.ts:ro
-      - ./vite.config.ts:/app/vite.config.ts:ro
-      - ./tsconfig.json:/app/tsconfig.json:ro
-      - ./tsconfig.app.json:/app/tsconfig.app.json:ro
-      - ./tsconfig.node.json:/app/tsconfig.node.json:ro
-      - ./tailwind.config.js:/app/tailwind.config.js:ro
-      - ./postcss.config.js:/app/postcss.config.js:ro
-    command: >
-      sh -c "
-        pnpm exec playwright install --with-deps firefox webkit &&
-        pnpm test:e2e
-      "
+    volumes: *e2e-volumes
+    command: ["pnpm", "test:e2e"]

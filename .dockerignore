@@ -6,7 +6,12 @@ coverage
 .gitignore
 .vscode
 .claude
+Dockerfile*
+docker-compose*
 playwright-report
 test-results
 blob-report
 *.md
+*.log
+.env*
+eslint.config.*
