@@ -21,7 +21,9 @@ export default function App() {
       <div className="lantern-wrapper lantern-pos-1">
         <div className="lantern-wire" />
         <div className="lantern">
+          <div className="lantern-cap lantern-cap-top" />
           <span className="lantern-kanji">龍</span>
+          <div className="lantern-cap lantern-cap-bottom" />
         </div>
         <div className="lantern-tassel" />
       </div>
@@ -29,7 +31,9 @@ export default function App() {
       <div className="lantern-wrapper lantern-pos-2">
         <div className="lantern-wire" style={{ height: '80px' }} />
         <div className="lantern">
+          <div className="lantern-cap lantern-cap-top" />
           <span className="lantern-kanji">福</span>
+          <div className="lantern-cap lantern-cap-bottom" />
         </div>
         <div className="lantern-tassel" />
       </div>
@@ -37,7 +41,9 @@ export default function App() {
       <div className="lantern-wrapper lantern-pos-3">
         <div className="lantern-wire" />
         <div className="lantern">
+          <div className="lantern-cap lantern-cap-top" />
           <span className="lantern-kanji">虎</span>
+          <div className="lantern-cap lantern-cap-bottom" />
         </div>
         <div className="lantern-tassel" />
       </div>
@@ -45,7 +51,9 @@ export default function App() {
       <div className="lantern-wrapper lantern-pos-4">
         <div className="lantern-wire" style={{ height: '70px' }} />
         <div className="lantern">
+          <div className="lantern-cap lantern-cap-top" />
           <span className="lantern-kanji">寿</span>
+          <div className="lantern-cap lantern-cap-bottom" />
         </div>
         <div className="lantern-tassel" />
       </div>

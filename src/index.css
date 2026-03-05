@@ -273,59 +273,87 @@
     flex-direction: column;
     align-items: center;
     transform-origin: top center;
-    animation: lantern-swing 4s infinite alternate ease-in-out;
+    animation: lantern-swing 5s infinite alternate ease-in-out;
     pointer-events: none;
-    z-index: 1;
-    filter: drop-shadow(0 0 15px rgba(174, 32, 18, 0.3));
+    z-index: 10;
   }
 
   .lantern-wire {
     width: 1px;
     height: 60px;
-    background: linear-gradient(to bottom, transparent, #222, #c9a227);
+    background: linear-gradient(to bottom, transparent, #111 20%, #c9a227 100%);
   }
 
   .lantern {
     position: relative;
     width: 65px;
-    height: 85px;
-    background: radial-gradient(circle at 30% 30%, #ce2415 0%, #ae2012 50%, #8a1a0f 100%);
-    border-radius: 20px / 30px;
+    height: 90px;
+    /* Silk with vertical ribs pattern */
+    background:
+      repeating-linear-gradient(90deg, transparent, transparent 15%, rgba(0, 0, 0, 0.1) 16%, transparent 17%),
+      radial-gradient(circle at 30% 30%, #ff4d3d 0%, #ae2012 50%, #631009 100%);
+    border-radius: 25px / 35px;
     box-shadow:
-      0 0 25px rgba(174, 32, 18, 0.4),
-      inset 0 0 20px rgba(253, 245, 230, 0.15);
+      0 0 40px rgba(174, 32, 18, 0.5),
+      inset 0 0 20px rgba(253, 245, 230, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-left: 2px solid rgba(201, 162, 39, 0.2);
-    border-right: 2px solid rgba(201, 162, 39, 0.2);
+    border: 1px solid rgba(201, 162, 39, 0.3);
   }
 
-  .lantern::before,
+  /* Atmospheric outer glow */
+  .lantern::before {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, rgba(174, 32, 18, 0.15) 0%, transparent 70%);
+    z-index: -1;
+    pointer-events: none;
+    animation: lantern-flicker 4s infinite alternate ease-in-out;
+  }
+
+  /* Internal glow flicker */
   .lantern::after {
     content: '';
     position: absolute;
-    width: 80%;
-    height: 8px;
-    background: #111;
-    border: 1px solid #c9a22744;
-    border-radius: 2px;
+    inset: 5px;
+    background: radial-gradient(circle at center, rgba(253, 245, 230, 0.2) 0%, transparent 80%);
+    animation: lantern-flicker 3s infinite alternate ease-in-out;
+    border-radius: inherit;
+    pointer-events: none;
   }
 
-  .lantern::before {
-    top: -2px;
+  .lantern-cap {
+    position: absolute;
+    width: 82%;
+    height: 12px;
+    background: linear-gradient(to bottom, #1a1a1a, #000);
+    border: 1px solid rgba(201, 162, 39, 0.4);
+    z-index: 2;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   }
 
-  .lantern::after {
-    bottom: -2px;
+  .lantern-cap-top {
+    top: -4px;
+    border-radius: 4px 4px 2px 2px;
+  }
+
+  .lantern-cap-bottom {
+    bottom: -4px;
+    border-radius: 2px 2px 4px 4px;
   }
 
   .lantern-kanji {
     font-family: 'Ma Shan Zheng', 'Noto Serif JP', serif;
-    color: rgba(253, 245, 230, 0.9);
-    font-size: 1.8rem;
-    text-shadow: 0 0 12px rgba(253, 245, 230, 0.5);
+    color: #fdf5e6;
+    font-size: 2rem;
+    text-shadow:
+      0 0 8px rgba(253, 245, 230, 0.6),
+      0 0 15px rgba(174, 32, 18, 1);
+    z-index: 5;
     user-select: none;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
   }
 
   .lantern-tassel {
@@ -333,56 +361,92 @@
     height: 40px;
     background: #ae2012;
     position: relative;
-    margin-top: 2px;
+    margin-top: 1px;
+    box-shadow: 1px 0 2px rgba(0, 0, 0, 0.3);
   }
 
+  /* Tassel Head (Gold) */
+  .lantern-tassel::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle at 30% 30%, #fdf5e6, #c9a227);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+    border: 1px solid #111;
+  }
+
+  /* Split tassel ends */
   .lantern-tassel::after {
     content: '';
     position: absolute;
-    bottom: -10px;
+    bottom: -15px;
     left: 50%;
     transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    background: #c9a227;
-    border-radius: 50%;
-    box-shadow: 0 0 10px #c9a227;
+    width: 14px;
+    height: 20px;
+    background: linear-gradient(90deg,
+        #ae2012 0%, #ae2012 10%,
+        transparent 11%, transparent 20%,
+        #ae2012 21%, #ae2012 40%,
+        transparent 41%, transparent 60%,
+        #ae2012 61%, #ae2012 80%,
+        transparent 81%, transparent 90%,
+        #ae2012 91% 100%);
   }
 
   @keyframes lantern-swing {
     0% {
-      transform: rotate(-3deg) translateX(-3px);
+      transform: rotate(-4deg) translateX(-4px);
     }
 
     100% {
-      transform: rotate(3deg) translateX(3px);
+      transform: rotate(4deg) translateX(4px);
+    }
+  }
+
+  @keyframes lantern-flicker {
+
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
     }
   }
 
   /* Positions */
   .lantern-pos-1 {
-    left: 10%;
+    left: 8%;
     animation-delay: -0.5s;
   }
 
   .lantern-pos-2 {
-    left: 25%;
+    left: 22%;
     animation-delay: -2.3s;
-    scale: 0.8;
-    top: -45px;
-    opacity: 0.8;
+    scale: 0.75;
+    top: -50px;
+    opacity: 0.7;
   }
 
   .lantern-pos-3 {
-    right: 10%;
+    right: 8%;
     animation-delay: -1.2s;
   }
 
   .lantern-pos-4 {
-    right: 28%;
+    right: 24%;
     animation-delay: -3.7s;
     scale: 0.85;
-    top: -35px;
-    opacity: 0.9;
+    top: -40px;
+    opacity: 0.85;
   }
 }
