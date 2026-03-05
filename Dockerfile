@@ -8,6 +8,10 @@ RUN pnpm install --frozen-lockfile
 # ── dev: full source — used by coverage / vitest ──
 FROM deps AS dev
 COPY . .
+# Run as non-root to prevent root-owned files leaking to bind-mounts.
+# node:alpine ships with a "node" user (uid 1000) already.
+RUN chown -R node:node /app
+USER node
 
 # ── build: compile production assets ──
 FROM dev AS build

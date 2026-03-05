@@ -1,5 +1,7 @@
 # Shared bind-mounts for E2E services — source is read-only so
 # code changes don't require an image rebuild.
+# The anonymous /app/node_modules volume keeps the image's deps
+# isolated, preventing root-owned files from leaking to the host.
 x-e2e-volumes: &e2e-volumes
   - ./src:/app/src:ro
   - ./e2e:/app/e2e:ro
@@ -12,6 +14,7 @@ x-e2e-volumes: &e2e-volumes
   - ./tsconfig.node.json:/app/tsconfig.node.json:ro
   - ./tailwind.config.js:/app/tailwind.config.js:ro
   - ./postcss.config.js:/app/postcss.config.js:ro
+  - /app/node_modules
 
 services:
   # ── App (default profile) ────────────────────────────────

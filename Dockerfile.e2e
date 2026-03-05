@@ -22,5 +22,10 @@ RUN pnpm install --frozen-lockfile
 # 3 ─ Copy project source
 COPY . .
 
+# Run as non-root to prevent root-owned files leaking to bind-mounts.
+RUN useradd -m -u 1000 -U appuser 2>/dev/null || true \
+    && chown -R 1000:1000 /app
+USER 1000
+
 # Default: run E2E on chromium only (fastest in CI)
 CMD ["pnpm", "test:e2e:ci"]
