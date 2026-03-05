@@ -276,6 +276,12 @@
     animation: lantern-swing 5s infinite alternate ease-in-out;
     pointer-events: none;
     z-index: 10;
+    transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Fade out during gameplay to avoid distraction */
+  [data-screen="play"] .lantern-wrapper {
+    opacity: 0.25 !important;
   }
 
   .lantern-wire {

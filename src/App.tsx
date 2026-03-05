@@ -9,7 +9,10 @@ export default function App() {
   const game = useNonogramGame();
 
   return (
-    <div className="min-h-screen text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30">
+    <div
+      className="min-h-screen text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30"
+      data-screen={game.screen}
+    >
       <div className="oriental-bg" />
       <div className="bg-illustration-dragon" />
       <div className="bg-illustration-tiger" />
