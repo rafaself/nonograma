@@ -163,11 +163,14 @@ function normalizePuzzles(puzzles: RawPuzzle[]): Puzzle[] {
             height,
         };
 
-        return {
+        const result: Puzzle = {
             ...puzzleWithDerivedDimensions,
             resultColors: buildResultColors(puzzleWithDerivedDimensions),
-            ...(puzzle.backgroundColors ? { backgroundColors: buildBackgroundColors(puzzleWithDerivedDimensions) } : {}),
         };
+        if (puzzle.backgroundColors) {
+            result.backgroundColors = buildBackgroundColors(puzzleWithDerivedDimensions)!;
+        }
+        return result;
     });
 }
 
