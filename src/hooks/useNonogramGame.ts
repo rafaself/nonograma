@@ -8,7 +8,8 @@ import { sounds } from '../lib/sounds';
 export function useNonogramGame() {
   const [screen, setScreen] = useState<'home' | 'play'>('home');
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [history, setHistory] = useState<CellState[][][]>([]);
+  const [undoHistory, setUndoHistory] = useState<CellState[][][]>([]);
+  const [redoHistory, setRedoHistory] = useState<CellState[][][]>([]);
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [showVictory, setShowVictory] = useState(false);
@@ -35,7 +36,8 @@ export function useNonogramGame() {
     };
 
     setGameState(initialState);
-    setHistory([]);
+    setUndoHistory([]);
+    setRedoHistory([]);
     setScreen('play');
     setShowVictory(false);
   }, []);
@@ -43,6 +45,8 @@ export function useNonogramGame() {
   const goHome = useCallback(() => {
     setScreen('home');
     setGameState(null);
+    setUndoHistory([]);
+    setRedoHistory([]);
   }, []);
 
   const nextPuzzle = useCallback(() => {
@@ -61,7 +65,8 @@ export function useNonogramGame() {
     setGameState(prev => {
       if (!prev) return null;
 
-      setHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
+      setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
+      setRedoHistory([]);
 
       const newGrid = prev.grid.map(row => [...row]);
       const currentCell = newGrid[r][c];
@@ -100,26 +105,41 @@ export function useNonogramGame() {
   }, [gameState, inputMode, play]);
 
   const undo = useCallback(() => {
-    if (history.length === 0 || !gameState) return;
+    if (undoHistory.length === 0 || !gameState) return;
     play(sounds.undo);
-    const [lastGrid, ...rest] = history;
+    const [lastGrid, ...rest] = undoHistory;
+    setRedoHistory(h => [gameState.grid.map(row => [...row]), ...h].slice(0, 50));
     setGameState({ ...gameState, grid: lastGrid, isSolved: checkWin(lastGrid, gameState.clues) });
-    setHistory(rest);
+    setUndoHistory(rest);
     persistence.saveGame(gameState.puzzle.id, lastGrid, gameState.elapsedTime);
-  }, [history, gameState, play]);
+  }, [undoHistory, gameState, play]);
+
+  const redo = useCallback(() => {
+    if (redoHistory.length === 0 || !gameState) return;
+    play(sounds.undo);
+    const [nextGrid, ...rest] = redoHistory;
+    setUndoHistory(h => [gameState.grid.map(row => [...row]), ...h].slice(0, 50));
+    setGameState({ ...gameState, grid: nextGrid, isSolved: checkWin(nextGrid, gameState.clues) });
+    setRedoHistory(rest);
+    persistence.saveGame(gameState.puzzle.id, nextGrid, gameState.elapsedTime);
+  }, [redoHistory, gameState, play]);
 
   const reset = useCallback(() => {
     if (!gameState || !window.confirm('Reset this puzzle?')) return;
     play(sounds.reset);
     const empty = createEmptyGrid(gameState.puzzle.width, gameState.puzzle.height);
     setGameState({ ...gameState, grid: empty, isSolved: false });
-    setHistory([]);
+    setUndoHistory([]);
+    setRedoHistory([]);
     persistence.resetPuzzle(gameState.puzzle.id);
   }, [gameState, play]);
 
   const isLastPuzzle = gameState
     ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
     : false;
+
+  const canUndo = undoHistory.length > 0;
+  const canRedo = redoHistory.length > 0;
 
   return {
     screen,
@@ -136,7 +156,10 @@ export function useNonogramGame() {
     nextPuzzle,
     handleCellAction,
     undo,
+    redo,
     reset,
+    canUndo,
+    canRedo,
     isLastPuzzle,
   };
 }

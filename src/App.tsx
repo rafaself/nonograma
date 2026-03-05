@@ -1,4 +1,4 @@
-import { Volume2, VolumeX, Undo2, RotateCcw } from 'lucide-react';
+import { Volume2, VolumeX, Undo2, Redo2, RotateCcw } from 'lucide-react';
 import { useNonogramGame } from './hooks/useNonogramGame';
 import { HomeScreen } from './components/HomeScreen';
 import { PlayScreen } from './components/PlayScreen';
@@ -13,34 +13,43 @@ export default function App() {
       <div className="ink-brush" style={{ top: '-10%', left: '-10%' }} />
       <div className="ink-brush" style={{ bottom: '-10%', right: '-10%', animationDelay: '-5s', background: 'radial-gradient(circle, rgba(201, 162, 39, 0.05) 0%, transparent 70%)' }} />
 
-      <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-3">
+      <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-2 md:gap-3">
         {game.screen === 'play' && (
           <>
             <button
               onClick={game.undo}
-              className="p-3 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
+              disabled={!game.canUndo}
+              className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#c9a227]/20 disabled:hover:bg-[#1a1510]/80 disabled:active:scale-100"
               title="Undo"
             >
-              <Undo2 className="w-5 h-5 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
+              <Undo2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
+            </button>
+            <button
+              onClick={game.redo}
+              disabled={!game.canRedo}
+              className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#c9a227]/20 disabled:hover:bg-[#1a1510]/80 disabled:active:scale-100"
+              title="Redo"
+            >
+              <Redo2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
             </button>
             <button
               onClick={game.reset}
-              className="p-3 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
+              className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
               title="Reset"
             >
-              <RotateCcw className="w-5 h-5 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
+              <RotateCcw className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
             </button>
           </>
         )}
         <button
           onClick={() => game.setMuted(m => !m)}
-          className="p-3 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
+          className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
           title={game.muted ? 'Unmute' : 'Mute'}
         >
           {game.muted ? (
-            <VolumeX className="w-5 h-5 md:w-6 md:h-6 text-[#5a4d41]" />
+            <VolumeX className="w-4 h-4 md:w-6 md:h-6 text-[#5a4d41]" />
           ) : (
-            <Volume2 className="w-5 h-5 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
+            <Volume2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
           )}
         </button>
       </div>
