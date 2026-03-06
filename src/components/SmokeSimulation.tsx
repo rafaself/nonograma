@@ -383,7 +383,7 @@ export const SmokeSimulation = memo(function SmokeSimulation({ active = true }: 
         height: '100vh',
         zIndex: -1,
         pointerEvents: 'none',
-        opacity: active ? 0.35 : 0,
+        opacity: active ? 0.15 : 0,
         mixBlendMode: 'screen',
         transition: 'opacity 1s ease-in-out',
       }}

@@ -54,7 +54,7 @@ describe('App', () => {
     smokeSimulationMock.mockClear();
   });
 
-  it('keeps smoke active on home and disables it on play', () => {
+  it('keeps smoke active on all screens', () => {
     useNonogramGameMock.mockReturnValue({
       screen: 'home',
       gameState: null,
@@ -113,7 +113,7 @@ describe('App', () => {
     });
 
     rerender(<App />);
-    expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: false });
+    expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: true });
   });
 
   it('renders home flow and mute toggle', () => {

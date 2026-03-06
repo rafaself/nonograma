@@ -17,7 +17,7 @@ export default function App() {
     >
       <div className="oriental-bg" />
       <MountFujiBackground />
-      <SmokeSimulation active={game.screen === 'home'} />
+      <SmokeSimulation active={true} />
       <div className="bg-illustration-dragon" />
       <div className="bg-illustration-tiger" />
       <div className="bg-illustration-crane" />

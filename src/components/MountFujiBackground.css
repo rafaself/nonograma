@@ -588,7 +588,7 @@
 
 /* Make it adapt to the gameplay nicely */
 [data-screen="play"] .fuji-artwork {
-  opacity: 0.06;
+  opacity: 0.02;
   /* dim it when playing */
   filter: grayscale(0.5);
 }
