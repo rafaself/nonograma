@@ -1,5 +1,5 @@
 # ── deps: install all dependencies (cached unless lockfile changes) ──
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
