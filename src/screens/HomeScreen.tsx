@@ -61,6 +61,7 @@ export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle
             <img
               src="/favicon.png"
               alt="Logo"
+              draggable={false}
               className="w-20 h-20 md:w-28 md:h-28 rounded-3xl shadow-2xl shadow-red-950/40 border border-[#c9a227]/30"
             />
             <div className="absolute -bottom-2 -right-2 bg-[#ae2012] text-white px-2 py-1 text-xs font-bold rounded shadow-lg border border-[#c9a227]/40 rotate-12 font-['Ma_Shan_Zheng']">
