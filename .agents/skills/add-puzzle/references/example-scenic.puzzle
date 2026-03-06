@@ -1,0 +1,25 @@
+# Multi-color puzzle with background
+# Uses different palette letters for different colors in the result,
+# plus a separate background palette for the solved-state backdrop.
+
+title: Tree
+
+palette:
+  G = #2d6a4f
+  T = #78350f
+
+grid:
+  ..G..
+  .GGG.
+  GGGGG
+  ..T..
+  ..T..
+
+background:
+  S = #1d4e89
+
+  SS.SS
+  S...S
+  .....
+  SS.SS
+  SS.SS

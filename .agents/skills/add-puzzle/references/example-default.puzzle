@@ -1,0 +1,11 @@
+# Minimal puzzle using default gold color
+# Use '#' for filled cells when you don't need custom colors.
+
+title: Plus
+
+grid:
+  ..#..
+  ..#..
+  #####
+  ..#..
+  ..#..

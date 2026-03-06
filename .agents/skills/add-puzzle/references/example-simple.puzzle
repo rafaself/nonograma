@@ -1,0 +1,14 @@
+# Simple single-color puzzle
+# All filled cells use one color from the palette.
+
+title: Heart
+
+palette:
+  R = #e63941
+
+grid:
+  .R.R.
+  RRRRR
+  RRRRR
+  .RRR.
+  ..R..
