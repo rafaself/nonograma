@@ -4,7 +4,7 @@ Mobile-responsive Nonogram web app built with React, TypeScript, and Tailwind CS
 
 ## ✨ Features
 
-- 🎨 **35 Curated Puzzles** — 5×5, 10×10, and 15×15 grids.
+- 🎨 **55 Curated Puzzles** — 5×5, 10×10, 15x15 and 20×20 grids.
 - 📱 **Mobile Friendly** — Fill / X mode toggle for touch devices.
 - 🖱️ **Desktop Enhanced** — Left-click to fill, right-click to mark X.
 - 💾 **Persistence** — Game state and progress saved in `localStorage`.
