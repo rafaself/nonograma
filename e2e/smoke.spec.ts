@@ -4,7 +4,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 /** Click the canvas cell at logical grid position (row, col). */
 async function clickCell(page: Page, row: number, col: number) {
-  const canvas = page.locator('canvas');
+  const canvas = page.getByRole('main').locator('canvas');
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Canvas not found');
 
@@ -46,7 +46,7 @@ async function solveHeart(page: Page) {
 async function goToFirstPuzzle(page: Page) {
   await page.goto('/');
   await page.locator('.oriental-card').first().click();
-  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.getByRole('main').locator('canvas')).toBeVisible();
 }
 
 /* ─── Home screen ──────────────────────────────────────────── */
@@ -66,7 +66,7 @@ test.describe('Home screen', () => {
 
   test('shows puzzle cards grouped by size', async ({ page }) => {
     await expect(page.locator('.oriental-card').first()).toBeVisible();
-    await expect(page.getByText('5×5')).toBeVisible();
+    await expect(page.getByText('Trail of the Panda')).toBeVisible();
   });
 
   test('size group sections are collapsible', async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe('Home screen', () => {
     await expect(firstCard).toBeVisible();
 
     // Scope to the 5×5 section
-    const section5x5 = page.locator('section').filter({ has: page.getByText('5×5') }).first();
+    const section5x5 = page.locator('section').filter({ has: page.getByText('Trail of the Panda') }).first();
     const sectionButton = section5x5.locator('button').first();
     const collapseGrid = section5x5.locator('.collapse-grid');
 
@@ -98,16 +98,16 @@ test.describe('Home screen', () => {
 
   test('clicking a card navigates to play screen', async ({ page }) => {
     await page.locator('.oriental-card').first().click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('displays multiple size sections when puzzles exist', async ({
     page,
   }) => {
     // The dataset has 5×5, 10×10, and 15×15 puzzles
-    await expect(page.getByText('5×5')).toBeVisible();
-    await expect(page.getByText('10×10')).toBeVisible();
-    await expect(page.getByText('15×15')).toBeVisible();
+    await expect(page.getByText('Trail of the Panda')).toBeVisible();
+    await expect(page.getByText('Trail of the Tiger')).toBeVisible();
+    await expect(page.getByText('Trail of the Dragon')).toBeVisible();
   });
 
   test('uncompleted cards show RESOLVE label', async ({ page }) => {
@@ -124,7 +124,7 @@ test.describe('Play screen', () => {
   });
 
   test('shows canvas, mode toggle, and toolbar buttons', async ({ page }) => {
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
     await expect(
       page.getByRole('button', { name: /switch to (mark|fill) mode/i }),
     ).toBeVisible();
@@ -230,7 +230,7 @@ test.describe('Solve puzzle & Victory', () => {
     // "Review Trial" closes the modal but stays on play screen
     await page.getByRole('button', { name: /review trial/i }).click();
     await expect(page.getByText('Achieved')).not.toBeVisible();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('"Ascend Next" advances to next puzzle', async ({ page }) => {
@@ -239,7 +239,7 @@ test.describe('Solve puzzle & Victory', () => {
     await expect(page.getByText('Achieved')).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: /ascend next/i }).click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('progress updates on home after solving', async ({ page }) => {
@@ -274,7 +274,7 @@ test.describe('Persistence', () => {
 
     // Re-enter the puzzle – canvas renders without error
     await page.locator('.oriental-card').first().click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('completed status persists across reloads', async ({ page }) => {
@@ -316,7 +316,7 @@ test.describe('Responsive & Accessibility', () => {
 
     await expect(page.getByText('Trails')).toBeVisible();
     await page.locator('.oriental-card').first().click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
 
     await context.close();
   });
@@ -330,7 +330,7 @@ test.describe('Responsive & Accessibility', () => {
 
     await expect(page.getByText('Trails')).toBeVisible();
     await page.locator('.oriental-card').first().click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
 
     await context.close();
   });
@@ -372,7 +372,7 @@ test.describe('Edge cases', () => {
       await clickCell(page, 0, 0);
     }
 
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('switching mode then clicking does not crash', async ({ page }) => {
@@ -386,7 +386,7 @@ test.describe('Edge cases', () => {
     await toggle.click(); // Back to fill mode
     await clickCell(page, 1, 1);
 
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 
   test('navigating home and back preserves game state', async ({ page }) => {
@@ -400,6 +400,6 @@ test.describe('Edge cases', () => {
       .first()
       .click();
     await page.locator('.oriental-card').first().click();
-    await expect(page.locator('canvas')).toBeVisible();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 });
