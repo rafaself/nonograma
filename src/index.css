@@ -33,7 +33,7 @@
     height: 100%;
     background:
       radial-gradient(circle at 50% 50%, #1a1510 0%, #0a0a0a 100%);
-    z-index: -2;
+    z-index: -3;
   }
 
   .oriental-bg::after {
@@ -324,7 +324,8 @@
 
   /* Fade out during gameplay to avoid distraction - Faster fade out */
   [data-screen="play"] .lantern-wrapper {
-    opacity: 0.25 !important;
+    opacity: 0 !important;
+    pointer-events: none;
     transition-duration: 0.5s;
   }
 
