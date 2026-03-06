@@ -51,8 +51,8 @@ export const PlayScreen = memo(function PlayScreen({
             onCellAction={handleBoardAction}
             isSolved={gameState.isSolved}
             inputMode={inputMode}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
+            {...(onDragStart ? { onDragStart } : {})}
+            {...(onDragEnd ? { onDragEnd } : {})}
             {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}
             {...(gameState.puzzle.backgroundColors ? { backgroundColors: gameState.puzzle.backgroundColors } : {})}
           />

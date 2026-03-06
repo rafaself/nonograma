@@ -98,28 +98,25 @@ export function useNonogramGame() {
       play(targetState === CellState.FILLED ? sounds.fill : sounds.erase);
     }
 
-    const col = prev.grid.map(row => row[c]);
+    const colBefore = prev.grid.map(row => row[c]);
     const rowWasDone = isLineSatisfied(prev.grid[r], prev.clues.rows[r]);
-    const colWasDone = isLineSatisfied(col, prev.clues.cols[c]);
+    const colWasDone = isLineSatisfied(colBefore, prev.clues.cols[c]);
 
     newGrid[r][c] = targetState;
-    col[r] = targetState;
 
+    const colAfter = newGrid.map(row => row[c]);
     const rowNowDone = isLineSatisfied(newGrid[r], prev.clues.rows[r]);
-    const colNowDone = isLineSatisfied(col, prev.clues.cols[c]);
+    const colNowDone = isLineSatisfied(colAfter, prev.clues.cols[c]);
 
     // Skip expensive full-grid check when the edited row or column isn't satisfied
     const solved = rowNowDone && colNowDone && checkWin(newGrid, prev.clues);
 
+    // Fill all remaining empty cells with X on solve
+    const finalGrid = solved
+      ? newGrid.map(row => row.map(cell => cell === CellState.EMPTY ? CellState.MARKED_X : cell))
+      : newGrid;
+
     if (solved) {
-      // Fill all remaining empty cells with X
-      for (let row = 0; row < newGrid.length; row++) {
-        for (let col2 = 0; col2 < newGrid[row].length; col2++) {
-          if (newGrid[row][col2] === CellState.EMPTY) {
-            newGrid[row][col2] = CellState.MARKED_X;
-          }
-        }
-      }
       persistence.markCompleted(prev.puzzle.id);
       setCompletedIds(persistence.getCompletedStatus());
       setShowVictory(true);
@@ -128,8 +125,8 @@ export function useNonogramGame() {
       play(sounds.lineComplete);
     }
 
-    persistence.saveGame(prev.puzzle.id, newGrid, prev.elapsedTime);
-    setGameState({ ...prev, grid: newGrid, isSolved: solved });
+    persistence.saveGame(prev.puzzle.id, finalGrid, prev.elapsedTime);
+    setGameState({ ...prev, grid: finalGrid, isSolved: solved });
   }, [gameState, inputMode, play]);
 
   const undo = useCallback(() => {
