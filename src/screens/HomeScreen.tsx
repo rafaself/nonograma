@@ -1,7 +1,7 @@
 import { useState, useMemo, memo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES } from '../data/puzzles';
-import { Play, ChevronRight, ChevronDown, Github, Heart } from 'lucide-react';
+import { Play, ChevronRight, ChevronDown, Github } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
