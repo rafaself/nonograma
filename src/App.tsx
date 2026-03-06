@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Undo2, Redo2, RotateCcw } from 'lucide-react';
 import { SmokeSimulation } from './components/SmokeSimulation';
 import { VolumeControl } from './components/VolumeControl';
@@ -7,14 +8,13 @@ import { PlayScreen } from './screens/PlayScreen';
 import { VictoryModal } from './components/VictoryModal';
 import { MountFujiBackground } from './components/MountFujiBackground';
 
-export default function App() {
-  const game = useNonogramGame();
-
+/**
+ * Static decorative elements that never depend on game state.
+ * Wrapped in memo so they are never re-rendered when the parent updates.
+ */
+const StaticDecorations = memo(function StaticDecorations() {
   return (
-    <div
-      className="min-h-screen text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30"
-      data-screen={game.screen}
-    >
+    <>
       <div className="oriental-bg" />
       <MountFujiBackground />
       <SmokeSimulation active={true} />
@@ -64,6 +64,19 @@ export default function App() {
         </div>
         <div className="lantern-tassel" />
       </div>
+    </>
+  );
+});
+
+export default function App() {
+  const game = useNonogramGame();
+
+  return (
+    <div
+      className="min-h-screen text-[#fdf5e6] flex flex-col items-center relative overflow-hidden selection:bg-[#ae2012]/30"
+      data-screen={game.screen}
+    >
+      <StaticDecorations />
 
       <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-2 md:gap-3">
         {game.screen === 'play' && (
@@ -116,6 +129,8 @@ export default function App() {
             onSetInputMode={game.setInputMode}
             onCellAction={game.handleCellAction}
             onBack={game.goHome}
+            onDragStart={game.beginBatch}
+            onDragEnd={game.endBatch}
           />
         )}
       </main>

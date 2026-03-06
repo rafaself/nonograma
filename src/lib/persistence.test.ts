@@ -4,12 +4,14 @@ import { persistence } from './persistence';
 
 describe('persistence', () => {
   beforeEach(() => {
+    persistence.flushSave();
     localStorage.clear();
   });
 
   it('saves and loads a game', () => {
     const grid = [[CellState.FILLED, CellState.EMPTY]];
     persistence.saveGame('id-1', grid, 12);
+    persistence.flushSave();
 
     expect(persistence.loadGame('id-1')).toEqual({
       grid,
@@ -35,6 +37,7 @@ describe('persistence', () => {
 
   it('resets a puzzle save', () => {
     persistence.saveGame('p1', [[CellState.EMPTY]], 0);
+    persistence.flushSave();
     persistence.resetPuzzle('p1');
     expect(persistence.loadGame('p1')).toBeNull();
   });
@@ -55,6 +58,7 @@ describe('persistence', () => {
 
     it('accepts valid puzzle ids with alphanumeric, hyphens, and underscores', () => {
       persistence.saveGame('my_puzzle-1', [[CellState.FILLED]], 5);
+      persistence.flushSave();
       expect(persistence.loadGame('my_puzzle-1')).toEqual({
         grid: [[CellState.FILLED]],
         elapsedTime: 5,

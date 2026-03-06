@@ -56,11 +56,40 @@ function safeParse(raw: string): unknown {
     }
 }
 
+/**
+ * Debounced save: during drag operations saveGame can fire dozens of times
+ * per second. We coalesce writes so localStorage.setItem + JSON.stringify
+ * only happens once per 300 ms.
+ */
+let pendingSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSaveData: { key: string; data: SaveData } | null = null;
+
+function flushPendingSave(): void {
+    if (pendingSaveData) {
+        localStorage.setItem(pendingSaveData.key, JSON.stringify(pendingSaveData.data));
+        pendingSaveData = null;
+    }
+    if (pendingSaveTimer !== null) {
+        clearTimeout(pendingSaveTimer);
+        pendingSaveTimer = null;
+    }
+}
+
 export const persistence = {
     saveGame(puzzleId: string, grid: CellState[][], elapsedTime: number) {
         const id = sanitizeId(puzzleId);
+        const key = `${STORAGE_KEY_PREFIX}${id}`;
         const data: SaveData = { grid, elapsedTime };
-        localStorage.setItem(`${STORAGE_KEY_PREFIX}${id}`, JSON.stringify(data));
+
+        // Store latest data and (re)start the debounce timer
+        pendingSaveData = { key, data };
+        if (pendingSaveTimer !== null) clearTimeout(pendingSaveTimer);
+        pendingSaveTimer = setTimeout(flushPendingSave, 300);
+    },
+
+    /** Force any pending save to disk immediately (e.g. before navigation). */
+    flushSave() {
+        flushPendingSave();
     },
 
     loadGame(puzzleId: string): SaveData | null {

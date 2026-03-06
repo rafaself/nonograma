@@ -85,6 +85,7 @@ vi.mock('../lib/persistence', () => ({
     markCompleted: (...args: Parameters<typeof mocks.markCompleted>) => mocks.markCompleted(...args),
     getCompletedStatus: () => mocks.getCompletedStatus(),
     resetPuzzle: (...args: Parameters<typeof mocks.resetPuzzle>) => mocks.resetPuzzle(...args),
+    flushSave: vi.fn(),
     getMuted: () => false,
     setMuted: vi.fn(),
     getVolume: () => 0.5,

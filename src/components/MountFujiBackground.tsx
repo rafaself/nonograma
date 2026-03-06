@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import './MountFujiBackground.css';
 
-export function MountFujiBackground() {
+export const MountFujiBackground = memo(function MountFujiBackground() {
     return (
         <div className="fuji-artwork" aria-label="A modern CSS Illustration of Mount Fuji at Sunset">
             <div className="sky-gradient"></div>
@@ -53,4 +54,4 @@ export function MountFujiBackground() {
             </div>
         </div>
     );
-}
+});

@@ -11,6 +11,8 @@ interface PlayScreenProps {
   onSetInputMode: (mode: CellState.FILLED | CellState.MARKED_X) => void;
   onCellAction: (row: number, col: number, mouseButton?: number) => void;
   onBack: () => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 export const PlayScreen = memo(function PlayScreen({
@@ -19,6 +21,8 @@ export const PlayScreen = memo(function PlayScreen({
   onSetInputMode,
   onCellAction,
   onBack,
+  onDragStart,
+  onDragEnd,
 }: PlayScreenProps) {
   const handleBoardAction = useCallback(
     (row: number, col: number, action: 'fill' | 'mark_x') => {
@@ -47,6 +51,8 @@ export const PlayScreen = memo(function PlayScreen({
             onCellAction={handleBoardAction}
             isSolved={gameState.isSolved}
             inputMode={inputMode}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
             {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}
             {...(gameState.puzzle.backgroundColors ? { backgroundColors: gameState.puzzle.backgroundColors } : {})}
           />

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type { Puzzle, GameState } from '../lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from '../lib/game-logic';
 import { persistence } from '../lib/persistence';
@@ -15,6 +15,10 @@ export function useNonogramGame() {
   const [showVictory, setShowVictory] = useState(false);
   const [muted, setMuted] = useState(() => persistence.getMuted());
   const [volume, setVolume] = useState(() => persistence.getVolume());
+
+  // --- Drag-batch undo: one undo entry per drag stroke instead of per cell ---
+  const batchActiveRef = useRef(false);
+  const batchSnapshotPushedRef = useRef(false);
 
   const play = useCallback((fn: (v: number) => void) => {
     if (!muted) fn(volume);
@@ -53,6 +57,7 @@ export function useNonogramGame() {
   }, []);
 
   const goHome = useCallback(() => {
+    persistence.flushSave();
     setScreen('home');
     setGameState(null);
     setUndoHistory([]);
@@ -74,8 +79,12 @@ export function useNonogramGame() {
 
     const prev = gameState;
 
-    setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
-    setRedoHistory([]);
+    // During a drag batch, only push the undo snapshot once (on the first cell)
+    if (!batchActiveRef.current || !batchSnapshotPushedRef.current) {
+      setUndoHistory(h => [prev.grid.map(row => [...row]), ...h].slice(0, 50));
+      setRedoHistory([]);
+      if (batchActiveRef.current) batchSnapshotPushedRef.current = true;
+    }
 
     const newGrid = prev.grid.map(row => [...row]);
     const currentCell = newGrid[r][c];
@@ -157,6 +166,18 @@ export function useNonogramGame() {
     ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
     : false, [gameState]);
 
+  /** Call before a drag stroke begins so all cells in the drag share one undo entry. */
+  const beginBatch = useCallback(() => {
+    batchActiveRef.current = true;
+    batchSnapshotPushedRef.current = false;
+  }, []);
+
+  /** Call when the drag stroke ends. */
+  const endBatch = useCallback(() => {
+    batchActiveRef.current = false;
+    batchSnapshotPushedRef.current = false;
+  }, []);
+
   const canUndo = undoHistory.length > 0;
   const canRedo = redoHistory.length > 0;
 
@@ -182,5 +203,7 @@ export function useNonogramGame() {
     canUndo,
     canRedo,
     isLastPuzzle,
+    beginBatch,
+    endBatch,
   };
 }

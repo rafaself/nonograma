@@ -13,6 +13,8 @@ export interface NonogramBoardCanvasProps {
   inputMode: CellState.FILLED | CellState.MARKED_X;
   resultColors?: (string | null)[][];
   backgroundColors?: (string | null)[][];
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 interface DragState {
@@ -29,6 +31,8 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   inputMode,
   resultColors,
   backgroundColors,
+  onDragStart,
+  onDragEnd,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,6 +55,22 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       colClueHeight: maxColLen * (fs * 1.2 + sp) + 6,
     };
   }, [clues, cellSize]);
+
+  // Pre-compute which rows/cols are satisfied to avoid O(rows*cols) work in JSX
+  const satisfiedRows = useMemo(() =>
+    clues.rows.map((rowClues, r) =>
+      isLineSatisfied(grid[r], rowClues) && !(rowClues.length === 1 && rowClues[0] === 0)
+    ),
+    [grid, clues.rows],
+  );
+
+  const satisfiedCols = useMemo(() =>
+    clues.cols.map((colClues, c) => {
+      const col = grid.map(row => row[c]);
+      return isLineSatisfied(col, colClues) && !(colClues.length === 1 && colClues[0] === 0);
+    }),
+    [grid, clues.cols],
+  );
 
   // --- Resize ---
   /* c8 ignore start */
@@ -136,6 +156,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       if (!cell) return;
 
       const action = resolveAction(e);
+      onDragStart?.();
       dragRef.current = {
         active: true,
         action,
@@ -143,7 +164,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       };
       onCellAction(cell.row, cell.col, action);
     },
-    [isSolved, getCell, resolveAction, onCellAction],
+    [isSolved, getCell, resolveAction, onCellAction, onDragStart],
   );
 
   const handlePointerMove = useCallback(
@@ -164,8 +185,11 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   );
 
   const handlePointerUp = useCallback(() => {
+    if (dragRef.current) {
+      onDragEnd?.();
+    }
     dragRef.current = null;
-  }, []);
+  }, [onDragEnd]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -185,17 +209,13 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
 
         {/* Column clues */}
         <div className="flex">
-          {clues.cols.map((colClues, c) => {
-            const satisfied =
-              isLineSatisfied(grid.map(row => row[c]), colClues) &&
-              !(colClues.length === 1 && colClues[0] === 0);
-            return (
+          {clues.cols.map((colClues, c) => (
               <div
                 key={c}
                 className={cn(
                   'flex flex-col justify-end items-center transition-colors',
                   c % 5 === 4 && c !== cols - 1 && 'border-r border-r-[#c9a227]/20',
-                  satisfied ? 'text-[#5a4d41]' : 'text-[#ae2012]',
+                  satisfiedCols[c] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
                 )}
                 style={{ width: cellSize, fontSize, paddingBottom: 2 }}
               >
@@ -204,7 +224,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
                     key={i}
                     className={cn(
                       "font-bold leading-tight font-['Noto_Serif_JP'] transition-colors",
-                      satisfied ? "text-[#5a4d41]" : "text-[#ae2012]"
+                      satisfiedCols[c] ? "text-[#5a4d41]" : "text-[#ae2012]"
                     )}
                     style={{ marginBottom: i < colClues.length - 1 ? spacing : 0 }}
                   >
@@ -212,23 +232,18 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
                   </span>
                 ))}
               </div>
-            );
-          })}
+          ))}
         </div>
 
         {/* Row clues */}
         <div className="flex flex-col">
-          {clues.rows.map((rowClues, r) => {
-            const satisfied =
-              isLineSatisfied(grid[r], rowClues) &&
-              !(rowClues.length === 1 && rowClues[0] === 0);
-            return (
+          {clues.rows.map((rowClues, r) => (
               <div
                 key={r}
                 className={cn(
                   'flex justify-end items-center px-2 transition-colors',
                   r % 5 === 4 && r !== rows - 1 && 'border-b border-b-[#c9a227]/20',
-                  satisfied ? 'text-[#5a4d41]' : 'text-[#ae2012]',
+                  satisfiedRows[r] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
                 )}
                 style={{ height: cellSize, paddingRight: 4, fontSize, gap: spacing }}
               >
@@ -240,8 +255,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
                   ))}
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
 
         {/* Canvas grid */}
