@@ -1,7 +1,7 @@
 import { useState, useMemo, memo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES } from '../data/puzzles';
-import { Play, ChevronRight, ChevronDown } from 'lucide-react';
+import { Play, ChevronRight, ChevronDown, Github, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
@@ -197,6 +197,21 @@ export const HomeScreen = memo(function HomeScreen({ completedIds, onStartPuzzle
           );
         })}
       </div>
+
+      {/* ── Footer ── */}
+      <footer className="mt-24 mb-8 flex flex-col items-center gap-3 text-[11px] text-[#7a7a7a] tracking-wide">
+        <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#c9a227]/30 to-transparent mb-1" />
+        <a
+          href="https://github.com/rafaself"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 hover:text-[#fdf5e6] transition-colors"
+        >
+          Made by Rafael
+          <Github className="w-3.5 h-3.5" />
+        </a>
+        <span className="text-[10px] text-[#555]">Nonogram puzzle game · Open source</span>
+      </footer>
     </div>
   );
 });
