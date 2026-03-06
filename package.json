@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Oriental-themed Picross puzzle game",
+  "homepage": "https://nonograma.alsogravity.com/",
   "packageManager": "pnpm@10.30.1",
   "scripts": {
     "dev": "vite",
