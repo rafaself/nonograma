@@ -13,6 +13,7 @@ const TRAIL_NAMES: Record<string, string> = {
   '5×5': 'Trail of the Panda',
   '10×10': 'Trail of the Tiger',
   '15×15': 'Trail of the Dragon',
+  '20×20': 'Trail of the Wukong',
 };
 
 /** Group puzzles by grid size for visual sections */
