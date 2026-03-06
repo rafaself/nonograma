@@ -258,7 +258,7 @@ test.describe('Solve puzzle & Victory', () => {
     // Scoped to the tabular-nums progress counter
     await expect(page.locator('.tabular-nums').first()).toHaveText(/[1-9]\d*\/\d+/);
     const firstCard = page.locator('.oriental-card').first();
-    await expect(firstCard.getByText('SUCCESS')).toBeVisible();
+    await expect(firstCard.getByText('成功')).toBeVisible();
   });
 });
 
