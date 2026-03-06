@@ -107,6 +107,25 @@ Format: `{type}: {description}` (feat, fix, refactor). Imperative mood, lowercas
 - Do NOT reduce coverage below 100% -- use `/* c8 ignore */` for untestable code
 - Do NOT use `npm` or `yarn` -- this project uses `pnpm`
 
+## Agent Skills
+
+Reusable skills for common tasks live in `.agents/skills/`. Load them to get step-by-step instructions and scripts.
+
+| Skill | Description |
+|-------|-------------|
+| `verify` | Run the full quality pipeline: lint → typecheck → test (100% coverage) → build → optional E2E |
+| `add-puzzle` | Add a new nonogram puzzle via visual `.puzzle` files. Includes `scripts/create-puzzle.mjs` to generate TypeScript, preview in terminal, validate, and auto-assign IDs |
+| `add-component` | Create a React component following project conventions (memo, Props interface, colocated tests) |
+| `add-e2e-test` | Write a Playwright E2E test with the right helpers and selectors for this project |
+
+### add-puzzle script
+
+```bash
+node .agents/skills/add-puzzle/scripts/create-puzzle.mjs my-puzzle.puzzle   # Generate TS
+node .agents/skills/add-puzzle/scripts/create-puzzle.mjs --preview my.puzzle # Terminal preview
+node .agents/skills/add-puzzle/scripts/create-puzzle.mjs --next-id 10x10     # Next available ID
+```
+
 ## CI Pipeline
 
 GitHub Actions on push/PR to main: lint, type-check, audit, unit tests (with coverage), build, e2e (chromium only).
