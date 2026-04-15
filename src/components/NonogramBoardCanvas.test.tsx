@@ -2,12 +2,17 @@ import { fireEvent, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CellState } from '../lib/game-logic';
 import { NonogramBoardCanvas } from './NonogramBoardCanvas';
-import { computeCellSize } from '../lib/canvasSizing';
+import { computeStableCellSize } from '../lib/canvasSizing';
 import { hitTest, renderBoard } from '../lib/boardRender';
 
-vi.mock('../lib/canvasSizing', () => ({
-  computeCellSize: vi.fn(() => 24),
-}));
+vi.mock('../lib/canvasSizing', async () => {
+  const actual = await vi.importActual<typeof import('../lib/canvasSizing')>('../lib/canvasSizing');
+
+  return {
+    ...actual,
+    computeStableCellSize: vi.fn(() => 24),
+  };
+});
 
 vi.mock('../lib/boardRender', () => ({
   renderBoard: vi.fn(),
@@ -42,7 +47,7 @@ describe('NonogramBoardCanvas', () => {
     fireEvent(window, new Event('resize'));
     unmount();
 
-    expect(computeCellSize).toHaveBeenCalled();
+    expect(computeStableCellSize).toHaveBeenCalled();
     expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(renderBoard).toHaveBeenCalledWith(
@@ -64,7 +69,7 @@ describe('NonogramBoardCanvas', () => {
       />,
     );
 
-    expect(computeCellSize).toHaveBeenCalled();
+    expect(computeStableCellSize).toHaveBeenCalled();
     expect(renderBoard).toHaveBeenCalled();
     expect(container.querySelector('canvas')).toBeTruthy();
   });

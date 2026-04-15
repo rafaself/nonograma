@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { CellState, isLineSatisfied } from '../lib/game-logic';
 import type { Clues } from '../lib/game-logic';
-import { computeCellSize } from '../lib/canvasSizing';
+import { computeClueLayoutMetrics, computeStableCellSize } from '../lib/canvasSizing';
 import { renderBoard, hitTest } from '../lib/boardRender';
 import { cn } from '../lib/utils';
 
@@ -43,18 +43,18 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
 
   const [cellSize, setCellSize] = useState(32);
 
-  const { fontSize, spacing, rowClueWidth, colClueHeight } = useMemo(() => {
-    const maxRowLen = Math.max(...clues.rows.map(r => r.length));
-    const maxColLen = Math.max(...clues.cols.map(c => c.length));
-    const fs = Math.max(10, Math.min(18, cellSize * 0.45));
-    const sp = 5;
-    return {
-      fontSize: fs,
-      spacing: sp,
-      rowClueWidth: maxRowLen * (fs * 1.2 + sp) + 8,
-      colClueHeight: maxColLen * (fs * 1.2 + sp) + 6,
-    };
-  }, [clues, cellSize]);
+  const maxRowClueCount = useMemo(
+    () => Math.max(...clues.rows.map((rowClues) => rowClues.length)),
+    [clues.rows],
+  );
+  const maxColClueCount = useMemo(
+    () => Math.max(...clues.cols.map((colClues) => colClues.length)),
+    [clues.cols],
+  );
+  const { fontSize, spacing, rowClueWidth, colClueHeight } = useMemo(
+    () => computeClueLayoutMetrics(cellSize, maxRowClueCount, maxColClueCount),
+    [cellSize, maxRowClueCount, maxColClueCount],
+  );
 
   // Pre-compute which rows/cols are satisfied to avoid O(rows*cols) work in JSX
   const satisfiedRows = useMemo(() =>
@@ -81,7 +81,16 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
     const compute = () => {
       const availW = el.clientWidth;
       const availH = window.innerHeight - 180;
-      setCellSize(computeCellSize(availW, availH, cols, rows, rowClueWidth, colClueHeight));
+      setCellSize(
+        computeStableCellSize(
+          availW,
+          availH,
+          cols,
+          rows,
+          maxRowClueCount,
+          maxColClueCount,
+        ),
+      );
     };
 
     compute();
@@ -95,7 +104,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
     };
-  }, [cols, rows, rowClueWidth, colClueHeight]);
+  }, [cols, rows, maxRowClueCount, maxColClueCount]);
   /* c8 ignore stop */
 
   // --- Canvas render ---
