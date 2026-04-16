@@ -72,6 +72,9 @@ const StaticDecorations = memo(function StaticDecorations() {
 
 export default function App() {
   const game = useNonogramGame();
+  const mainShellClassName = game.screen === 'play'
+    ? 'w-full max-w-7xl flex-1 flex flex-col overflow-y-auto overflow-x-hidden px-2 md:px-6 pt-16 pb-4 md:pt-20 md:pb-6'
+    : 'w-full max-w-6xl flex-1 flex flex-col px-2 md:px-12 py-14 md:py-24';
 
   return (
     <div
@@ -135,7 +138,7 @@ export default function App() {
         />
       </div>
 
-      <main className="w-full max-w-6xl flex-1 flex flex-col px-2 md:px-12 py-14 md:py-24">
+      <main className={mainShellClassName}>
         {game.screen === 'home' && (
           <HomeScreen
             completedIds={game.completedIds}

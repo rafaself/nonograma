@@ -46,11 +46,11 @@ export const PlayScreen = memo(function PlayScreen({
         <span className="font-['Ma_Shan_Zheng'] tracking-widest uppercase hidden md:inline">Return to Trails</span>
       </button>
 
-      <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
+      <div className="relative flex max-w-full flex-1 flex-col items-center animate-in zoom-in-95 duration-500 min-h-0">
         {tutorial && (
           <section
             aria-label="How to play"
-            className="mb-6 w-full max-w-3xl border border-[#c9a227]/20 bg-[#120f0b]/90 p-5 shadow-2xl shadow-black/20"
+            className="mb-4 w-full max-w-3xl shrink-0 border border-[#c9a227]/20 bg-[#120f0b]/90 p-5 shadow-2xl shadow-black/20"
           >
             <div className="mb-3 flex flex-wrap items-center gap-3">
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#c9a227]">
@@ -79,7 +79,7 @@ export const PlayScreen = memo(function PlayScreen({
           </section>
         )}
 
-        <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 px-4 md:px-8 overflow-hidden">
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-2 md:px-4">
           <p id={boardDescriptionId} className="sr-only">
             Puzzle board for {gameState.puzzle.title}. Grid size {gameState.puzzle.width} by {gameState.puzzle.height}. Current mode is {inputMode === CellState.FILLED ? 'fill' : 'mark x'}. On desktop, left click fills and right click marks X. On touch, tap uses the current mode, hold uses the alternate action, and two fingers zoom or pan the board.
           </p>
@@ -99,7 +99,7 @@ export const PlayScreen = memo(function PlayScreen({
           />
         </div>
 
-        <div className="mt-6 md:mt-10 mb-6 flex flex-col items-center gap-4">
+        <div className="mt-3 mb-3 flex shrink-0 flex-col items-center gap-3 md:mt-5 md:mb-4 md:gap-4">
           <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#7a7a7a]">Instruction</span>
           <button
             onClick={() =>

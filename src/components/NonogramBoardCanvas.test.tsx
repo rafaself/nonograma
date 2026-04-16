@@ -88,7 +88,7 @@ describe('NonogramBoardCanvas', () => {
     resizeObserverCallback?.([], {} as ResizeObserver);
     unmount();
 
-    expect(computeStableCellSize).toHaveBeenCalledWith(320, 480, 1, 1, 1, 1);
+    expect(computeStableCellSize).toHaveBeenCalledWith(320, 620, 1, 1, 1, 1);
     expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(observeSpy).toHaveBeenCalled();

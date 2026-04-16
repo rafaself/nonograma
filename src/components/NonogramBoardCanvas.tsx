@@ -146,7 +146,8 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
 
     const compute = () => {
       const availW = el.clientWidth;
-      const availH = el.clientHeight;
+      const viewportHeightBudget = Math.max(window.innerHeight - 180, 0);
+      const availH = Math.max(el.clientHeight, viewportHeightBudget);
       setCellSize(
         computeStableCellSize(
           availW,
