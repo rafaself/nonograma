@@ -1,7 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { createRef } from 'react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { CellState } from '../lib/game-logic';
 import { NonogramBoardCanvas } from './NonogramBoardCanvas';
+import type { NonogramBoardCanvasHandle } from './NonogramBoardCanvas';
 import { computeStableCellSize } from '../lib/canvasSizing';
 import { hitTest, renderBoard } from '../lib/boardRender';
 
@@ -117,6 +119,36 @@ describe('NonogramBoardCanvas', () => {
     expect(computeStableCellSize).toHaveBeenCalled();
     expect(renderBoard).toHaveBeenCalled();
     expect(screen.getByRole('img', { name: 'Puzzle board for Alpha' })).toHaveAttribute('aria-describedby', 'board-help');
+  });
+
+  it('exposes zoom controls that update the board viewport transform', () => {
+    const boardRef = createRef<NonogramBoardCanvasHandle>();
+
+    render(
+      <NonogramBoardCanvas
+        ref={boardRef}
+        grid={[[CellState.EMPTY]]}
+        clues={{ rows: [[0]], cols: [[0]] }}
+        onCellAction={() => {}}
+        isSolved={false}
+        inputMode={CellState.FILLED}
+        ariaLabel="Zoomable board"
+      />,
+    );
+
+    const viewport = screen.getByRole('img', { name: 'Zoomable board' }).parentElement;
+    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1)');
+
+    act(() => {
+      boardRef.current?.zoomIn();
+    });
+    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1.25)');
+
+    act(() => {
+      boardRef.current?.zoomOut();
+      boardRef.current?.zoomOut();
+    });
+    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1)');
   });
 
   it('handles pointer interactions for mouse and drag dedupe', () => {

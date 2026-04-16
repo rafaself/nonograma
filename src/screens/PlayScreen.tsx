@@ -1,9 +1,10 @@
-import { useCallback, memo, useId } from 'react';
+import { memo, useCallback, useId, useRef } from 'react';
 import type { GameState } from '../lib/game-logic';
 import { CellState } from '../lib/game-logic';
-import { ChevronLeft, X, Square } from 'lucide-react';
+import { ChevronLeft, Square, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { NonogramBoardCanvas } from '../components/NonogramBoardCanvas';
+import type { NonogramBoardCanvasHandle } from '../components/NonogramBoardCanvas';
 
 interface PlayScreenProps {
   gameState: GameState;
@@ -26,6 +27,7 @@ export const PlayScreen = memo(function PlayScreen({
 }: PlayScreenProps) {
   const tutorial = gameState.puzzle.tutorial;
   const boardDescriptionId = useId();
+  const boardRef = useRef<NonogramBoardCanvasHandle>(null);
 
   const handleBoardAction = useCallback(
     (row: number, col: number, action: 'fill' | 'mark_x') => {
@@ -84,6 +86,7 @@ export const PlayScreen = memo(function PlayScreen({
             Puzzle board for {gameState.puzzle.title}. Grid size {gameState.puzzle.width} by {gameState.puzzle.height}. Current mode is {inputMode === CellState.FILLED ? 'fill' : 'mark x'}. On desktop, left click fills and right click marks X. On touch, tap uses the current mode, hold uses the alternate action, and two fingers zoom or pan the board.
           </p>
           <NonogramBoardCanvas
+            ref={boardRef}
             key={gameState.puzzle.id}
             grid={gameState.grid}
             clues={gameState.clues}
@@ -100,6 +103,26 @@ export const PlayScreen = memo(function PlayScreen({
         </div>
 
         <div className="mt-3 mb-3 flex shrink-0 flex-col items-center gap-3 md:mt-5 md:mb-4 md:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => boardRef.current?.zoomOut()}
+              className="flex h-11 items-center gap-2 rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-4 text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+              aria-label="Zoom out board"
+            >
+              <ZoomOut className="h-4 w-4" />
+              <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Zoom Out</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => boardRef.current?.zoomIn()}
+              className="flex h-11 items-center gap-2 rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-4 text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+              aria-label="Zoom in board"
+            >
+              <ZoomIn className="h-4 w-4" />
+              <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Zoom In</span>
+            </button>
+          </div>
           <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#7a7a7a]">Instruction</span>
           <button
             onClick={() =>

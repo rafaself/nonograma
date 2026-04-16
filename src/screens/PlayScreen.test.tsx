@@ -1,25 +1,39 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CellState, type GameState } from '../lib/game-logic';
 import { PlayScreen } from './PlayScreen';
 
 const canvasPropsSpy = vi.fn();
+const zoomInSpy = vi.fn();
+const zoomOutSpy = vi.fn();
 
-vi.mock('../components/NonogramBoardCanvas', () => ({
-  NonogramBoardCanvas: (props: {
-    onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void;
-    resultColors?: (string | null)[][];
-    backgroundColors?: (string | null)[][];
-  }) => {
-    canvasPropsSpy(props);
-    return (
-      <div>
-        <button onClick={() => props.onCellAction(1, 2, 'fill')}>fill cell</button>
-        <button onClick={() => props.onCellAction(3, 4, 'mark_x')}>mark cell</button>
-      </div>
-    );
-  },
-}));
+vi.mock('../components/NonogramBoardCanvas', async () => {
+  const React = await vi.importActual<typeof import('react')>('react');
+
+  return {
+    NonogramBoardCanvas: React.forwardRef<
+      { zoomIn: () => void; zoomOut: () => void },
+      {
+        onCellAction: (r: number, c: number, action: 'fill' | 'mark_x') => void;
+        resultColors?: (string | null)[][];
+        backgroundColors?: (string | null)[][];
+      }
+    >(function NonogramBoardCanvasMock(props, ref) {
+      canvasPropsSpy(props);
+      React.useImperativeHandle(ref, () => ({
+        zoomIn: zoomInSpy,
+        zoomOut: zoomOutSpy,
+      }));
+
+      return (
+        <div>
+          <button onClick={() => props.onCellAction(1, 2, 'fill')}>fill cell</button>
+          <button onClick={() => props.onCellAction(3, 4, 'mark_x')}>mark cell</button>
+        </div>
+      );
+    }),
+  };
+});
 
 const gameState: GameState = {
   puzzle: {
@@ -41,6 +55,12 @@ const gameState: GameState = {
 };
 
 describe('PlayScreen', () => {
+  beforeEach(() => {
+    canvasPropsSpy.mockClear();
+    zoomInSpy.mockClear();
+    zoomOutSpy.mockClear();
+  });
+
   it('renders tutorial guidance when the puzzle includes tutorial metadata', () => {
     const tutorialState: GameState = {
       ...gameState,
@@ -121,6 +141,24 @@ describe('PlayScreen', () => {
     expect(onCellAction).toHaveBeenNthCalledWith(2, 3, 4, 2);
     expect(onSetInputMode).toHaveBeenCalledWith(CellState.MARKED_X);
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders zoom controls that delegate to the board canvas handle', () => {
+    render(
+      <PlayScreen
+        gameState={gameState}
+        inputMode={CellState.FILLED}
+        onSetInputMode={() => {}}
+        onCellAction={() => {}}
+        onBack={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out board' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in board' }));
+
+    expect(zoomOutSpy).toHaveBeenCalledTimes(1);
+    expect(zoomInSpy).toHaveBeenCalledTimes(1);
   });
 
 

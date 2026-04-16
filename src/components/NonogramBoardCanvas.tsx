@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { CellState, isLineSatisfied } from '../lib/game-logic';
 import type { Clues } from '../lib/game-logic';
 import { computeClueLayoutMetrics, computeStableCellSize } from '../lib/canvasSizing';
@@ -24,6 +24,11 @@ export interface NonogramBoardCanvasProps {
   onDragEnd?: () => void;
   ariaLabel?: string;
   ariaDescribedBy?: string;
+}
+
+export interface NonogramBoardCanvasHandle {
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 interface DragState {
@@ -56,8 +61,9 @@ const DEFAULT_VIEWPORT: BoardViewport = {
 
 const TOUCH_HOLD_DELAY_MS = 250;
 const TOUCH_MOVE_SLOP_PX = 8;
+const ZOOM_STEP = 0.25;
 
-const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
+const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, NonogramBoardCanvasProps>(function NonogramBoardCanvas({
   grid,
   clues,
   onCellAction,
@@ -69,7 +75,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   onDragEnd,
   ariaLabel,
   ariaDescribedBy,
-}) => {
+}, ref) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -122,6 +128,22 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
     viewportRef.current = clampedViewport;
     setViewport(clampedViewport);
   }, [boardWidth, boardHeight]);
+
+  const adjustViewportScale = useCallback((scaleDelta: number) => {
+    commitViewport({
+      ...viewportRef.current,
+      scale: viewportRef.current.scale + scaleDelta,
+    });
+  }, [commitViewport]);
+
+  useImperativeHandle(ref, () => ({
+    zoomIn: () => {
+      adjustViewportScale(ZOOM_STEP);
+    },
+    zoomOut: () => {
+      adjustViewportScale(-ZOOM_STEP);
+    },
+  }), [adjustViewportScale]);
 
   const finalizeDrag = useCallback(() => {
     if (dragRef.current) {
@@ -523,6 +545,6 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
       </div>
     </div>
   );
-};
+});
 
-export const NonogramBoardCanvas = memo(NonogramBoardCanvasBase);
+export const NonogramBoardCanvas = memo(NonogramBoardCanvasComponent);
