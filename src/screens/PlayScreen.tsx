@@ -103,26 +103,6 @@ export const PlayScreen = memo(function PlayScreen({
         </div>
 
         <div className="mt-3 mb-3 flex shrink-0 flex-col items-center gap-3 md:mt-5 md:mb-4 md:gap-4">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => boardRef.current?.zoomOut()}
-              className="flex h-11 items-center gap-2 rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-4 text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
-              aria-label="Zoom out board"
-            >
-              <ZoomOut className="h-4 w-4" />
-              <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Zoom Out</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => boardRef.current?.zoomIn()}
-              className="flex h-11 items-center gap-2 rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-4 text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
-              aria-label="Zoom in board"
-            >
-              <ZoomIn className="h-4 w-4" />
-              <span className="text-[10px] font-bold tracking-[0.25em] uppercase">Zoom In</span>
-            </button>
-          </div>
           <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-[#7a7a7a]">Instruction</span>
           <button
             onClick={() =>
@@ -163,6 +143,24 @@ export const PlayScreen = memo(function PlayScreen({
               <Square className="w-5 h-5 md:w-6 md:h-6 fill-current" />
             </span>
           </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => boardRef.current?.zoomOut()}
+              className="flex h-11 w-11 items-center justify-center rounded-sm border border-[#c9a227]/20 bg-[#1a1510] text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+              aria-label="Zoom out board"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => boardRef.current?.zoomIn()}
+              className="flex h-11 w-11 items-center justify-center rounded-sm border border-[#c9a227]/20 bg-[#1a1510] text-[#fdf5e6] transition-all hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+              aria-label="Zoom in board"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </>
