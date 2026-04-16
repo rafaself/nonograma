@@ -81,7 +81,7 @@ export const PlayScreen = memo(function PlayScreen({
           </section>
         )}
 
-        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-2 md:px-4">
+        <div className="flex w-full flex-1 flex-col items-center justify-center px-2 md:px-4">
           <p id={boardDescriptionId} className="sr-only">
             Puzzle board for {gameState.puzzle.title}. Grid size {gameState.puzzle.width} by {gameState.puzzle.height}. Current mode is {inputMode === CellState.FILLED ? 'fill' : 'mark x'}. On desktop, left click fills and right click marks X. On touch, tap uses the current mode, hold uses the alternate action, and two fingers zoom or pan the board.
           </p>

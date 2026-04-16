@@ -9,16 +9,33 @@ export interface ViewportPoint {
   y: number;
 }
 
-export function clampBoardScale(scale: number): number {
-  return Math.max(1, Math.min(3, scale));
+const MIN_BOARD_SCALE = 1;
+const ABSOLUTE_MAX_BOARD_SCALE = 2.5;
+const MIN_INTERACTIVE_MAX_BOARD_SCALE = 1.35;
+const TARGET_MAX_RENDERED_CELL_SIZE = 72;
+
+export function getBoardMaxScale(cellSize: number): number {
+  if (cellSize <= 0) {
+    return MIN_INTERACTIVE_MAX_BOARD_SCALE;
+  }
+
+  return Math.max(
+    MIN_INTERACTIVE_MAX_BOARD_SCALE,
+    Math.min(ABSOLUTE_MAX_BOARD_SCALE, TARGET_MAX_RENDERED_CELL_SIZE / cellSize),
+  );
+}
+
+export function clampBoardScale(scale: number, maxScale = ABSOLUTE_MAX_BOARD_SCALE): number {
+  return Math.max(MIN_BOARD_SCALE, Math.min(Math.max(MIN_BOARD_SCALE, maxScale), scale));
 }
 
 export function clampBoardViewport(
   viewport: BoardViewport,
   boardWidth: number,
   boardHeight: number,
+  maxScale = ABSOLUTE_MAX_BOARD_SCALE,
 ): BoardViewport {
-  const scale = clampBoardScale(viewport.scale);
+  const scale = clampBoardScale(viewport.scale, maxScale);
   const maxOffsetX = (boardWidth * (scale - 1)) / 2;
   const maxOffsetY = (boardHeight * (scale - 1)) / 2;
 
@@ -46,14 +63,18 @@ export function getPinchViewport(
   currentPoints: [ViewportPoint, ViewportPoint],
   boardWidth: number,
   boardHeight: number,
+  maxScale = ABSOLUTE_MAX_BOARD_SCALE,
 ): BoardViewport {
   const baseDistance = getPinchDistance(startPoints[0], startPoints[1]);
   if (baseDistance === 0) {
-    return clampBoardViewport(startViewport, boardWidth, boardHeight);
+    return clampBoardViewport(startViewport, boardWidth, boardHeight, maxScale);
   }
 
   const currentDistance = getPinchDistance(currentPoints[0], currentPoints[1]);
-  const nextScale = clampBoardScale(startViewport.scale * (currentDistance / baseDistance));
+  const nextScale = clampBoardScale(
+    startViewport.scale * (currentDistance / baseDistance),
+    maxScale,
+  );
   const startMidpoint = getPinchMidpoint(startPoints[0], startPoints[1]);
   const currentMidpoint = getPinchMidpoint(currentPoints[0], currentPoints[1]);
 
@@ -65,6 +86,7 @@ export function getPinchViewport(
     },
     boardWidth,
     boardHeight,
+    maxScale,
   );
 }
 

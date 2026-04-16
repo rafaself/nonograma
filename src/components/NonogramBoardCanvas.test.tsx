@@ -136,19 +136,54 @@ describe('NonogramBoardCanvas', () => {
       />,
     );
 
-    const viewport = screen.getByRole('img', { name: 'Zoomable board' }).parentElement;
+    const canvas = screen.getByRole('img', { name: 'Zoomable board' });
+    const viewport = canvas.parentElement;
+    const layoutBox = canvas.parentElement?.parentElement?.parentElement as HTMLDivElement | null;
+
     expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1)');
+    const initialWidth = Number.parseFloat(layoutBox?.style.width ?? '0');
+    const initialHeight = Number.parseFloat(layoutBox?.style.height ?? '0');
 
     act(() => {
       boardRef.current?.zoomIn();
     });
-    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1.25)');
+    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1.2)');
+    expect(Number.parseFloat(layoutBox?.style.width ?? '0')).toBeGreaterThan(initialWidth);
+    expect(Number.parseFloat(layoutBox?.style.height ?? '0')).toBeGreaterThan(initialHeight);
 
     act(() => {
       boardRef.current?.zoomOut();
       boardRef.current?.zoomOut();
     });
     expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(1)');
+    expect(Number.parseFloat(layoutBox?.style.width ?? '0')).toBe(initialWidth);
+    expect(Number.parseFloat(layoutBox?.style.height ?? '0')).toBe(initialHeight);
+  });
+
+  it('stops button zooming at the dynamic max scale', () => {
+    const boardRef = createRef<NonogramBoardCanvasHandle>();
+
+    render(
+      <NonogramBoardCanvas
+        ref={boardRef}
+        grid={[[CellState.EMPTY]]}
+        clues={{ rows: [[0]], cols: [[0]] }}
+        onCellAction={() => {}}
+        isSolved={false}
+        inputMode={CellState.FILLED}
+        ariaLabel="Clamped board"
+      />,
+    );
+
+    const viewport = screen.getByRole('img', { name: 'Clamped board' }).parentElement;
+
+    act(() => {
+      for (let zoomStep = 0; zoomStep < 20; zoomStep += 1) {
+        boardRef.current?.zoomIn();
+      }
+    });
+
+    expect(viewport).toHaveStyle('transform: translate(0px, 0px) scale(2.5)');
   });
 
   it('handles pointer interactions for mouse and drag dedupe', () => {

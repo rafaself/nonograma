@@ -5,6 +5,7 @@ import { computeClueLayoutMetrics, computeStableCellSize } from '../lib/canvasSi
 import { renderBoard, hitTest } from '../lib/boardRender';
 import {
   clampBoardViewport,
+  getBoardMaxScale,
   getPinchViewport,
   toLogicalCanvasPoint,
   type BoardViewport,
@@ -61,7 +62,7 @@ const DEFAULT_VIEWPORT: BoardViewport = {
 
 const TOUCH_HOLD_DELAY_MS = 250;
 const TOUCH_MOVE_SLOP_PX = 8;
-const ZOOM_STEP = 0.25;
+const ZOOM_STEP = 0.2;
 
 const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, NonogramBoardCanvasProps>(function NonogramBoardCanvas({
   grid,
@@ -106,6 +107,9 @@ const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, Nonog
   const logicalCanvasHeight = cellSize * rows;
   const boardWidth = rowClueWidth + logicalCanvasWidth;
   const boardHeight = colClueHeight + logicalCanvasHeight;
+  const maxScale = useMemo(() => getBoardMaxScale(cellSize), [cellSize]);
+  const scaledBoardWidth = boardWidth * viewport.scale;
+  const scaledBoardHeight = boardHeight * viewport.scale;
 
   // Pre-compute which rows/cols are satisfied to avoid O(rows*cols) work in JSX
   const satisfiedRows = useMemo(() =>
@@ -124,10 +128,10 @@ const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, Nonog
   );
 
   const commitViewport = useCallback((nextViewport: BoardViewport) => {
-    const clampedViewport = clampBoardViewport(nextViewport, boardWidth, boardHeight);
+    const clampedViewport = clampBoardViewport(nextViewport, boardWidth, boardHeight, maxScale);
     viewportRef.current = clampedViewport;
     setViewport(clampedViewport);
-  }, [boardWidth, boardHeight]);
+  }, [boardWidth, boardHeight, maxScale]);
 
   const adjustViewportScale = useCallback((scaleDelta: number) => {
     commitViewport({
@@ -387,6 +391,7 @@ const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, Nonog
               currentPoints,
               boardWidth,
               boardHeight,
+              maxScale,
             ),
           );
           return;
@@ -419,7 +424,7 @@ const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, Nonog
 
       applyDragCell(getCell(e), drag.action);
     },
-    [getCell, boardWidth, boardHeight, commitViewport, clearPendingTouch, finalizeDrag, startStroke, applyDragCell],
+    [getCell, boardWidth, boardHeight, maxScale, commitViewport, clearPendingTouch, finalizeDrag, startStroke, applyDragCell],
   );
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -460,88 +465,95 @@ const NonogramBoardCanvasComponent = forwardRef<NonogramBoardCanvasHandle, Nonog
   return (
     <div
       ref={containerRef}
-      className="flex h-full min-h-0 w-full items-center justify-center overflow-hidden select-none"
+      className="flex w-full justify-center py-1 select-none"
     >
       <div
-        className="grid gap-0"
-        style={{
-          gridTemplateColumns: `${rowClueWidth}px ${cellSize * cols}px`,
-          gridTemplateRows: `${colClueHeight}px ${cellSize * rows}px`,
-          transform: `translate(${viewport.offsetX}px, ${viewport.offsetY}px) scale(${viewport.scale})`,
-          transformOrigin: 'center center',
-        }}
+        className="relative shrink-0"
+        style={{ width: scaledBoardWidth, height: scaledBoardHeight }}
       >
-        {/* Top-left corner */}
-        <div />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className="grid gap-0"
+            style={{
+              gridTemplateColumns: `${rowClueWidth}px ${cellSize * cols}px`,
+              gridTemplateRows: `${colClueHeight}px ${cellSize * rows}px`,
+              transform: `translate(${viewport.offsetX}px, ${viewport.offsetY}px) scale(${viewport.scale})`,
+              transformOrigin: 'center center',
+            }}
+          >
+            {/* Top-left corner */}
+            <div />
 
-        {/* Column clues */}
-        <div className="flex">
-          {clues.cols.map((colClues, c) => (
-              <div
-                key={c}
-                className={cn(
-                  'flex flex-col justify-end items-center transition-colors',
-                  c % 5 === 4 && c !== cols - 1 && 'border-r border-r-[#c9a227]/20',
-                  satisfiedCols[c] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
-                )}
-                style={{ width: cellSize, fontSize, paddingBottom: 2 }}
-              >
-                {colClues.map((clue, i) => (
-                  <span
-                    key={i}
+            {/* Column clues */}
+            <div className="flex">
+              {clues.cols.map((colClues, c) => (
+                  <div
+                    key={c}
                     className={cn(
-                      "font-bold leading-tight font-['Noto_Serif_JP'] transition-colors",
-                      satisfiedCols[c] ? "text-[#5a4d41]" : "text-[#ae2012]"
+                      'flex flex-col justify-end items-center transition-colors',
+                      c % 5 === 4 && c !== cols - 1 && 'border-r border-r-[#c9a227]/20',
+                      satisfiedCols[c] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
                     )}
-                    style={{ marginBottom: i < colClues.length - 1 ? spacing : 0 }}
+                    style={{ width: cellSize, fontSize, paddingBottom: 2 }}
                   >
-                    {clue > 0 ? clue : ''}
-                  </span>
-                ))}
-              </div>
-          ))}
-        </div>
+                    {colClues.map((clue, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "font-bold leading-tight font-['Noto_Serif_JP'] transition-colors",
+                          satisfiedCols[c] ? "text-[#5a4d41]" : "text-[#ae2012]"
+                        )}
+                        style={{ marginBottom: i < colClues.length - 1 ? spacing : 0 }}
+                      >
+                        {clue > 0 ? clue : ''}
+                      </span>
+                    ))}
+                  </div>
+              ))}
+            </div>
 
-        {/* Row clues */}
-        <div className="flex flex-col">
-          {clues.rows.map((rowClues, r) => (
-              <div
-                key={r}
-                className={cn(
-                  'flex justify-end items-center px-2 transition-colors',
-                  r % 5 === 4 && r !== rows - 1 && 'border-b border-b-[#c9a227]/20',
-                  satisfiedRows[r] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
-                )}
-                style={{ height: cellSize, paddingRight: 4, fontSize, gap: spacing }}
-              >
-                <div className="flex gap-2">
-                  {rowClues.map((clue, i) => (
-                    <span key={i} className="font-bold font-['Noto_Serif_JP']">
-                      {clue > 0 ? clue : ''}
-                    </span>
-                  ))}
-                </div>
-              </div>
-          ))}
-        </div>
+            {/* Row clues */}
+            <div className="flex flex-col">
+              {clues.rows.map((rowClues, r) => (
+                  <div
+                    key={r}
+                    className={cn(
+                      'flex justify-end items-center px-2 transition-colors',
+                      r % 5 === 4 && r !== rows - 1 && 'border-b border-b-[#c9a227]/20',
+                      satisfiedRows[r] ? 'text-[#5a4d41]' : 'text-[#ae2012]',
+                    )}
+                    style={{ height: cellSize, paddingRight: 4, fontSize, gap: spacing }}
+                  >
+                    <div className="flex gap-2">
+                      {rowClues.map((clue, i) => (
+                        <span key={i} className="font-bold font-['Noto_Serif_JP']">
+                          {clue > 0 ? clue : ''}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+              ))}
+            </div>
 
-        {/* Canvas grid */}
-        <canvas
-          ref={canvasRef}
-          style={{
-            width: cellSize * cols,
-            height: cellSize * rows,
-            touchAction: 'none',
-          }}
-          role="img"
-          aria-label={ariaLabel}
-          aria-describedby={ariaDescribedBy}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onContextMenu={handleContextMenu}
-        />
+            {/* Canvas grid */}
+            <canvas
+              ref={canvasRef}
+              style={{
+                width: cellSize * cols,
+                height: cellSize * rows,
+                touchAction: 'none',
+              }}
+              role="img"
+              aria-label={ariaLabel}
+              aria-describedby={ariaDescribedBy}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onContextMenu={handleContextMenu}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

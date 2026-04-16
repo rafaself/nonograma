@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clampBoardScale,
   clampBoardViewport,
+  getBoardMaxScale,
   getPinchDistance,
   getPinchMidpoint,
   getPinchViewport,
@@ -12,7 +13,14 @@ describe('boardViewport', () => {
   it('clamps board scale to the supported zoom range', () => {
     expect(clampBoardScale(0.4)).toBe(1);
     expect(clampBoardScale(2.5)).toBe(2.5);
-    expect(clampBoardScale(9)).toBe(3);
+    expect(clampBoardScale(9)).toBe(2.5);
+    expect(clampBoardScale(9, 1.8)).toBe(1.8);
+  });
+
+  it('derives a reasonable dynamic zoom ceiling from the fitted cell size', () => {
+    expect(getBoardMaxScale(24)).toBe(2.5);
+    expect(getBoardMaxScale(40)).toBe(1.8);
+    expect(getBoardMaxScale(72)).toBe(1.35);
   });
 
   it('clamps board viewport offsets against the scaled board size', () => {
