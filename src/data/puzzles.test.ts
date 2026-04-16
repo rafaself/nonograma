@@ -156,4 +156,20 @@ describe('puzzles internals', () => {
     expect(PUZZLES.length).toBeGreaterThan(0);
     expect(PUZZLES.every((p) => p.resultColors && p.resultColors.length === p.height)).toBe(true);
   });
+
+  it('exports the expected catalog distribution', () => {
+    expect(PUZZLES).toHaveLength(95);
+
+    const countsByWidth = PUZZLES.reduce<Record<number, number>>((acc, puzzle) => {
+      acc[puzzle.width] = (acc[puzzle.width] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    expect(countsByWidth).toEqual({
+      5: 25,
+      10: 25,
+      15: 25,
+      20: 20,
+    });
+  });
 });

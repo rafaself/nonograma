@@ -84,7 +84,16 @@ describe('puzzle solvability', () => {
     });
 
     it('ships authored non-default finish palettes for the upgraded major levels', () => {
-        const upgradedIds = new Set(['10x10-8', '15x15-1', '15x15-2', '15x15-3', '15x15-4', '15x15-5']);
+        const upgradedIds = new Set([
+            '10x10-8',
+            '15x15-1',
+            '15x15-2',
+            '15x15-3',
+            '15x15-4',
+            '15x15-5',
+            ...Array.from({ length: 10 }, (_, i) => `15x15-${i + 16}`),
+            ...Array.from({ length: 10 }, (_, i) => `20x20-${i + 11}`),
+        ]);
 
         for (const puzzle of PUZZLES) {
             if (!upgradedIds.has(puzzle.id)) {
@@ -101,7 +110,29 @@ describe('puzzle solvability', () => {
     });
 
     it('exports scenic background palettes for the intended scene-based puzzles', () => {
-        const scenicIds = ['5x5-5', '10x10-2', '10x10-5', '10x10-6', '10x10-10', '15x15-1', '15x15-2', '15x15-3', '15x15-4', '15x15-5'];
+        const scenicIds = [
+            '5x5-5',
+            '5x5-19',
+            '5x5-20',
+            '5x5-25',
+            '10x10-2',
+            '10x10-5',
+            '10x10-6',
+            '10x10-10',
+            '10x10-16',
+            '10x10-18',
+            '10x10-19',
+            '10x10-24',
+            '15x15-1',
+            '15x15-2',
+            '15x15-3',
+            '15x15-4',
+            '15x15-5',
+            ...Array.from({ length: 10 }, (_, i) => `15x15-${i + 16}`),
+            '20x20-11',
+            '20x20-12',
+            ...Array.from({ length: 7 }, (_, i) => `20x20-${i + 14}`),
+        ];
 
         for (const id of scenicIds) {
             const puzzle = PUZZLES.find((entry) => entry.id === id);
