@@ -42,6 +42,11 @@ const mocks = vi.hoisted(() => {
   const resetPuzzle = vi.fn((puzzleId: string) => {
     delete savedGames[puzzleId];
   });
+  const resetAllProgress = vi.fn(() => {
+    completedStore = [];
+    savedGames = {};
+  });
+  const hasAnyPuzzleProgress = vi.fn(() => Object.keys(savedGames).length > 0 || completedStore.length > 0);
 
   const sounds = {
     fill: vi.fn(),
@@ -72,6 +77,8 @@ const mocks = vi.hoisted(() => {
     markCompleted,
     getCompletedStatus,
     resetPuzzle,
+    resetAllProgress,
+    hasAnyPuzzleProgress,
     sounds,
     resetStores,
     setSaved,
@@ -85,6 +92,8 @@ vi.mock('../lib/persistence', () => ({
     markCompleted: (...args: Parameters<typeof mocks.markCompleted>) => mocks.markCompleted(...args),
     getCompletedStatus: () => mocks.getCompletedStatus(),
     resetPuzzle: (...args: Parameters<typeof mocks.resetPuzzle>) => mocks.resetPuzzle(...args),
+    resetAllProgress: () => mocks.resetAllProgress(),
+    hasAnyPuzzleProgress: () => mocks.hasAnyPuzzleProgress(),
     flushSave: vi.fn(),
     getMuted: () => false,
     setMuted: vi.fn(),
@@ -112,6 +121,7 @@ describe('useNonogramGame', () => {
 
     expect(result.current.screen).toBe('home');
     expect(result.current.completedIds).toEqual([]);
+    expect(result.current.canResetAllProgress).toBe(false);
 
     act(() => result.current.startPuzzle(mocks.puzzleA));
     expect(result.current.screen).toBe('play');
@@ -186,6 +196,8 @@ describe('useNonogramGame', () => {
     const confirmSpy = vi.spyOn(window, 'confirm');
     const { result } = renderHook(() => useNonogramGame());
 
+    expect(result.current.canResetAllProgress).toBe(true);
+
     act(() => result.current.startPuzzle(mocks.puzzleA));
     expect(mocks.loadGame).toHaveBeenCalledWith('a');
     expect(result.current.gameState?.isSolved).toBe(true);
@@ -202,6 +214,25 @@ describe('useNonogramGame', () => {
     expect(mocks.resetPuzzle).toHaveBeenCalledWith('b');
     expect(result.current.canUndo).toBe(false);
     expect(result.current.canRedo).toBe(false);
+  });
+
+  it('clears all stored puzzle progress and returns home', () => {
+    const { result } = renderHook(() => useNonogramGame());
+
+    act(() => result.current.startPuzzle(mocks.puzzleA));
+    act(() => result.current.handleCellAction(0, 0));
+
+    expect(result.current.canResetAllProgress).toBe(true);
+    expect(result.current.completedIds).toEqual(['a']);
+
+    act(() => result.current.resetAllProgress());
+
+    expect(mocks.resetAllProgress).toHaveBeenCalledTimes(1);
+    expect(mocks.sounds.reset).toHaveBeenCalled();
+    expect(result.current.screen).toBe('home');
+    expect(result.current.gameState).toBeNull();
+    expect(result.current.completedIds).toEqual([]);
+    expect(result.current.canResetAllProgress).toBe(false);
   });
 
   it('respects muted mode for sound playback', () => {

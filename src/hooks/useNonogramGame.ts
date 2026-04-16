@@ -159,6 +159,17 @@ export function useNonogramGame() {
     persistence.resetPuzzle(gameState.puzzle.id);
   }, [gameState, play]);
 
+  const resetAllProgress = useCallback(() => {
+    play(sounds.reset);
+    persistence.resetAllProgress();
+    setCompletedIds([]);
+    setScreen('home');
+    setGameState(null);
+    setUndoHistory([]);
+    setRedoHistory([]);
+    setShowVictory(false);
+  }, [play]);
+
   const isLastPuzzle = useMemo(() => gameState
     ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
     : false, [gameState]);
@@ -177,6 +188,7 @@ export function useNonogramGame() {
 
   const canUndo = undoHistory.length > 0;
   const canRedo = redoHistory.length > 0;
+  const canResetAllProgress = completedIds.length > 0 || persistence.hasAnyPuzzleProgress();
 
   return {
     screen,
@@ -197,8 +209,10 @@ export function useNonogramGame() {
     undo,
     redo,
     reset,
+    resetAllProgress,
     canUndo,
     canRedo,
+    canResetAllProgress,
     isLastPuzzle,
     beginBatch,
     endBatch,

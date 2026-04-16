@@ -9,9 +9,17 @@ import { HomeScreen } from './HomeScreen';
 
 describe('HomeScreen empty puzzles', () => {
   it('handles zero puzzle count progress safely', () => {
-    const { container } = render(<HomeScreen completedIds={[]} onStartPuzzle={() => {}} />);
+    const { container } = render(
+      <HomeScreen
+        canResetAllProgress={false}
+        completedIds={[]}
+        onResetAllProgress={() => {}}
+        onStartPuzzle={() => {}}
+      />
+    );
 
     expect(screen.getByText('0/0')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reset All Progress' })).toBeDisabled();
     const bar = container.querySelector('div[style="width: 0%;"]');
     expect(bar).toBeTruthy();
   });

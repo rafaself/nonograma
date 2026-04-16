@@ -75,6 +75,16 @@ function flushPendingSave(): void {
     }
 }
 
+function clearPendingSave(key?: string): void {
+    if (key !== undefined && pendingSaveData?.key !== key) return;
+
+    pendingSaveData = null;
+    if (pendingSaveTimer !== null) {
+        clearTimeout(pendingSaveTimer);
+        pendingSaveTimer = null;
+    }
+}
+
 export const persistence = {
     saveGame(puzzleId: string, grid: CellState[][], elapsedTime: number) {
         const id = sanitizeId(puzzleId);
@@ -128,7 +138,37 @@ export const persistence = {
 
     resetPuzzle(puzzleId: string) {
         const id = sanitizeId(puzzleId);
-        localStorage.removeItem(`${STORAGE_KEY_PREFIX}${id}`);
+        const key = `${STORAGE_KEY_PREFIX}${id}`;
+        clearPendingSave(key);
+        localStorage.removeItem(key);
+    },
+
+    resetAllProgress() {
+        clearPendingSave();
+
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (key !== null && (key.startsWith(STORAGE_KEY_PREFIX) || key === COMPLETED_KEY)) {
+                keysToRemove.push(key);
+            }
+        }
+
+        keysToRemove.forEach((key) => localStorage.removeItem(key));
+    },
+
+    hasAnyPuzzleProgress(): boolean {
+        if (pendingSaveData !== null) return true;
+        if (localStorage.getItem(COMPLETED_KEY) !== null) return true;
+
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (key !== null && key.startsWith(STORAGE_KEY_PREFIX)) {
+                return true;
+            }
+        }
+
+        return false;
     },
 
     getMuted(): boolean {

@@ -11,8 +11,11 @@ vi.mock('./hooks/useNonogramGame', () => ({
 }));
 
 vi.mock('./screens/HomeScreen', () => ({
-  HomeScreen: ({ onStartPuzzle }: { onStartPuzzle: () => void }) => (
-    <button onClick={onStartPuzzle}>home-screen</button>
+  HomeScreen: ({ onResetAllProgress, onStartPuzzle }: { onResetAllProgress: () => void; onStartPuzzle: () => void }) => (
+    <div>
+      <button onClick={onStartPuzzle}>home-screen</button>
+      <button onClick={onResetAllProgress}>home-reset</button>
+    </div>
   ),
 }));
 
@@ -74,8 +77,10 @@ describe('App', () => {
       undo: vi.fn(),
       redo: vi.fn(),
       reset: vi.fn(),
+      resetAllProgress: vi.fn(),
       canUndo: false,
       canRedo: false,
+      canResetAllProgress: false,
       isLastPuzzle: false,
     });
 
@@ -107,8 +112,10 @@ describe('App', () => {
       undo: vi.fn(),
       redo: vi.fn(),
       reset: vi.fn(),
+      resetAllProgress: vi.fn(),
       canUndo: false,
       canRedo: false,
+      canResetAllProgress: false,
       isLastPuzzle: false,
     });
 
@@ -118,6 +125,7 @@ describe('App', () => {
 
   it('renders home flow and mute toggle', () => {
     const startPuzzle = vi.fn();
+    const resetAllProgress = vi.fn();
     const toggleMuted = vi.fn();
 
     useNonogramGameMock.mockReturnValue({
@@ -139,17 +147,21 @@ describe('App', () => {
       undo: vi.fn(),
       redo: vi.fn(),
       reset: vi.fn(),
+      resetAllProgress,
       canUndo: false,
       canRedo: false,
+      canResetAllProgress: true,
       isLastPuzzle: false,
     });
 
     render(<App />);
 
     fireEvent.click(screen.getByText('home-screen'));
+    fireEvent.click(screen.getByText('home-reset'));
     fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
 
     expect(startPuzzle).toHaveBeenCalledTimes(1);
+    expect(resetAllProgress).toHaveBeenCalledTimes(1);
     expect(toggleMuted).toHaveBeenCalledTimes(1);
   });
 
@@ -186,8 +198,10 @@ describe('App', () => {
       undo,
       redo,
       reset,
+      resetAllProgress: vi.fn(),
       canUndo: true,
       canRedo: true,
+      canResetAllProgress: true,
       isLastPuzzle: false,
     });
 

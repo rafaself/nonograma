@@ -42,6 +42,33 @@ describe('persistence', () => {
     expect(persistence.loadGame('p1')).toBeNull();
   });
 
+  it('clears pending puzzle saves when resetting a puzzle', () => {
+    persistence.saveGame('p1', [[CellState.FILLED]], 3);
+    persistence.resetPuzzle('p1');
+
+    persistence.flushSave();
+
+    expect(persistence.loadGame('p1')).toBeNull();
+  });
+
+  it('resets all puzzle progress without touching audio settings', () => {
+    persistence.saveGame('p1', [[CellState.FILLED]], 7);
+    persistence.markCompleted('p2');
+    persistence.setMuted(true);
+    persistence.setVolume(0.8);
+
+    expect(persistence.hasAnyPuzzleProgress()).toBe(true);
+
+    persistence.resetAllProgress();
+    persistence.flushSave();
+
+    expect(persistence.hasAnyPuzzleProgress()).toBe(false);
+    expect(persistence.loadGame('p1')).toBeNull();
+    expect(persistence.getCompletedStatus()).toEqual([]);
+    expect(persistence.getMuted()).toBe(true);
+    expect(persistence.getVolume()).toBe(0.8);
+  });
+
   describe('input validation', () => {
     it('throws on empty puzzle id', () => {
       expect(() => persistence.saveGame('', [[CellState.EMPTY]], 0)).toThrow('Invalid puzzle id');

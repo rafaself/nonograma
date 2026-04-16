@@ -118,6 +118,8 @@ export default function App() {
         {game.screen === 'home' && (
           <HomeScreen
             completedIds={game.completedIds}
+            canResetAllProgress={game.canResetAllProgress}
+            onResetAllProgress={game.resetAllProgress}
             onStartPuzzle={game.startPuzzle}
           />
         )}

@@ -295,10 +295,9 @@ test.describe('Persistence', () => {
   test('localStorage stores grid data', async ({ page }) => {
     await goToFirstPuzzle(page);
     await clickCell(page, 0, 1);
-    await page.waitForTimeout(200);
-
-    const keys = await page.evaluate(() => Object.keys(localStorage));
-    expect(keys.length).toBeGreaterThan(0);
+    await expect
+      .poll(async () => page.evaluate(() => Object.keys(localStorage).length))
+      .toBeGreaterThan(0);
   });
 });
 
