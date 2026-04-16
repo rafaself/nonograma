@@ -6,6 +6,8 @@ import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
   completedIds: string[];
+  inProgressIds: string[];
+  continuePuzzleId: string | null;
   onStartPuzzle: (puzzle: Puzzle) => void;
   onStartTutorial: () => void;
   showTutorialCard: boolean;
@@ -38,12 +40,18 @@ function groupBySize(puzzles: typeof PUZZLES) {
 
 export const HomeScreen = memo(function HomeScreen({
   completedIds,
+  inProgressIds,
+  continuePuzzleId,
   onStartPuzzle,
   onStartTutorial,
   showTutorialCard,
 }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const continuePuzzle = useMemo(
+    () => PUZZLES.find((puzzle) => puzzle.id === continuePuzzleId) ?? null,
+    [continuePuzzleId],
+  );
 
   const toggleGroup = (size: string) => {
     setCollapsedGroups(prev => {
@@ -132,6 +140,39 @@ export const HomeScreen = memo(function HomeScreen({
         </button>
       )}
 
+      {continuePuzzle && (
+        <button
+          type="button"
+          onClick={() => onStartPuzzle(continuePuzzle)}
+          className="mb-16 w-full max-w-2xl border border-[#ae2012]/30 bg-[#120f0b]/95 px-6 py-5 text-left shadow-2xl shadow-black/20 transition-all hover:border-[#ae2012]/60 hover:bg-[#17120d]"
+          aria-label={`Continue trail ${continuePuzzle.title}`}
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#ae2012]">
+                  Continue Trail
+                </span>
+                <span className="rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-2 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-[#a0a0a0]">
+                  {continuePuzzle.width}x{continuePuzzle.height}
+                </span>
+              </div>
+              <h2 className="font-['Ma_Shan_Zheng'] text-3xl text-[#fdf5e6]">
+                {continuePuzzle.title}
+              </h2>
+              <p className="max-w-xl text-sm leading-7 text-[#c8bea9] font-['Noto_Serif_JP']">
+                Resume where you left off and complete the last unfinished trail.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 self-start text-[11px] font-bold tracking-[0.24em] uppercase text-[#ae2012] sm:self-center">
+              Resume
+              <ChevronRight className="h-4 w-4" />
+            </div>
+          </div>
+        </button>
+      )}
+
       {/* ── Puzzle sections grouped by size ── */}
       <div className="w-full flex flex-col gap-16">
         {groups.map((group) => {
@@ -143,6 +184,7 @@ export const HomeScreen = memo(function HomeScreen({
               <button
                 onClick={() => toggleGroup(group.size)}
                 className="w-full flex items-center gap-6 mb-8 group/header focus:outline-none"
+                aria-expanded={!isCollapsed}
               >
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -177,16 +219,22 @@ export const HomeScreen = memo(function HomeScreen({
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 pb-4">
                     {group.puzzles.map((p, idx) => {
                       const isCompleted = completedIds.includes(p.id);
+                      const isInProgress = inProgressIds.includes(p.id);
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={p.id}
                           onClick={() => onStartPuzzle(p)}
+                          aria-label={`${p.title}, ${p.width} by ${p.height}${isCompleted ? ', completed' : ''}${isInProgress && !isCompleted ? ', in progress' : ''}`}
                           style={{ animationDelay: `${idx * 50}ms` }}
                           className={cn(
-                            "oriental-card animate-in fade-in slide-in-from-bottom-4 flex flex-col justify-between aspect-square",
+                            "oriental-card animate-in fade-in slide-in-from-bottom-4 flex flex-col justify-between aspect-square text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ae2012]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]",
+                            "group",
                             isCompleted
                               ? "border-[#ae2012]/30 hover:border-[#ae2012]/60"
-                              : "border-[#c9a227]/10"
+                              : isInProgress
+                                ? "border-[#c9a227]/40 hover:border-[#ae2012]/50 bg-[#17120d]"
+                                : "border-[#c9a227]/10"
                           )}
                         >
                           {/* Level number + status */}
@@ -194,28 +242,29 @@ export const HomeScreen = memo(function HomeScreen({
                             <span className="text-xs font-bold tracking-widest text-[#7a7a7a]">
                               {String(p.globalIndex + 1).padStart(2, '0')}
                             </span>
-                            {isCompleted && (
-                              <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
-                                <span className="font-['Ma_Shan_Zheng'] text-xl text-[#ae2012] leading-none text-center">
-                                  成功
+                            <div className="flex flex-col items-end gap-2">
+                              {isInProgress && !isCompleted && (
+                                <span className="rounded-sm border border-[#c9a227]/30 bg-[#c9a227]/10 px-2 py-1 text-[9px] font-bold tracking-[0.2em] uppercase text-[#c9a227]">
+                                  In Progress
                                 </span>
-                              </div>
-                            )}
+                              )}
+                              {isCompleted && (
+                                <div className="absolute top-2 right-2 w-10 h-10 border-2 border-[#ae2012]/40 rounded-sm flex items-center justify-center -rotate-12 pointer-events-none">
+                                  <span className="font-['Ma_Shan_Zheng'] text-xl text-[#ae2012] leading-none text-center">
+                                    成功
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Title */}
                           <div className="flex-1 flex flex-col justify-center">
                             <h3 className={cn(
                               "text-xl md:text-2xl font-bold tracking-tight leading-tight",
-                              isCompleted ? "font-['Noto_Serif_JP']" : "font-mono opacity-20"
+                              isCompleted ? "font-['Noto_Serif_JP']" : "font-['Noto_Serif_JP'] text-[#fdf5e6]"
                             )}>
-                              {isCompleted ? (
-                                <span className="text-[#fdf5e6]">{p.title}</span>
-                              ) : (
-                                <span className="text-[#a0a0a0]">
-                                  {'王'.repeat(Math.min(p.title.length, 3))}
-                                </span>
-                              )}
+                              <span className="text-[#fdf5e6]">{p.title}</span>
                             </h3>
                           </div>
 
@@ -224,15 +273,19 @@ export const HomeScreen = memo(function HomeScreen({
                             "mt-4 flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors",
                             isCompleted
                               ? "text-[#ae2012] group-hover:text-red-400"
+                              : isInProgress
+                                ? "text-[#c9a227] group-hover:text-[#fdf5e6]"
                               : "text-[#c9a227]/60 group-hover:text-[#c9a227]"
                           )}>
                             {isCompleted ? (
                               <>TRANSCEND <ChevronRight className="w-3 h-3" /></>
+                            ) : isInProgress ? (
+                              <>RESUME <ChevronRight className="w-3 h-3" /></>
                             ) : (
                               <>RESOLVE <Play className="w-2.5 h-2.5 fill-current" /></>
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

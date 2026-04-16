@@ -23,6 +23,8 @@ describe('HomeScreen empty puzzles', () => {
     const { container } = render(
       <HomeScreen
         completedIds={[]}
+        inProgressIds={[]}
+        continuePuzzleId={null}
         onStartPuzzle={() => {}}
         onStartTutorial={() => {}}
         showTutorialCard={true}

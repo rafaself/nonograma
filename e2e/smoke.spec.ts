@@ -24,6 +24,44 @@ async function clickCell(page: Page, row: number, col: number) {
   await canvas.click({ position: { x, y } });
 }
 
+async function getCellPointerPosition(page: Page, row: number, col: number) {
+  const canvas = page.getByRole('main').locator('canvas');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Canvas not found');
+
+  const style = await canvas.getAttribute('style');
+  const wMatch = style?.match(/width:\s*([\d.]+)px/);
+  const hMatch = style?.match(/height:\s*([\d.]+)px/);
+  if (!wMatch || !hMatch)
+    throw new Error('Cannot read canvas dimensions from style');
+
+  const canvasW = Number(wMatch[1]);
+  const cols = Math.round(
+    box.width / (canvasW / Math.round(box.width / (canvasW / 5))),
+  );
+  const cellSize = canvasW / cols;
+  return {
+    canvas,
+    clientX: box.x + (col + 0.5) * cellSize,
+    clientY: box.y + (row + 0.5) * cellSize,
+  };
+}
+
+async function longPressTouchCell(page: Page, row: number, col: number, durationMs = 300) {
+  const { clientX, clientY } = await getCellPointerPosition(page, row, col);
+  const cdp = await page.context().newCDPSession(page);
+
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x: clientX, y: clientY, id: 91 }],
+  });
+  await page.waitForTimeout(durationMs);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd',
+    touchPoints: [],
+  });
+}
+
 /**
  * Solve the first 5×5 puzzle ("Heart") by clicking every
  * filled cell in its known solution.
@@ -47,6 +85,10 @@ async function goToFirstPuzzle(page: Page) {
   await page.goto('/');
   await page.locator('.oriental-card').first().click();
   await expect(page.getByRole('main').locator('canvas')).toBeVisible();
+}
+
+function getHomeProgressCounter(page: Page) {
+  return page.getByText('Enlightenment').locator('xpath=..').locator('.tabular-nums');
 }
 
 /* ─── Home screen ──────────────────────────────────────────── */
@@ -125,6 +167,9 @@ test.describe('Play screen', () => {
 
   test('shows canvas, mode toggle, and toolbar buttons', async ({ page }) => {
     await expect(page.getByRole('main').locator('canvas')).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Puzzle status' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Heart' })).toBeVisible();
+    await expect(page.getByText(/\d{2}:\d{2}/)).toBeVisible();
     await expect(
       page.getByRole('button', { name: /switch to (mark|fill) mode/i }),
     ).toBeVisible();
@@ -189,9 +234,13 @@ test.describe('Play screen', () => {
     await clickCell(page, 1, 1);
     await expect(undoBtn).toBeEnabled();
 
-    // Reset triggers window.confirm — accept it
-    page.on('dialog', (dialog) => dialog.accept());
     await resetBtn.click();
+    await expect(page.getByRole('dialog', { name: 'Reset current trail?' })).toBeVisible();
+    await page.getByRole('button', { name: 'Keep Solving' }).click();
+    await expect(undoBtn).toBeEnabled();
+
+    await resetBtn.click();
+    await page.getByRole('button', { name: 'Reset Puzzle' }).click();
     await expect(undoBtn).toBeDisabled();
   });
 
@@ -222,7 +271,7 @@ test.describe('Solve puzzle & Victory', () => {
     await goToFirstPuzzle(page);
     await solveHeart(page);
 
-    await expect(page.getByText('Achieved')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: /review trial/i })).toBeVisible({ timeout: 5000 });
     await expect(
       page.getByText('The path is clear. Enlightenment attained.'),
     ).toBeVisible();
@@ -236,7 +285,7 @@ test.describe('Solve puzzle & Victory', () => {
   test('"Ascend Next" advances to next puzzle', async ({ page }) => {
     await goToFirstPuzzle(page);
     await solveHeart(page);
-    await expect(page.getByText('Achieved')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: /ascend next/i })).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: /ascend next/i }).click();
     await expect(page.getByRole('main').locator('canvas')).toBeVisible();
@@ -245,7 +294,7 @@ test.describe('Solve puzzle & Victory', () => {
   test('progress updates on home after solving', async ({ page }) => {
     await goToFirstPuzzle(page);
     await solveHeart(page);
-    await expect(page.getByText('Achieved')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('button', { name: /review trial/i })).toBeVisible({ timeout: 5000 });
 
     // Return home
     await page.getByRole('button', { name: /review trial/i }).click();
@@ -255,10 +304,18 @@ test.describe('Solve puzzle & Victory', () => {
       .first()
       .click();
 
-    // Scoped to the tabular-nums progress counter
-    await expect(page.locator('.tabular-nums').first()).toHaveText(/[1-9]\d*\/\d+/);
+    await expect(getHomeProgressCounter(page)).toHaveText(/[1-9]\d*\/\d+/);
     const firstCard = page.locator('.oriental-card').first();
     await expect(firstCard.getByText('成功')).toBeVisible();
+  });
+
+  test('victory modal includes puzzle identity and elapsed time', async ({ page }) => {
+    await goToFirstPuzzle(page);
+    await solveHeart(page);
+
+    await expect(page.getByRole('button', { name: /review trial/i })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('5x5 Trail')).toBeVisible();
+    await expect(page.getByText(/Time 00:/)).toBeVisible();
   });
 });
 
@@ -280,7 +337,7 @@ test.describe('Persistence', () => {
   test('completed status persists across reloads', async ({ page }) => {
     await goToFirstPuzzle(page);
     await solveHeart(page);
-    await expect(page.getByText('Achieved')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('button', { name: /review trial/i })).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: /review trial/i }).click();
     await page
       .locator('button')
@@ -288,8 +345,8 @@ test.describe('Persistence', () => {
       .first()
       .click();
 
-    await page.reload();
-    await expect(page.locator('.tabular-nums').first()).toHaveText(/[1-9]\d*\/\d+/);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(getHomeProgressCounter(page)).toHaveText(/[1-9]\d*\/\d+/);
   });
 
   test('localStorage stores grid data', async ({ page }) => {
@@ -298,6 +355,22 @@ test.describe('Persistence', () => {
     await expect
       .poll(async () => page.evaluate(() => Object.keys(localStorage).length))
       .toBeGreaterThan(0);
+  });
+
+  test('continue trail resumes the latest unfinished puzzle from home', async ({ page }) => {
+    await goToFirstPuzzle(page);
+    await clickCell(page, 0, 1);
+    await page
+      .locator('button')
+      .filter({ hasText: /return to trails/i })
+      .first()
+      .click();
+
+    await expect(page.getByRole('button', { name: /continue trail heart/i })).toBeVisible();
+    await expect(page.locator('.oriental-card').first().getByText('In Progress')).toBeVisible();
+
+    await page.getByRole('button', { name: /continue trail heart/i }).click();
+    await expect(page.getByRole('main').locator('canvas')).toBeVisible();
   });
 });
 
@@ -316,6 +389,7 @@ test.describe('Responsive & Accessibility', () => {
     await expect(page.getByText('Trails')).toBeVisible();
     await page.locator('.oriental-card').first().click();
     await expect(page.getByRole('main').locator('canvas')).toBeVisible();
+    await expect(page.getByRole('img', { name: /puzzle board for heart/i })).toBeVisible();
 
     await context.close();
   });
@@ -386,6 +460,31 @@ test.describe('Edge cases', () => {
     await clickCell(page, 1, 1);
 
     await expect(page.getByRole('main').locator('canvas')).toBeVisible();
+  });
+
+  test('long press on touch uses the alternate action without changing the visible mode', async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+
+    await goToFirstPuzzle(page);
+    const toggle = page.getByRole('button', {
+      name: /switch to (mark|fill) mode/i,
+    });
+    await expect(toggle).toHaveAttribute('aria-label', /switch to mark mode/i);
+
+    await longPressTouchCell(page, 0, 0);
+
+    const undoBtn = page.getByTitle('Undo');
+    await expect(undoBtn).toBeEnabled();
+    await undoBtn.click();
+    await expect(undoBtn).toBeDisabled();
+    await expect(toggle).toHaveAttribute('aria-label', /switch to mark mode/i);
+
+    await context.close();
   });
 
   test('navigating home and back preserves game state', async ({ page }) => {

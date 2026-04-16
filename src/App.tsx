@@ -8,6 +8,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { VictoryModal } from './components/VictoryModal';
 import { MountFujiBackground } from './components/MountFujiBackground';
+import { ResetPuzzleModal } from './components/ResetPuzzleModal';
 
 /**
  * Static decorative elements that never depend on game state.
@@ -103,6 +104,7 @@ export default function App() {
               disabled={!game.canUndo}
               className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#c9a227]/20 disabled:hover:bg-[#1a1510]/80 disabled:active:scale-100"
               title="Undo"
+              aria-label="Undo"
             >
               <Undo2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
             </button>
@@ -111,13 +113,15 @@ export default function App() {
               disabled={!game.canRedo}
               className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#c9a227]/20 disabled:hover:bg-[#1a1510]/80 disabled:active:scale-100"
               title="Redo"
+              aria-label="Redo"
             >
               <Redo2 className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
             </button>
             <button
-              onClick={game.reset}
+              onClick={game.openResetPuzzleConfirm}
               className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg"
               title="Reset"
+              aria-label="Reset"
             >
               <RotateCcw className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
             </button>
@@ -135,6 +139,12 @@ export default function App() {
         {game.screen === 'home' && (
           <HomeScreen
             completedIds={game.completedIds}
+            inProgressIds={game.inProgressIds}
+            continuePuzzleId={
+              game.lastPlayedPuzzleId !== null && game.inProgressIds.includes(game.lastPlayedPuzzleId)
+                ? game.lastPlayedPuzzleId
+                : null
+            }
             onStartPuzzle={game.startPuzzle}
             onStartTutorial={game.startTutorial}
             showTutorialCard={!game.showTutorialShortcut}
@@ -157,8 +167,19 @@ export default function App() {
       {game.screen === 'play' && game.showVictory && (
         <VictoryModal
           isLastPuzzle={game.isLastPuzzle}
+          puzzleTitle={game.gameState?.puzzle.title ?? ''}
+          puzzleWidth={game.gameState?.puzzle.width ?? 0}
+          puzzleHeight={game.gameState?.puzzle.height ?? 0}
+          elapsedTime={game.gameState?.elapsedTime ?? 0}
           onViewGrid={() => game.setShowVictory(false)}
           onNext={game.nextPuzzle}
+        />
+      )}
+
+      {game.screen === 'play' && game.showResetPuzzleConfirm && (
+        <ResetPuzzleModal
+          onCancel={game.closeResetPuzzleConfirm}
+          onConfirm={game.confirmResetPuzzle}
         />
       )}
     </div>

@@ -15,10 +15,12 @@ vi.mock('./screens/HomeScreen', () => ({
     onStartPuzzle,
     onStartTutorial,
     showTutorialCard,
+    continuePuzzleId,
   }: {
     onStartPuzzle: () => void;
     onStartTutorial: () => void;
     showTutorialCard: boolean;
+    continuePuzzleId: string | null;
   }) => (
     <div>
       <button onClick={onStartPuzzle}>home-screen</button>
@@ -27,6 +29,7 @@ vi.mock('./screens/HomeScreen', () => ({
       ) : (
         <span>tutorial-card-hidden</span>
       )}
+      <span>{continuePuzzleId ?? 'no-continue'}</span>
     </div>
   ),
 }));
@@ -42,10 +45,28 @@ vi.mock('./screens/PlayScreen', () => ({
 }));
 
 vi.mock('./components/VictoryModal', () => ({
-  VictoryModal: ({ onViewGrid, onNext }: { onViewGrid: () => void; onNext: () => void }) => (
+  VictoryModal: ({
+    onViewGrid,
+    onNext,
+    puzzleTitle,
+  }: {
+    onViewGrid: () => void;
+    onNext: () => void;
+    puzzleTitle: string;
+  }) => (
     <div>
+      <span>{puzzleTitle}</span>
       <button onClick={onViewGrid}>victory-view</button>
       <button onClick={onNext}>victory-next</button>
+    </div>
+  ),
+}));
+
+vi.mock('./components/ResetPuzzleModal', () => ({
+  ResetPuzzleModal: ({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) => (
+    <div>
+      <button onClick={onCancel}>reset-cancel</button>
+      <button onClick={onConfirm}>reset-confirm</button>
     </div>
   ),
 }));
@@ -63,6 +84,42 @@ vi.mock('./components/SmokeSimulation', () => ({
   },
 }));
 
+function buildHookState(overrides: Record<string, unknown> = {}) {
+  return {
+    screen: 'home',
+    gameState: null,
+    inputMode: CellState.FILLED,
+    setInputMode: vi.fn(),
+    completedIds: [],
+    inProgressIds: [],
+    lastPlayedPuzzleId: null,
+    showVictory: false,
+    setShowVictory: vi.fn(),
+    showResetPuzzleConfirm: false,
+    muted: false,
+    volume: 0.5,
+    toggleMuted: vi.fn(),
+    changeVolume: vi.fn(),
+    startPuzzle: vi.fn(),
+    startTutorial: vi.fn(),
+    goHome: vi.fn(),
+    nextPuzzle: vi.fn(),
+    handleCellAction: vi.fn(),
+    undo: vi.fn(),
+    redo: vi.fn(),
+    openResetPuzzleConfirm: vi.fn(),
+    closeResetPuzzleConfirm: vi.fn(),
+    confirmResetPuzzle: vi.fn(),
+    resetAllProgress: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    canResetAllProgress: false,
+    isLastPuzzle: false,
+    showTutorialShortcut: false,
+    ...overrides,
+  };
+}
+
 describe('App', () => {
   beforeEach(() => {
     useNonogramGameMock.mockReset();
@@ -70,38 +127,12 @@ describe('App', () => {
   });
 
   it('keeps smoke active on all screens', () => {
-    useNonogramGameMock.mockReturnValue({
-      screen: 'home',
-      gameState: null,
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
-      completedIds: [],
-      showVictory: false,
-      setShowVictory: vi.fn(),
-      muted: false,
-      volume: 0.5,
-      toggleMuted: vi.fn(),
-      changeVolume: vi.fn(),
-      startPuzzle: vi.fn(),
-      startTutorial: vi.fn(),
-      goHome: vi.fn(),
-      nextPuzzle: vi.fn(),
-      handleCellAction: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      reset: vi.fn(),
-      resetAllProgress: vi.fn(),
-      canUndo: false,
-      canRedo: false,
-      canResetAllProgress: false,
-      isLastPuzzle: false,
-      showTutorialShortcut: false,
-    });
+    useNonogramGameMock.mockReturnValue(buildHookState());
 
     const { rerender } = render(<App />);
     expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: true });
 
-    useNonogramGameMock.mockReturnValue({
+    useNonogramGameMock.mockReturnValue(buildHookState({
       screen: 'play',
       gameState: {
         puzzle: { id: 'p', title: 'P', width: 1, height: 1, solution: [[true]] },
@@ -110,67 +141,25 @@ describe('App', () => {
         isSolved: false,
         elapsedTime: 0,
       },
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
-      completedIds: [],
-      showVictory: false,
-      setShowVictory: vi.fn(),
-      muted: false,
-      volume: 0.5,
-      toggleMuted: vi.fn(),
-      changeVolume: vi.fn(),
-      startPuzzle: vi.fn(),
-      startTutorial: vi.fn(),
-      goHome: vi.fn(),
-      nextPuzzle: vi.fn(),
-      handleCellAction: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      reset: vi.fn(),
-      resetAllProgress: vi.fn(),
-      canUndo: false,
-      canRedo: false,
-      canResetAllProgress: false,
-      isLastPuzzle: false,
-      showTutorialShortcut: false,
-    });
+    }));
 
     rerender(<App />);
     expect(smokeSimulationMock).toHaveBeenLastCalledWith({ active: true });
   });
 
-  it('renders home flow and mute toggle', () => {
+  it('renders home flow, continue metadata, and mute toggle', () => {
     const startPuzzle = vi.fn();
     const startTutorial = vi.fn();
     const toggleMuted = vi.fn();
 
-    useNonogramGameMock.mockReturnValue({
-      screen: 'home',
-      gameState: null,
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
-      completedIds: [],
-      showVictory: false,
-      setShowVictory: vi.fn(),
-      muted: false,
-      volume: 0.5,
-      toggleMuted,
-      changeVolume: vi.fn(),
+    useNonogramGameMock.mockReturnValue(buildHookState({
       startPuzzle,
       startTutorial,
-      goHome: vi.fn(),
-      nextPuzzle: vi.fn(),
-      handleCellAction: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      reset: vi.fn(),
-      resetAllProgress: vi.fn(),
-      canUndo: false,
-      canRedo: false,
+      toggleMuted,
       canResetAllProgress: true,
-      isLastPuzzle: false,
-      showTutorialShortcut: false,
-    });
+      inProgressIds: ['a'],
+      lastPlayedPuzzleId: 'a',
+    }));
 
     render(<App />);
 
@@ -182,38 +171,18 @@ describe('App', () => {
     expect(startTutorial).toHaveBeenCalledTimes(1);
     expect(toggleMuted).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Reset all progress' })).toBeInTheDocument();
+    expect(screen.getByText('a')).toBeInTheDocument();
   });
 
   it('shows the compact tutorial shortcut on the home toolbar after progress is unlocked', () => {
     const startTutorial = vi.fn();
 
-    useNonogramGameMock.mockReturnValue({
-      screen: 'home',
-      gameState: null,
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
+    useNonogramGameMock.mockReturnValue(buildHookState({
       completedIds: ['a'],
-      showVictory: false,
-      setShowVictory: vi.fn(),
-      muted: false,
-      volume: 0.5,
-      toggleMuted: vi.fn(),
-      changeVolume: vi.fn(),
-      startPuzzle: vi.fn(),
       startTutorial,
-      goHome: vi.fn(),
-      nextPuzzle: vi.fn(),
-      handleCellAction: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      reset: vi.fn(),
-      resetAllProgress: vi.fn(),
-      canUndo: false,
-      canRedo: false,
       canResetAllProgress: true,
-      isLastPuzzle: false,
       showTutorialShortcut: true,
-    });
+    }));
 
     render(<App />);
 
@@ -226,7 +195,7 @@ describe('App', () => {
   });
 
   it('renders the home reset control only on the home screen', () => {
-    useNonogramGameMock.mockReturnValue({
+    useNonogramGameMock.mockReturnValue(buildHookState({
       screen: 'play',
       gameState: {
         puzzle: { id: 'p', title: 'P', width: 1, height: 1, solution: [[true]] },
@@ -235,77 +204,47 @@ describe('App', () => {
         isSolved: false,
         elapsedTime: 0,
       },
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
-      completedIds: [],
-      showVictory: false,
-      setShowVictory: vi.fn(),
-      muted: false,
-      volume: 0.5,
-      toggleMuted: vi.fn(),
-      changeVolume: vi.fn(),
-      startPuzzle: vi.fn(),
-      startTutorial: vi.fn(),
-      goHome: vi.fn(),
-      nextPuzzle: vi.fn(),
-      handleCellAction: vi.fn(),
-      undo: vi.fn(),
-      redo: vi.fn(),
-      reset: vi.fn(),
-      resetAllProgress: vi.fn(),
-      canUndo: false,
-      canRedo: false,
       canResetAllProgress: true,
-      isLastPuzzle: false,
-      showTutorialShortcut: false,
-    });
+    }));
 
     render(<App />);
 
     expect(screen.queryByRole('button', { name: 'Reset all progress' })).not.toBeInTheDocument();
   });
 
-  it('renders play controls and victory modal actions', () => {
+  it('renders play controls, reset modal actions, and victory modal actions', () => {
     const undo = vi.fn();
     const redo = vi.fn();
-    const reset = vi.fn();
+    const openResetPuzzleConfirm = vi.fn();
+    const closeResetPuzzleConfirm = vi.fn();
+    const confirmResetPuzzle = vi.fn();
     const goHome = vi.fn();
     const nextPuzzle = vi.fn();
     const setShowVictory = vi.fn();
 
-    useNonogramGameMock.mockReturnValue({
+    useNonogramGameMock.mockReturnValue(buildHookState({
       screen: 'play',
       gameState: {
         puzzle: { id: 'p', title: 'P', width: 1, height: 1, solution: [[true]] },
         clues: { rows: [[1]], cols: [[1]] },
         grid: [[CellState.EMPTY]],
         isSolved: false,
-        elapsedTime: 0,
+        elapsedTime: 125,
       },
-      inputMode: CellState.FILLED,
-      setInputMode: vi.fn(),
-      completedIds: [],
       showVictory: true,
       setShowVictory,
+      showResetPuzzleConfirm: true,
       muted: true,
-      volume: 0.5,
-      toggleMuted: vi.fn(),
-      changeVolume: vi.fn(),
-      startPuzzle: vi.fn(),
-      startTutorial: vi.fn(),
-      goHome,
-      nextPuzzle,
-      handleCellAction: vi.fn(),
       undo,
       redo,
-      reset,
-      resetAllProgress: vi.fn(),
+      openResetPuzzleConfirm,
+      closeResetPuzzleConfirm,
+      confirmResetPuzzle,
+      goHome,
+      nextPuzzle,
       canUndo: true,
       canRedo: true,
-      canResetAllProgress: true,
-      isLastPuzzle: false,
-      showTutorialShortcut: false,
-    });
+    }));
 
     render(<App />);
 
@@ -315,14 +254,18 @@ describe('App', () => {
     fireEvent.click(screen.getByText('play-back'));
     fireEvent.click(screen.getByText('victory-view'));
     fireEvent.click(screen.getByText('victory-next'));
+    fireEvent.click(screen.getByText('reset-cancel'));
+    fireEvent.click(screen.getByText('reset-confirm'));
 
     expect(undo).toHaveBeenCalledTimes(1);
     expect(redo).toHaveBeenCalledTimes(1);
-    expect(reset).toHaveBeenCalledTimes(1);
+    expect(openResetPuzzleConfirm).toHaveBeenCalledTimes(1);
     expect(goHome).toHaveBeenCalledTimes(1);
     expect(setShowVictory).toHaveBeenCalledWith(false);
     expect(nextPuzzle).toHaveBeenCalledTimes(1);
+    expect(closeResetPuzzleConfirm).toHaveBeenCalledTimes(1);
+    expect(confirmResetPuzzle).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Unmute' })).toBeInTheDocument();
+    expect(screen.getByText('P')).toBeInTheDocument();
   });
-
 });

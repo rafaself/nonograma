@@ -1,9 +1,10 @@
-import { useCallback, memo } from 'react';
+import { useCallback, memo, useId } from 'react';
 import type { GameState } from '../lib/game-logic';
 import { CellState } from '../lib/game-logic';
 import { ChevronLeft, X, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { NonogramBoardCanvas } from '../components/NonogramBoardCanvas';
+import { PlayStatusHud } from '../components/PlayStatusHud';
 
 interface PlayScreenProps {
   gameState: GameState;
@@ -25,6 +26,7 @@ export const PlayScreen = memo(function PlayScreen({
   onDragEnd,
 }: PlayScreenProps) {
   const tutorial = gameState.puzzle.tutorial;
+  const boardDescriptionId = useId();
 
   const handleBoardAction = useCallback(
     (row: number, col: number, action: 'fill' | 'mark_x') => {
@@ -46,6 +48,13 @@ export const PlayScreen = memo(function PlayScreen({
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
+        <PlayStatusHud
+          title={gameState.puzzle.title}
+          width={gameState.puzzle.width}
+          height={gameState.puzzle.height}
+          elapsedTime={gameState.elapsedTime}
+        />
+
         {tutorial && (
           <section
             aria-label="How to play"
@@ -79,12 +88,18 @@ export const PlayScreen = memo(function PlayScreen({
         )}
 
         <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 px-4 md:px-8 overflow-hidden">
+          <p id={boardDescriptionId} className="sr-only">
+            Puzzle board for {gameState.puzzle.title}. Grid size {gameState.puzzle.width} by {gameState.puzzle.height}. Current mode is {inputMode === CellState.FILLED ? 'fill' : 'mark x'}. On desktop, left click fills and right click marks X. On touch, tap uses the current mode, hold uses the alternate action, and two fingers zoom or pan the board.
+          </p>
           <NonogramBoardCanvas
+            key={gameState.puzzle.id}
             grid={gameState.grid}
             clues={gameState.clues}
             onCellAction={handleBoardAction}
             isSolved={gameState.isSolved}
             inputMode={inputMode}
+            ariaLabel={`Puzzle board for ${gameState.puzzle.title}`}
+            ariaDescribedBy={boardDescriptionId}
             {...(onDragStart ? { onDragStart } : {})}
             {...(onDragEnd ? { onDragEnd } : {})}
             {...(gameState.puzzle.resultColors ? { resultColors: gameState.puzzle.resultColors } : {})}

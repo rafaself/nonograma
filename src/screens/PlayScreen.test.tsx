@@ -64,6 +64,7 @@ describe('PlayScreen', () => {
     );
 
     expect(screen.getByRole('region', { name: 'How to play' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Puzzle status' })).toBeInTheDocument();
     expect(screen.getByText('Learn the clue system.')).toBeInTheDocument();
     expect(screen.getByText('Read the clues.')).toBeInTheDocument();
   });
@@ -112,6 +113,9 @@ describe('PlayScreen', () => {
       />,
     );
 
+    expect(screen.getByText('P')).toBeInTheDocument();
+    expect(screen.getByText('00:00')).toBeInTheDocument();
+
     fireEvent.click(screen.getByText('fill cell'));
     fireEvent.click(screen.getByText('mark cell'));
     fireEvent.click(screen.getByRole('button', { name: 'Switch to mark mode' }));
@@ -138,5 +142,28 @@ describe('PlayScreen', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Switch to fill mode' }));
     expect(onSetInputMode).toHaveBeenCalledWith(CellState.FILLED);
+  });
+
+  it('passes accessible board metadata to the canvas', () => {
+    canvasPropsSpy.mockClear();
+
+    render(
+      <PlayScreen
+        gameState={gameState}
+        inputMode={CellState.MARKED_X}
+        onSetInputMode={() => {}}
+        onCellAction={() => {}}
+        onBack={() => {}}
+      />,
+    );
+
+    const lastCallProps = canvasPropsSpy.mock.calls.at(-1)?.[0] as {
+      ariaLabel?: string;
+      ariaDescribedBy?: string;
+    };
+
+    expect(lastCallProps.ariaLabel).toBe('Puzzle board for P');
+    expect(lastCallProps.ariaDescribedBy).toBeTruthy();
+    expect(screen.getByText(/Current mode is mark x/i)).toHaveClass('sr-only');
   });
 });

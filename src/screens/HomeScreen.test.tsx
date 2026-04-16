@@ -28,6 +28,8 @@ describe('HomeScreen', () => {
     const { container } = render(
       <HomeScreen
         completedIds={['a']}
+        inProgressIds={['b']}
+        continuePuzzleId="b"
         onStartPuzzle={onStartPuzzle}
         onStartTutorial={onStartTutorial}
         showTutorialCard={true}
@@ -39,7 +41,9 @@ describe('HomeScreen', () => {
     expect(screen.getByText('1/3')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /start tutorial/i })).toBeInTheDocument();
     expect(screen.getByText('Alpha')).toBeInTheDocument();
-    expect(screen.getAllByText(/王+/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Beta')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /continue trail beta/i })).toBeInTheDocument();
+    expect(screen.getByText('In Progress')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Alpha'));
     expect(onStartPuzzle).toHaveBeenCalledTimes(1);
@@ -55,6 +59,8 @@ describe('HomeScreen', () => {
     render(
       <HomeScreen
         completedIds={[]}
+        inProgressIds={[]}
+        continuePuzzleId={null}
         onStartPuzzle={onStartPuzzle}
         onStartTutorial={onStartTutorial}
         showTutorialCard={true}
@@ -71,6 +77,8 @@ describe('HomeScreen', () => {
     render(
       <HomeScreen
         completedIds={['a']}
+        inProgressIds={[]}
+        continuePuzzleId={null}
         onStartPuzzle={() => {}}
         onStartTutorial={() => {}}
         showTutorialCard={false}
@@ -84,6 +92,8 @@ describe('HomeScreen', () => {
     render(
       <HomeScreen
         completedIds={[]}
+        inProgressIds={[]}
+        continuePuzzleId={null}
         onStartPuzzle={() => {}}
         onStartTutorial={() => {}}
         showTutorialCard={true}
@@ -103,5 +113,25 @@ describe('HomeScreen', () => {
     await waitFor(() => {
       expect(collapse.classList.contains('expanded')).toBe(true);
     });
+  });
+
+  it('starts the continue trail card when resume data is available', () => {
+    const onStartPuzzle = vi.fn();
+
+    render(
+      <HomeScreen
+        completedIds={[]}
+        inProgressIds={['b']}
+        continuePuzzleId="b"
+        onStartPuzzle={onStartPuzzle}
+        onStartTutorial={() => {}}
+        showTutorialCard={true}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /continue trail beta/i }));
+
+    expect(onStartPuzzle).toHaveBeenCalledTimes(1);
+    expect(onStartPuzzle.mock.calls[0]?.[0]).toMatchObject({ id: 'b' });
   });
 });

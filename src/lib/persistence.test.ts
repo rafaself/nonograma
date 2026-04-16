@@ -44,11 +44,31 @@ describe('persistence', () => {
     expect(persistence.hasAnyPuzzleProgress()).toBe(true);
   });
 
+  it('tracks in-progress puzzle ids across saved games', () => {
+    persistence.saveGame('p1', [[CellState.FILLED]], 7);
+    persistence.flushSave();
+    persistence.saveGame('p2', [[CellState.EMPTY]], 0);
+
+    expect(persistence.getInProgressPuzzleIds().sort()).toEqual(['p1', 'p2']);
+  });
+
+  it('stores and clears the last played puzzle id', () => {
+    expect(persistence.getLastPlayedPuzzleId()).toBeNull();
+
+    persistence.setLastPlayedPuzzleId('p1');
+    expect(persistence.getLastPlayedPuzzleId()).toBe('p1');
+
+    persistence.clearLastPlayedPuzzleId();
+    expect(persistence.getLastPlayedPuzzleId()).toBeNull();
+  });
+
   it('resets a puzzle save', () => {
     persistence.saveGame('p1', [[CellState.EMPTY]], 0);
     persistence.flushSave();
+    persistence.setLastPlayedPuzzleId('p1');
     persistence.resetPuzzle('p1');
     expect(persistence.loadGame('p1')).toBeNull();
+    expect(persistence.getLastPlayedPuzzleId()).toBeNull();
   });
 
   it('clears pending puzzle saves when resetting a puzzle', () => {
@@ -64,6 +84,7 @@ describe('persistence', () => {
     persistence.saveGame('p1', [[CellState.FILLED]], 7);
     persistence.markCompleted('p2');
     persistence.markTutorialCompleted();
+    persistence.setLastPlayedPuzzleId('p1');
     persistence.setMuted(true);
     persistence.setVolume(0.8);
 
@@ -76,6 +97,7 @@ describe('persistence', () => {
     expect(persistence.loadGame('p1')).toBeNull();
     expect(persistence.getCompletedStatus()).toEqual([]);
     expect(persistence.getTutorialCompleted()).toBe(false);
+    expect(persistence.getLastPlayedPuzzleId()).toBeNull();
     expect(persistence.getMuted()).toBe(true);
     expect(persistence.getVolume()).toBe(0.8);
   });
@@ -144,6 +166,12 @@ describe('persistence', () => {
       localStorage.setItem('nonogram_completed', JSON.stringify([1, 2, 3]));
       expect(persistence.getCompletedStatus()).toEqual([]);
       expect(localStorage.getItem('nonogram_completed')).toBeNull();
+    });
+
+    it('returns null and cleans up when the last played id is invalid', () => {
+      localStorage.setItem('nonogram_last_played', '../etc/passwd');
+      expect(persistence.getLastPlayedPuzzleId()).toBeNull();
+      expect(localStorage.getItem('nonogram_last_played')).toBeNull();
     });
 
     it('returns null and cleans up when grid has empty rows', () => {

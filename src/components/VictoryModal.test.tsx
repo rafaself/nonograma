@@ -7,9 +7,22 @@ describe('VictoryModal', () => {
     const onViewGrid = vi.fn();
     const onNext = vi.fn();
 
-    render(<VictoryModal isLastPuzzle={false} onViewGrid={onViewGrid} onNext={onNext} />);
+    render(
+      <VictoryModal
+        isLastPuzzle={false}
+        puzzleTitle="Temple Path"
+        puzzleWidth={15}
+        puzzleHeight={15}
+        elapsedTime={125}
+        onViewGrid={onViewGrid}
+        onNext={onNext}
+      />,
+    );
 
     expect(screen.getByText('Achieved')).toBeInTheDocument();
+    expect(screen.getByText('Temple Path')).toBeInTheDocument();
+    expect(screen.getByText('15x15 Trail')).toBeInTheDocument();
+    expect(screen.getByText('Time 02:05')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Review Trial' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ascend Next' })).toBeInTheDocument();
 
@@ -21,7 +34,17 @@ describe('VictoryModal', () => {
   });
 
   it('shows last puzzle label', () => {
-    render(<VictoryModal isLastPuzzle onViewGrid={() => {}} onNext={() => {}} />);
+    render(
+      <VictoryModal
+        isLastPuzzle
+        puzzleTitle="Temple Path"
+        puzzleWidth={15}
+        puzzleHeight={15}
+        elapsedTime={125}
+        onViewGrid={() => {}}
+        onNext={() => {}}
+      />,
+    );
     expect(screen.getByRole('button', { name: 'Final Peace' })).toBeInTheDocument();
   });
 });

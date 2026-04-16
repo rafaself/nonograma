@@ -76,6 +76,7 @@ const VolumeControlBase: React.FC<VolumeControlProps> = ({
                 onClick={handleClick}
                 className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg flex items-center justify-center relative z-10"
                 title={muted ? 'Unmute' : 'Mute'}
+                aria-label={muted ? 'Unmute' : 'Mute'}
             >
                 {muted ? (
                     <VolumeX className="w-4 h-4 md:w-6 md:h-6 text-[#5a4d41]" />

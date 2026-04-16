@@ -1,13 +1,26 @@
 import { memo } from 'react';
 import { Check } from 'lucide-react';
+import { formatElapsedTime } from '../lib/time';
 
 interface VictoryModalProps {
   isLastPuzzle: boolean;
+  puzzleTitle: string;
+  puzzleWidth: number;
+  puzzleHeight: number;
+  elapsedTime: number;
   onViewGrid: () => void;
   onNext: () => void;
 }
 
-export const VictoryModal = memo(function VictoryModal({ isLastPuzzle, onViewGrid, onNext }: VictoryModalProps) {
+export const VictoryModal = memo(function VictoryModal({
+  isLastPuzzle,
+  puzzleTitle,
+  puzzleWidth,
+  puzzleHeight,
+  elapsedTime,
+  onViewGrid,
+  onNext,
+}: VictoryModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0a0a0a]/95 backdrop-blur-3xl animate-in fade-in zoom-in duration-700">
       <div className="absolute inset-0 bg-radial-gradient from-[#ae2012]/10 to-transparent pointer-events-none" />
@@ -18,7 +31,16 @@ export const VictoryModal = memo(function VictoryModal({ isLastPuzzle, onViewGri
           </div>
         </div>
         <h2 className="text-7xl md:text-8xl font-bold mb-4 tracking-tight text-[#fdf5e6] font-['Ma_Shan_Zheng'] py-2">Achieved</h2>
-        <p className="text-[#a0a0a0] text-xl mb-14 font-['Noto_Serif_JP'] tracking-wide">The path is clear. Enlightenment attained.</p>
+        <p className="text-[#a0a0a0] text-xl mb-4 font-['Noto_Serif_JP'] tracking-wide">The path is clear. Enlightenment attained.</p>
+        <div className="mb-14 flex flex-col items-center gap-2 rounded-sm border border-[#c9a227]/20 bg-[#120f0b]/90 px-6 py-5">
+          <div className="text-3xl font-['Ma_Shan_Zheng'] text-[#fdf5e6]">{puzzleTitle}</div>
+          <div className="text-xs font-bold tracking-[0.28em] uppercase text-[#7a7a7a]">
+            {puzzleWidth}x{puzzleHeight} Trail
+          </div>
+          <div className="text-sm font-bold tracking-[0.24em] uppercase text-[#ae2012]">
+            Time {formatElapsedTime(elapsedTime)}
+          </div>
+        </div>
         <div className="flex flex-col sm:flex-row gap-6">
           <button
             onClick={onViewGrid}
