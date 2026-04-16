@@ -3,6 +3,13 @@ import { CellState, isLineSatisfied } from '../lib/game-logic';
 import type { Clues } from '../lib/game-logic';
 import { computeClueLayoutMetrics, computeStableCellSize } from '../lib/canvasSizing';
 import { renderBoard, hitTest } from '../lib/boardRender';
+import {
+  clampBoardViewport,
+  getPinchViewport,
+  toLogicalCanvasPoint,
+  type BoardViewport,
+  type ViewportPoint,
+} from '../lib/boardViewport';
 import { cn } from '../lib/utils';
 
 export interface NonogramBoardCanvasProps {
@@ -15,6 +22,8 @@ export interface NonogramBoardCanvasProps {
   backgroundColors?: (string | null)[][];
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  ariaLabel?: string;
+  ariaDescribedBy?: string;
 }
 
 interface DragState {
@@ -22,6 +31,31 @@ interface DragState {
   action: 'fill' | 'mark_x';
   visitedCells: Set<string>;
 }
+
+interface PendingTouchState {
+  pointerId: number;
+  timerId: number | null;
+  startX: number;
+  startY: number;
+  startCell: { row: number; col: number } | null;
+  normalAction: 'fill' | 'mark_x';
+  alternateAction: 'fill' | 'mark_x';
+  beganStroke: boolean;
+}
+
+interface PinchGestureState {
+  startViewport: BoardViewport;
+  startPoints: [ViewportPoint, ViewportPoint];
+}
+
+const DEFAULT_VIEWPORT: BoardViewport = {
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+const TOUCH_HOLD_DELAY_MS = 250;
+const TOUCH_MOVE_SLOP_PX = 8;
 
 const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   grid,
@@ -33,15 +67,22 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   backgroundColors,
   onDragStart,
   onDragEnd,
+  ariaLabel,
+  ariaDescribedBy,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  const touchPointersRef = useRef(new Map<number, ViewportPoint>());
+  const pendingTouchRef = useRef<PendingTouchState | null>(null);
+  const pinchRef = useRef<PinchGestureState | null>(null);
+  const viewportRef = useRef<BoardViewport>(DEFAULT_VIEWPORT);
 
   const rows = grid.length;
   const cols = grid[0].length;
 
   const [cellSize, setCellSize] = useState(32);
+  const [viewport, setViewport] = useState<BoardViewport>(DEFAULT_VIEWPORT);
 
   const maxRowClueCount = useMemo(
     () => Math.max(...clues.rows.map((rowClues) => rowClues.length)),
@@ -55,6 +96,10 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
     () => computeClueLayoutMetrics(cellSize, maxRowClueCount, maxColClueCount),
     [cellSize, maxRowClueCount, maxColClueCount],
   );
+  const logicalCanvasWidth = cellSize * cols;
+  const logicalCanvasHeight = cellSize * rows;
+  const boardWidth = rowClueWidth + logicalCanvasWidth;
+  const boardHeight = colClueHeight + logicalCanvasHeight;
 
   // Pre-compute which rows/cols are satisfied to avoid O(rows*cols) work in JSX
   const satisfiedRows = useMemo(() =>
@@ -71,6 +116,27 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
     }),
     [grid, clues.cols],
   );
+
+  const commitViewport = useCallback((nextViewport: BoardViewport) => {
+    const clampedViewport = clampBoardViewport(nextViewport, boardWidth, boardHeight);
+    viewportRef.current = clampedViewport;
+    setViewport(clampedViewport);
+  }, [boardWidth, boardHeight]);
+
+  const finalizeDrag = useCallback(() => {
+    if (dragRef.current) {
+      onDragEnd?.();
+    }
+    dragRef.current = null;
+  }, [onDragEnd]);
+
+  const clearPendingTouch = useCallback(() => {
+    const pendingTouch = pendingTouchRef.current;
+    if (pendingTouch?.timerId != null) {
+      window.clearTimeout(pendingTouch.timerId);
+    }
+    pendingTouchRef.current = null;
+  }, []);
 
   // --- Resize ---
   /* c8 ignore start */
@@ -107,6 +173,21 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   }, [cols, rows, maxRowClueCount, maxColClueCount]);
   /* c8 ignore stop */
 
+  useEffect(() => {
+    const touchPointers = touchPointersRef.current;
+
+    return () => {
+      dragRef.current = null;
+      touchPointers.clear();
+      clearPendingTouch();
+      pinchRef.current = null;
+    };
+  }, [clearPendingTouch]);
+
+  useEffect(() => {
+    commitViewport(viewportRef.current);
+  }, [commitViewport]);
+
   // --- Canvas render ---
   /* c8 ignore start */
   useEffect(() => {
@@ -137,11 +218,21 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   const getCell = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      return hitTest(x, y, cellSize, rows, cols);
+      const point = toLogicalCanvasPoint(
+        e.clientX,
+        e.clientY,
+        rect,
+        logicalCanvasWidth,
+        logicalCanvasHeight,
+      );
+
+      if (!point) {
+        return null;
+      }
+
+      return hitTest(point.x, point.y, cellSize, rows, cols);
     },
-    [cellSize, rows, cols],
+    [cellSize, rows, cols, logicalCanvasWidth, logicalCanvasHeight],
   );
 
   const resolveAction = useCallback(
@@ -156,61 +247,196 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
     [inputMode],
   );
 
+  const applyDragCell = useCallback((cell: { row: number; col: number } | null, action: 'fill' | 'mark_x') => {
+    if (!cell || !dragRef.current?.active) {
+      return;
+    }
+
+    const key = `${cell.row},${cell.col}`;
+    if (dragRef.current.visitedCells.has(key)) {
+      return;
+    }
+
+    dragRef.current.visitedCells.add(key);
+    onCellAction(cell.row, cell.col, action);
+  }, [onCellAction]);
+
+  const startStroke = useCallback((cell: { row: number; col: number } | null, action: 'fill' | 'mark_x') => {
+    if (!cell) {
+      return false;
+    }
+
+    onDragStart?.();
+    dragRef.current = {
+      active: true,
+      action,
+      visitedCells: new Set([`${cell.row},${cell.col}`]),
+    };
+    onCellAction(cell.row, cell.col, action);
+    return true;
+  }, [onCellAction, onDragStart]);
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       if (isSolved) return;
       e.currentTarget.setPointerCapture(e.pointerId);
 
+      if (e.pointerType === 'touch') {
+        touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (touchPointersRef.current.size >= 2) {
+          clearPendingTouch();
+          finalizeDrag();
+
+          const [firstPoint, secondPoint] = [...touchPointersRef.current.values()];
+          pinchRef.current = {
+            startViewport: viewportRef.current,
+            startPoints: [firstPoint, secondPoint],
+          };
+          return;
+        }
+
+        const cell = getCell(e);
+        const normalAction = resolveAction(e);
+        const alternateAction = normalAction === 'fill' ? 'mark_x' : 'fill';
+        const timerId = window.setTimeout(() => {
+          const pendingTouch = pendingTouchRef.current;
+          if (!pendingTouch || pendingTouch.pointerId !== e.pointerId) {
+            return;
+          }
+
+          if (startStroke(pendingTouch.startCell, pendingTouch.alternateAction)) {
+            pendingTouch.beganStroke = true;
+          }
+        }, TOUCH_HOLD_DELAY_MS);
+
+        pendingTouchRef.current = {
+          pointerId: e.pointerId,
+          timerId,
+          startX: e.clientX,
+          startY: e.clientY,
+          startCell: cell,
+          normalAction,
+          alternateAction,
+          beganStroke: false,
+        };
+        return;
+      }
+
       const cell = getCell(e);
       if (!cell) return;
 
       const action = resolveAction(e);
-      onDragStart?.();
-      dragRef.current = {
-        active: true,
-        action,
-        visitedCells: new Set([`${cell.row},${cell.col}`]),
-      };
-      onCellAction(cell.row, cell.col, action);
+      startStroke(cell, action);
     },
-    [isSolved, getCell, resolveAction, onCellAction, onDragStart],
+    [isSolved, getCell, resolveAction, clearPendingTouch, finalizeDrag, startStroke],
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (e.pointerType === 'touch') {
+        touchPointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (touchPointersRef.current.size >= 2) {
+          clearPendingTouch();
+          finalizeDrag();
+
+          const [firstPoint, secondPoint] = [...touchPointersRef.current.values()];
+          const currentPoints: [ViewportPoint, ViewportPoint] = [firstPoint, secondPoint];
+
+          if (pinchRef.current === null) {
+            pinchRef.current = {
+              startViewport: viewportRef.current,
+              startPoints: currentPoints,
+            };
+          }
+
+          commitViewport(
+            getPinchViewport(
+              pinchRef.current.startViewport,
+              pinchRef.current.startPoints,
+              currentPoints,
+              boardWidth,
+              boardHeight,
+            ),
+          );
+          return;
+        }
+
+        const pendingTouch = pendingTouchRef.current;
+        if (pendingTouch && pendingTouch.pointerId === e.pointerId && !pendingTouch.beganStroke) {
+          const movedEnough = Math.hypot(e.clientX - pendingTouch.startX, e.clientY - pendingTouch.startY) > TOUCH_MOVE_SLOP_PX;
+
+          if (movedEnough) {
+            if (pendingTouch.timerId !== null) {
+              window.clearTimeout(pendingTouch.timerId);
+              pendingTouch.timerId = null;
+            }
+
+            if (!startStroke(pendingTouch.startCell, pendingTouch.normalAction)) {
+              clearPendingTouch();
+              return;
+            }
+
+            pendingTouch.beganStroke = true;
+            applyDragCell(getCell(e), pendingTouch.normalAction);
+          }
+          return;
+        }
+      }
+
       const drag = dragRef.current;
       if (!drag?.active) return;
 
-      const cell = getCell(e);
-      if (!cell) return;
-
-      const key = `${cell.row},${cell.col}`;
-      if (drag.visitedCells.has(key)) return;
-
-      drag.visitedCells.add(key);
-      onCellAction(cell.row, cell.col, drag.action);
+      applyDragCell(getCell(e), drag.action);
     },
-    [getCell, onCellAction],
+    [getCell, boardWidth, boardHeight, commitViewport, clearPendingTouch, finalizeDrag, startStroke, applyDragCell],
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (dragRef.current) {
-      onDragEnd?.();
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.pointerType === 'touch') {
+      touchPointersRef.current.delete(e.pointerId);
+
+      if (pinchRef.current !== null) {
+        if (touchPointersRef.current.size < 2) {
+          pinchRef.current = null;
+        }
+        return;
+      }
+
+      const pendingTouch = pendingTouchRef.current;
+      if (pendingTouch && pendingTouch.pointerId === e.pointerId) {
+        if (pendingTouch.timerId !== null) {
+          window.clearTimeout(pendingTouch.timerId);
+        }
+
+        if (!pendingTouch.beganStroke && pendingTouch.startCell) {
+          onCellAction(pendingTouch.startCell.row, pendingTouch.startCell.col, pendingTouch.normalAction);
+        } else {
+          finalizeDrag();
+        }
+
+        pendingTouchRef.current = null;
+        return;
+      }
     }
-    dragRef.current = null;
-  }, [onDragEnd]);
+
+    finalizeDrag();
+  }, [finalizeDrag, onCellAction]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
   }, []);
 
   return (
-    <div ref={containerRef} className="flex items-center justify-center select-none w-full">
+    <div ref={containerRef} className="flex items-center justify-center select-none w-full overflow-hidden">
       <div
         className="grid gap-0"
         style={{
           gridTemplateColumns: `${rowClueWidth}px ${cellSize * cols}px`,
           gridTemplateRows: `${colClueHeight}px ${cellSize * rows}px`,
+          transform: `translate(${viewport.offsetX}px, ${viewport.offsetY}px) scale(${viewport.scale})`,
+          transformOrigin: 'center center',
         }}
       >
         {/* Top-left corner */}
@@ -275,6 +501,9 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
             height: cellSize * rows,
             touchAction: 'none',
           }}
+          role="img"
+          aria-label={ariaLabel}
+          aria-describedby={ariaDescribedBy}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
