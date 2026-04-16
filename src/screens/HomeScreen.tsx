@@ -1,13 +1,11 @@
 import { useState, useMemo, memo } from 'react';
 import type { Puzzle } from '../lib/game-logic';
 import { PUZZLES, TUTORIAL_PUZZLE } from '../data/puzzles';
-import { Play, ChevronRight, ChevronDown, Github, RotateCcw, BookOpen } from 'lucide-react';
+import { Play, ChevronRight, ChevronDown, Github, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
-  canResetAllProgress: boolean;
   completedIds: string[];
-  onResetAllProgress: () => void;
   onStartPuzzle: (puzzle: Puzzle) => void;
 }
 
@@ -37,14 +35,11 @@ function groupBySize(puzzles: typeof PUZZLES) {
 }
 
 export const HomeScreen = memo(function HomeScreen({
-  canResetAllProgress,
   completedIds,
-  onResetAllProgress,
   onStartPuzzle,
 }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
-  const [showResetModal, setShowResetModal] = useState(false);
 
   const toggleGroup = (size: string) => {
     setCollapsedGroups(prev => {
@@ -61,23 +56,6 @@ export const HomeScreen = memo(function HomeScreen({
 
   return (
     <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-8 duration-1000 relative z-10">
-      <div className="w-full flex justify-center sm:justify-end mb-8">
-        <button
-          type="button"
-          onClick={() => setShowResetModal(true)}
-          disabled={!canResetAllProgress}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-sm border px-4 py-2.5 text-xs font-bold tracking-[0.24em] uppercase transition-all",
-            canResetAllProgress
-              ? "border-[#ae2012]/40 bg-[#ae2012]/10 text-[#fdf5e6] hover:border-[#ae2012]/70 hover:bg-[#ae2012]/20"
-              : "cursor-not-allowed border-[#c9a227]/10 bg-[#1a1510]/60 text-[#7a7a7a]"
-          )}
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          Reset All Progress
-        </button>
-      </div>
-
       {/* ── Header ── */}
       <div className="relative mb-10">
         <div className="absolute inset-0 bg-[#ae2012]/20 blur-[100px] -z-10 animate-pulse" />
@@ -273,50 +251,6 @@ export const HomeScreen = memo(function HomeScreen({
         </a>
         <span className="text-[10px] text-[#555]">Nonogram puzzle game · Open source</span>
       </footer>
-
-      {showResetModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0a0a0a]/95 backdrop-blur-3xl animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-radial-gradient from-[#ae2012]/10 to-transparent pointer-events-none" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reset-all-progress-title"
-            className="relative z-10 w-full max-w-lg border border-[#c9a227]/20 bg-[#120f0b]/95 p-8 shadow-2xl shadow-black/60"
-          >
-            <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-sm border border-[#ae2012]/40 bg-[#ae2012]/10 text-[#ae2012]">
-              <RotateCcw className="h-6 w-6" />
-            </div>
-            <h2
-              id="reset-all-progress-title"
-              className="mb-3 text-3xl font-bold tracking-tight text-[#fdf5e6] font-['Ma_Shan_Zheng']"
-            >
-              Reset all progress?
-            </h2>
-            <p className="mb-8 text-sm leading-7 text-[#c8bea9] font-['Noto_Serif_JP']">
-              This will erase every completed trail and every saved puzzle board. This action cannot be undone.
-            </p>
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setShowResetModal(false)}
-                className="rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-5 py-3 text-sm font-bold uppercase tracking-[0.24em] text-[#fdf5e6] transition-colors hover:border-[#c9a227]/40 hover:bg-[#251e16]"
-              >
-                Keep Progress
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onResetAllProgress();
-                  setShowResetModal(false);
-                }}
-                className="rounded-sm border border-[#ae2012]/40 bg-[#ae2012] px-5 py-3 text-sm font-bold uppercase tracking-[0.24em] text-[#fdf5e6] transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Reset Everything
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 });

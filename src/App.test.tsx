@@ -11,10 +11,9 @@ vi.mock('./hooks/useNonogramGame', () => ({
 }));
 
 vi.mock('./screens/HomeScreen', () => ({
-  HomeScreen: ({ onResetAllProgress, onStartPuzzle }: { onResetAllProgress: () => void; onStartPuzzle: () => void }) => (
+  HomeScreen: ({ onStartPuzzle }: { onStartPuzzle: () => void }) => (
     <div>
       <button onClick={onStartPuzzle}>home-screen</button>
-      <button onClick={onResetAllProgress}>home-reset</button>
     </div>
   ),
 }));
@@ -125,7 +124,6 @@ describe('App', () => {
 
   it('renders home flow and mute toggle', () => {
     const startPuzzle = vi.fn();
-    const resetAllProgress = vi.fn();
     const toggleMuted = vi.fn();
 
     useNonogramGameMock.mockReturnValue({
@@ -147,7 +145,7 @@ describe('App', () => {
       undo: vi.fn(),
       redo: vi.fn(),
       reset: vi.fn(),
-      resetAllProgress,
+      resetAllProgress: vi.fn(),
       canUndo: false,
       canRedo: false,
       canResetAllProgress: true,
@@ -157,12 +155,49 @@ describe('App', () => {
     render(<App />);
 
     fireEvent.click(screen.getByText('home-screen'));
-    fireEvent.click(screen.getByText('home-reset'));
     fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
 
     expect(startPuzzle).toHaveBeenCalledTimes(1);
-    expect(resetAllProgress).toHaveBeenCalledTimes(1);
     expect(toggleMuted).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Reset all progress' })).toBeInTheDocument();
+  });
+
+  it('renders the home reset control only on the home screen', () => {
+    useNonogramGameMock.mockReturnValue({
+      screen: 'play',
+      gameState: {
+        puzzle: { id: 'p', title: 'P', width: 1, height: 1, solution: [[true]] },
+        clues: { rows: [[1]], cols: [[1]] },
+        grid: [[CellState.EMPTY]],
+        isSolved: false,
+        elapsedTime: 0,
+      },
+      inputMode: CellState.FILLED,
+      setInputMode: vi.fn(),
+      completedIds: [],
+      showVictory: false,
+      setShowVictory: vi.fn(),
+      muted: false,
+      volume: 0.5,
+      toggleMuted: vi.fn(),
+      changeVolume: vi.fn(),
+      startPuzzle: vi.fn(),
+      goHome: vi.fn(),
+      nextPuzzle: vi.fn(),
+      handleCellAction: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
+      reset: vi.fn(),
+      resetAllProgress: vi.fn(),
+      canUndo: false,
+      canRedo: false,
+      canResetAllProgress: true,
+      isLastPuzzle: false,
+    });
+
+    render(<App />);
+
+    expect(screen.queryByRole('button', { name: 'Reset all progress' })).not.toBeInTheDocument();
   });
 
   it('renders play controls and victory modal actions', () => {

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Undo2, Redo2, RotateCcw } from 'lucide-react';
+import { HomeResetControl } from './components/HomeResetControl';
 import { SmokeSimulation } from './components/SmokeSimulation';
 import { VolumeControl } from './components/VolumeControl';
 import { useNonogramGame } from './hooks/useNonogramGame';
@@ -79,6 +80,12 @@ export default function App() {
       <StaticDecorations />
 
       <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-2 md:gap-3">
+        {game.screen === 'home' && (
+          <HomeResetControl
+            canResetAllProgress={game.canResetAllProgress}
+            onResetAllProgress={game.resetAllProgress}
+          />
+        )}
         {game.screen === 'play' && (
           <>
             <button
@@ -118,8 +125,6 @@ export default function App() {
         {game.screen === 'home' && (
           <HomeScreen
             completedIds={game.completedIds}
-            canResetAllProgress={game.canResetAllProgress}
-            onResetAllProgress={game.resetAllProgress}
             onStartPuzzle={game.startPuzzle}
           />
         )}
