@@ -24,10 +24,13 @@ vi.mock('../data/puzzles', () => ({
 describe('HomeScreen', () => {
   it('renders grouped puzzles, progress and starts puzzle', () => {
     const onStartPuzzle = vi.fn();
+    const onStartTutorial = vi.fn();
     const { container } = render(
       <HomeScreen
         completedIds={['a']}
         onStartPuzzle={onStartPuzzle}
+        onStartTutorial={onStartTutorial}
+        showTutorialCard={true}
       />
     );
 
@@ -47,22 +50,34 @@ describe('HomeScreen', () => {
 
   it('starts the tutorial from the dedicated button', () => {
     const onStartPuzzle = vi.fn();
+    const onStartTutorial = vi.fn();
 
     render(
       <HomeScreen
         completedIds={[]}
         onStartPuzzle={onStartPuzzle}
+        onStartTutorial={onStartTutorial}
+        showTutorialCard={true}
       />
     );
 
     fireEvent.click(screen.getByRole('button', { name: /start tutorial/i }));
 
-    expect(onStartPuzzle).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'tutorial',
-        title: 'Temple Lesson',
-      }),
+    expect(onStartTutorial).toHaveBeenCalledTimes(1);
+    expect(onStartPuzzle).not.toHaveBeenCalled();
+  });
+
+  it('hides the tutorial card when the compact shortcut is enabled', () => {
+    render(
+      <HomeScreen
+        completedIds={['a']}
+        onStartPuzzle={() => {}}
+        onStartTutorial={() => {}}
+        showTutorialCard={false}
+      />
     );
+
+    expect(screen.queryByRole('button', { name: /start tutorial/i })).not.toBeInTheDocument();
   });
 
   it('collapses and expands a size group', async () => {
@@ -70,6 +85,8 @@ describe('HomeScreen', () => {
       <HomeScreen
         completedIds={[]}
         onStartPuzzle={() => {}}
+        onStartTutorial={() => {}}
+        showTutorialCard={true}
       />
     );
     const headerLabel = screen.getAllByText('Trail of the Panda')[0];

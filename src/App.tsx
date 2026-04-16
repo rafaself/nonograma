@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Undo2, Redo2, RotateCcw } from 'lucide-react';
+import { Undo2, Redo2, RotateCcw, BookOpen } from 'lucide-react';
 import { HomeResetControl } from './components/HomeResetControl';
 import { SmokeSimulation } from './components/SmokeSimulation';
 import { VolumeControl } from './components/VolumeControl';
@@ -86,6 +86,16 @@ export default function App() {
             onResetAllProgress={game.resetAllProgress}
           />
         )}
+        {game.screen === 'home' && game.showTutorialShortcut && (
+          <button
+            onClick={game.startTutorial}
+            className="p-2 md:p-4 rounded-full bg-[#1a1510]/80 backdrop-blur-md border border-[#c9a227]/20 hover:border-[#ae2012]/50 hover:bg-[#251e16] transition-all active:scale-95 group shadow-lg flex items-center justify-center relative z-10"
+            title="Start tutorial"
+            aria-label="Start tutorial"
+          >
+            <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-[#fdf5e6]/80 group-hover:text-[#ae2012]" />
+          </button>
+        )}
         {game.screen === 'play' && (
           <>
             <button
@@ -126,6 +136,8 @@ export default function App() {
           <HomeScreen
             completedIds={game.completedIds}
             onStartPuzzle={game.startPuzzle}
+            onStartTutorial={game.startTutorial}
+            showTutorialCard={!game.showTutorialShortcut}
           />
         )}
 

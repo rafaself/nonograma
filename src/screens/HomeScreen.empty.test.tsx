@@ -24,6 +24,8 @@ describe('HomeScreen empty puzzles', () => {
       <HomeScreen
         completedIds={[]}
         onStartPuzzle={() => {}}
+        onStartTutorial={() => {}}
+        showTutorialCard={true}
       />
     );
 

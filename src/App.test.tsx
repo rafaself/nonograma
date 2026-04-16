@@ -11,9 +11,22 @@ vi.mock('./hooks/useNonogramGame', () => ({
 }));
 
 vi.mock('./screens/HomeScreen', () => ({
-  HomeScreen: ({ onStartPuzzle }: { onStartPuzzle: () => void }) => (
+  HomeScreen: ({
+    onStartPuzzle,
+    onStartTutorial,
+    showTutorialCard,
+  }: {
+    onStartPuzzle: () => void;
+    onStartTutorial: () => void;
+    showTutorialCard: boolean;
+  }) => (
     <div>
       <button onClick={onStartPuzzle}>home-screen</button>
+      {showTutorialCard ? (
+        <button onClick={onStartTutorial}>home-tutorial-card</button>
+      ) : (
+        <span>tutorial-card-hidden</span>
+      )}
     </div>
   ),
 }));
@@ -70,6 +83,7 @@ describe('App', () => {
       toggleMuted: vi.fn(),
       changeVolume: vi.fn(),
       startPuzzle: vi.fn(),
+      startTutorial: vi.fn(),
       goHome: vi.fn(),
       nextPuzzle: vi.fn(),
       handleCellAction: vi.fn(),
@@ -81,6 +95,7 @@ describe('App', () => {
       canRedo: false,
       canResetAllProgress: false,
       isLastPuzzle: false,
+      showTutorialShortcut: false,
     });
 
     const { rerender } = render(<App />);
@@ -105,6 +120,7 @@ describe('App', () => {
       toggleMuted: vi.fn(),
       changeVolume: vi.fn(),
       startPuzzle: vi.fn(),
+      startTutorial: vi.fn(),
       goHome: vi.fn(),
       nextPuzzle: vi.fn(),
       handleCellAction: vi.fn(),
@@ -116,6 +132,7 @@ describe('App', () => {
       canRedo: false,
       canResetAllProgress: false,
       isLastPuzzle: false,
+      showTutorialShortcut: false,
     });
 
     rerender(<App />);
@@ -124,6 +141,7 @@ describe('App', () => {
 
   it('renders home flow and mute toggle', () => {
     const startPuzzle = vi.fn();
+    const startTutorial = vi.fn();
     const toggleMuted = vi.fn();
 
     useNonogramGameMock.mockReturnValue({
@@ -139,6 +157,7 @@ describe('App', () => {
       toggleMuted,
       changeVolume: vi.fn(),
       startPuzzle,
+      startTutorial,
       goHome: vi.fn(),
       nextPuzzle: vi.fn(),
       handleCellAction: vi.fn(),
@@ -150,16 +169,60 @@ describe('App', () => {
       canRedo: false,
       canResetAllProgress: true,
       isLastPuzzle: false,
+      showTutorialShortcut: false,
     });
 
     render(<App />);
 
     fireEvent.click(screen.getByText('home-screen'));
+    fireEvent.click(screen.getByText('home-tutorial-card'));
     fireEvent.click(screen.getByRole('button', { name: 'Mute' }));
 
     expect(startPuzzle).toHaveBeenCalledTimes(1);
+    expect(startTutorial).toHaveBeenCalledTimes(1);
     expect(toggleMuted).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Reset all progress' })).toBeInTheDocument();
+  });
+
+  it('shows the compact tutorial shortcut on the home toolbar after progress is unlocked', () => {
+    const startTutorial = vi.fn();
+
+    useNonogramGameMock.mockReturnValue({
+      screen: 'home',
+      gameState: null,
+      inputMode: CellState.FILLED,
+      setInputMode: vi.fn(),
+      completedIds: ['a'],
+      showVictory: false,
+      setShowVictory: vi.fn(),
+      muted: false,
+      volume: 0.5,
+      toggleMuted: vi.fn(),
+      changeVolume: vi.fn(),
+      startPuzzle: vi.fn(),
+      startTutorial,
+      goHome: vi.fn(),
+      nextPuzzle: vi.fn(),
+      handleCellAction: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
+      reset: vi.fn(),
+      resetAllProgress: vi.fn(),
+      canUndo: false,
+      canRedo: false,
+      canResetAllProgress: true,
+      isLastPuzzle: false,
+      showTutorialShortcut: true,
+    });
+
+    render(<App />);
+
+    expect(screen.queryByText('home-tutorial-card')).not.toBeInTheDocument();
+    expect(screen.getByText('tutorial-card-hidden')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start tutorial' }));
+
+    expect(startTutorial).toHaveBeenCalledTimes(1);
   });
 
   it('renders the home reset control only on the home screen', () => {
@@ -182,6 +245,7 @@ describe('App', () => {
       toggleMuted: vi.fn(),
       changeVolume: vi.fn(),
       startPuzzle: vi.fn(),
+      startTutorial: vi.fn(),
       goHome: vi.fn(),
       nextPuzzle: vi.fn(),
       handleCellAction: vi.fn(),
@@ -193,6 +257,7 @@ describe('App', () => {
       canRedo: false,
       canResetAllProgress: true,
       isLastPuzzle: false,
+      showTutorialShortcut: false,
     });
 
     render(<App />);
@@ -227,6 +292,7 @@ describe('App', () => {
       toggleMuted: vi.fn(),
       changeVolume: vi.fn(),
       startPuzzle: vi.fn(),
+      startTutorial: vi.fn(),
       goHome,
       nextPuzzle,
       handleCellAction: vi.fn(),
@@ -238,6 +304,7 @@ describe('App', () => {
       canRedo: true,
       canResetAllProgress: true,
       isLastPuzzle: false,
+      showTutorialShortcut: false,
     });
 
     render(<App />);

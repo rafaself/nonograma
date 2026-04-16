@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 import type { Puzzle, GameState } from '../lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from '../lib/game-logic';
 import { persistence } from '../lib/persistence';
-import { PUZZLES } from '../data/puzzles';
+import { PUZZLES, TUTORIAL_PUZZLE } from '../data/puzzles';
 import { sounds } from '../lib/sounds';
 
 function cloneGrid(grid: CellState[][]): CellState[][] {
@@ -24,6 +24,7 @@ export function useNonogramGame() {
   const [redoHistory, setRedoHistory] = useState<CellState[][][]>([]);
   const [inputMode, setInputMode] = useState<CellState.FILLED | CellState.MARKED_X>(CellState.FILLED);
   const [completedIds, setCompletedIds] = useState<string[]>(() => persistence.getCompletedStatus());
+  const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => persistence.getTutorialCompleted());
   const [showVictory, setShowVictory] = useState(false);
   const [muted, setMuted] = useState(() => persistence.getMuted());
   const [volume, setVolume] = useState(() => persistence.getVolume());
@@ -77,6 +78,10 @@ export function useNonogramGame() {
     setUndoHistory([]);
     setRedoHistory([]);
   }, []);
+
+  const startTutorial = useCallback(() => {
+    startPuzzle(TUTORIAL_PUZZLE);
+  }, [startPuzzle]);
 
   const nextPuzzle = useCallback(() => {
     if (!gameState) return;
@@ -132,7 +137,10 @@ export function useNonogramGame() {
       : newGrid;
 
     if (solved) {
-      if (!tutorial) {
+      if (tutorial) {
+        persistence.markTutorialCompleted();
+        setHasCompletedTutorial(true);
+      } else {
         persistence.markCompleted(prev.puzzle.id);
         setCompletedIds(persistence.getCompletedStatus());
       }
@@ -188,6 +196,7 @@ export function useNonogramGame() {
     play(sounds.reset);
     persistence.resetAllProgress();
     setCompletedIds([]);
+    setHasCompletedTutorial(false);
     setScreen('home');
     setGameState(null);
     setUndoHistory([]);
@@ -218,7 +227,8 @@ export function useNonogramGame() {
 
   const canUndo = undoHistory.length > 0;
   const canRedo = redoHistory.length > 0;
-  const canResetAllProgress = completedIds.length > 0 || persistence.hasAnyPuzzleProgress();
+  const showTutorialShortcut = hasCompletedTutorial || completedIds.length > 0;
+  const canResetAllProgress = showTutorialShortcut || persistence.hasAnyPuzzleProgress();
 
   return {
     screen,
@@ -233,6 +243,7 @@ export function useNonogramGame() {
     toggleMuted,
     changeVolume,
     startPuzzle,
+    startTutorial,
     goHome,
     nextPuzzle,
     handleCellAction,
@@ -244,6 +255,7 @@ export function useNonogramGame() {
     canRedo,
     canResetAllProgress,
     isLastPuzzle,
+    showTutorialShortcut,
     beginBatch,
     endBatch,
   };

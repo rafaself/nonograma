@@ -7,6 +7,8 @@ import { cn } from '../lib/utils';
 interface HomeScreenProps {
   completedIds: string[];
   onStartPuzzle: (puzzle: Puzzle) => void;
+  onStartTutorial: () => void;
+  showTutorialCard: boolean;
 }
 
 const TRAIL_NAMES: Record<string, string> = {
@@ -37,6 +39,8 @@ function groupBySize(puzzles: typeof PUZZLES) {
 export const HomeScreen = memo(function HomeScreen({
   completedIds,
   onStartPuzzle,
+  onStartTutorial,
+  showTutorialCard,
 }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -91,40 +95,42 @@ export const HomeScreen = memo(function HomeScreen({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onStartPuzzle(TUTORIAL_PUZZLE)}
-        className="w-full max-w-2xl mb-16 border border-[#c9a227]/20 bg-[#120f0b]/90 px-6 py-5 text-left shadow-2xl shadow-black/20 transition-all hover:border-[#ae2012]/50 hover:bg-[#17120d]"
-      >
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-[#ae2012]/40 bg-[#ae2012]/10 text-[#ae2012]">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#c9a227]">
-                  Tutorial
-                </span>
-                <span className="rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-2 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-[#a0a0a0]">
-                  4x4 Guided Puzzle
-                </span>
+      {showTutorialCard && (
+        <button
+          type="button"
+          onClick={onStartTutorial}
+          className="w-full max-w-2xl mb-16 border border-[#c9a227]/20 bg-[#120f0b]/90 px-6 py-5 text-left shadow-2xl shadow-black/20 transition-all hover:border-[#ae2012]/50 hover:bg-[#17120d]"
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border border-[#ae2012]/40 bg-[#ae2012]/10 text-[#ae2012]">
+                <BookOpen className="h-5 w-5" />
               </div>
-              <h2 className="font-['Ma_Shan_Zheng'] text-3xl text-[#fdf5e6]">
-                Learn the rules before the trail begins
-              </h2>
-              <p className="max-w-xl text-sm leading-7 text-[#c8bea9] font-['Noto_Serif_JP']">
-                {TUTORIAL_PUZZLE.tutorial?.summary}
-              </p>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#c9a227]">
+                    Tutorial
+                  </span>
+                  <span className="rounded-sm border border-[#c9a227]/20 bg-[#1a1510] px-2 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-[#a0a0a0]">
+                    4x4 Guided Puzzle
+                  </span>
+                </div>
+                <h2 className="font-['Ma_Shan_Zheng'] text-3xl text-[#fdf5e6]">
+                  Learn the rules before the trail begins
+                </h2>
+                <p className="max-w-xl text-sm leading-7 text-[#c8bea9] font-['Noto_Serif_JP']">
+                  {TUTORIAL_PUZZLE.tutorial?.summary}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start text-[11px] font-bold tracking-[0.24em] uppercase text-[#ae2012] sm:self-center">
+              Start Tutorial
+              <ChevronRight className="h-4 w-4" />
             </div>
           </div>
-
-          <div className="flex items-center gap-2 self-start text-[11px] font-bold tracking-[0.24em] uppercase text-[#ae2012] sm:self-center">
-            Start Tutorial
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        </div>
-      </button>
+        </button>
+      )}
 
       {/* ── Puzzle sections grouped by size ── */}
       <div className="w-full flex flex-col gap-16">

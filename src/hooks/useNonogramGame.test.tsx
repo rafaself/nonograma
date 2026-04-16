@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => {
 
   let completedStore: string[] = [];
   let savedGames: Record<string, { grid: CellState[][]; elapsedTime: number }> = {};
+  let tutorialCompleted = false;
 
   const saveGame = vi.fn((puzzleId: string, grid: CellState[][], elapsedTime: number) => {
     savedGames[puzzleId] = { grid, elapsedTime };
@@ -39,14 +40,21 @@ const mocks = vi.hoisted(() => {
     if (!completedStore.includes(puzzleId)) completedStore.push(puzzleId);
   });
   const getCompletedStatus = vi.fn(() => [...completedStore]);
+  const markTutorialCompleted = vi.fn(() => {
+    tutorialCompleted = true;
+  });
+  const getTutorialCompleted = vi.fn(() => tutorialCompleted);
   const resetPuzzle = vi.fn((puzzleId: string) => {
     delete savedGames[puzzleId];
   });
   const resetAllProgress = vi.fn(() => {
     completedStore = [];
     savedGames = {};
+    tutorialCompleted = false;
   });
-  const hasAnyPuzzleProgress = vi.fn(() => Object.keys(savedGames).length > 0 || completedStore.length > 0);
+  const hasAnyPuzzleProgress = vi.fn(() => (
+    Object.keys(savedGames).length > 0 || completedStore.length > 0 || tutorialCompleted
+  ));
 
   const sounds = {
     fill: vi.fn(),
@@ -61,6 +69,7 @@ const mocks = vi.hoisted(() => {
   const resetStores = () => {
     completedStore = [];
     savedGames = {};
+    tutorialCompleted = false;
   };
 
   const setSaved = (id: string, grid: CellState[][], elapsedTime: number) => {
@@ -76,6 +85,8 @@ const mocks = vi.hoisted(() => {
     loadGame,
     markCompleted,
     getCompletedStatus,
+    markTutorialCompleted,
+    getTutorialCompleted,
     resetPuzzle,
     resetAllProgress,
     hasAnyPuzzleProgress,
@@ -91,6 +102,8 @@ vi.mock('../lib/persistence', () => ({
     loadGame: (...args: Parameters<typeof mocks.loadGame>) => mocks.loadGame(...args),
     markCompleted: (...args: Parameters<typeof mocks.markCompleted>) => mocks.markCompleted(...args),
     getCompletedStatus: () => mocks.getCompletedStatus(),
+    markTutorialCompleted: () => mocks.markTutorialCompleted(),
+    getTutorialCompleted: () => mocks.getTutorialCompleted(),
     resetPuzzle: (...args: Parameters<typeof mocks.resetPuzzle>) => mocks.resetPuzzle(...args),
     resetAllProgress: () => mocks.resetAllProgress(),
     hasAnyPuzzleProgress: () => mocks.hasAnyPuzzleProgress(),
@@ -104,6 +117,17 @@ vi.mock('../lib/persistence', () => ({
 
 vi.mock('../data/puzzles', () => ({
   PUZZLES: mocks.puzzles,
+  TUTORIAL_PUZZLE: {
+    id: 'tutorial',
+    title: 'Temple Lesson',
+    width: 4,
+    height: 4,
+    solution: [[true]],
+    tutorial: {
+      summary: 'Learn the basics.',
+      steps: ['One', 'Two', 'Three'],
+    },
+  },
 }));
 
 vi.mock('../lib/sounds', () => ({
@@ -122,6 +146,7 @@ describe('useNonogramGame', () => {
     expect(result.current.screen).toBe('home');
     expect(result.current.completedIds).toEqual([]);
     expect(result.current.canResetAllProgress).toBe(false);
+    expect(result.current.showTutorialShortcut).toBe(false);
 
     act(() => result.current.startPuzzle(mocks.puzzleA));
     expect(result.current.screen).toBe('play');
@@ -139,6 +164,15 @@ describe('useNonogramGame', () => {
 
     act(() => result.current.nextPuzzle());
     expect(result.current.screen).toBe('home');
+  });
+
+  it('starts the dedicated tutorial puzzle from the shortcut action', () => {
+    const { result } = renderHook(() => useNonogramGame());
+
+    act(() => result.current.startTutorial());
+
+    expect(result.current.screen).toBe('play');
+    expect(result.current.gameState?.puzzle.id).toBe('tutorial');
   });
 
   it('supports cell actions, solve flow, undo/redo and no-op when solved', () => {
@@ -177,6 +211,7 @@ describe('useNonogramGame', () => {
     expect(result.current.showVictory).toBe(true);
     expect(result.current.completedIds).toContain('c');
     expect(mocks.sounds.win).toHaveBeenCalled();
+    expect(result.current.showTutorialShortcut).toBe(true);
 
     const fillCalls = mocks.sounds.fill.mock.calls.length;
     act(() => result.current.handleCellAction(0, 0));
@@ -260,7 +295,10 @@ describe('useNonogramGame', () => {
     expect(result.current.showVictory).toBe(true);
     expect(mocks.saveGame).not.toHaveBeenCalled();
     expect(mocks.markCompleted).not.toHaveBeenCalled();
+    expect(mocks.markTutorialCompleted).toHaveBeenCalledTimes(1);
     expect(result.current.completedIds).toEqual([]);
+    expect(result.current.showTutorialShortcut).toBe(true);
+    expect(result.current.canResetAllProgress).toBe(true);
 
     confirmSpy.mockReturnValue(true);
     act(() => result.current.reset());
@@ -286,6 +324,7 @@ describe('useNonogramGame', () => {
     expect(result.current.gameState).toBeNull();
     expect(result.current.completedIds).toEqual([]);
     expect(result.current.canResetAllProgress).toBe(false);
+    expect(result.current.showTutorialShortcut).toBe(false);
   });
 
   it('respects muted mode for sound playback', () => {

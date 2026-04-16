@@ -35,6 +35,15 @@ describe('persistence', () => {
     expect(persistence.getCompletedStatus()).toEqual([]);
   });
 
+  it('tracks tutorial completion separately from puzzle completion', () => {
+    expect(persistence.getTutorialCompleted()).toBe(false);
+
+    persistence.markTutorialCompleted();
+
+    expect(persistence.getTutorialCompleted()).toBe(true);
+    expect(persistence.hasAnyPuzzleProgress()).toBe(true);
+  });
+
   it('resets a puzzle save', () => {
     persistence.saveGame('p1', [[CellState.EMPTY]], 0);
     persistence.flushSave();
@@ -54,6 +63,7 @@ describe('persistence', () => {
   it('resets all puzzle progress without touching audio settings', () => {
     persistence.saveGame('p1', [[CellState.FILLED]], 7);
     persistence.markCompleted('p2');
+    persistence.markTutorialCompleted();
     persistence.setMuted(true);
     persistence.setVolume(0.8);
 
@@ -65,6 +75,7 @@ describe('persistence', () => {
     expect(persistence.hasAnyPuzzleProgress()).toBe(false);
     expect(persistence.loadGame('p1')).toBeNull();
     expect(persistence.getCompletedStatus()).toEqual([]);
+    expect(persistence.getTutorialCompleted()).toBe(false);
     expect(persistence.getMuted()).toBe(true);
     expect(persistence.getVolume()).toBe(0.8);
   });

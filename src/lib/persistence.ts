@@ -2,6 +2,7 @@ import { CellState } from './game-logic';
 
 const STORAGE_KEY_PREFIX = 'nonogram_save_';
 const COMPLETED_KEY = 'nonogram_completed';
+const TUTORIAL_COMPLETED_KEY = 'nonogram_tutorial_completed';
 
 export interface SaveData {
     grid: CellState[][];
@@ -136,6 +137,14 @@ export const persistence = {
         return parsed;
     },
 
+    markTutorialCompleted() {
+        localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
+    },
+
+    getTutorialCompleted(): boolean {
+        return localStorage.getItem(TUTORIAL_COMPLETED_KEY) === 'true';
+    },
+
     resetPuzzle(puzzleId: string) {
         const id = sanitizeId(puzzleId);
         const key = `${STORAGE_KEY_PREFIX}${id}`;
@@ -149,7 +158,12 @@ export const persistence = {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i += 1) {
             const key = localStorage.key(i);
-            if (key !== null && (key.startsWith(STORAGE_KEY_PREFIX) || key === COMPLETED_KEY)) {
+            if (
+                key !== null &&
+                (key.startsWith(STORAGE_KEY_PREFIX) ||
+                    key === COMPLETED_KEY ||
+                    key === TUTORIAL_COMPLETED_KEY)
+            ) {
                 keysToRemove.push(key);
             }
         }
@@ -160,6 +174,7 @@ export const persistence = {
     hasAnyPuzzleProgress(): boolean {
         if (pendingSaveData !== null) return true;
         if (localStorage.getItem(COMPLETED_KEY) !== null) return true;
+        if (this.getTutorialCompleted()) return true;
 
         for (let i = 0; i < localStorage.length; i += 1) {
             const key = localStorage.key(i);
