@@ -19,12 +19,35 @@ vi.mock('../lib/boardRender', () => ({
   hitTest: vi.fn(),
 }));
 
+const observeSpy = vi.fn();
+const disconnectSpy = vi.fn();
+let resizeObserverCallback: ResizeObserverCallback | null = null;
+
 describe('NonogramBoardCanvas', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     Object.defineProperty(window, 'innerHeight', { value: 800, writable: true });
     Object.defineProperty(window, 'devicePixelRatio', { value: 1, writable: true });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      get: () => 320,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      get: () => 480,
+    });
+
+    resizeObserverCallback = null;
+    globalThis.ResizeObserver = class ResizeObserverMock {
+      constructor(callback: ResizeObserverCallback) {
+        resizeObserverCallback = callback;
+      }
+
+      observe = observeSpy;
+      disconnect = disconnectSpy;
+      unobserve = vi.fn();
+    } as unknown as typeof ResizeObserver;
 
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({ ok: true })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.setPointerCapture = vi.fn();
@@ -62,11 +85,14 @@ describe('NonogramBoardCanvas', () => {
     );
 
     fireEvent(window, new Event('resize'));
+    resizeObserverCallback?.([], {} as ResizeObserver);
     unmount();
 
-    expect(computeStableCellSize).toHaveBeenCalled();
+    expect(computeStableCellSize).toHaveBeenCalledWith(320, 480, 1, 1, 1, 1);
     expect(addSpy).toHaveBeenCalledWith('resize', expect.any(Function));
     expect(removeSpy).toHaveBeenCalledWith('resize', expect.any(Function));
+    expect(observeSpy).toHaveBeenCalled();
+    expect(disconnectSpy).toHaveBeenCalled();
     expect(renderBoard).toHaveBeenCalledWith(
       expect.objectContaining({ dpr: 1 }),
     );

@@ -28,6 +28,18 @@ describe('computeCellSize', () => {
 });
 
 describe('computeStableCellSize', () => {
+  it('allows small desktop boards to grow beyond the legacy 48px cap', () => {
+    const size = computeStableCellSize(1200, 900, 5, 5, 1, 1);
+
+    expect(size).toBe(96);
+  });
+
+  it('gives medium boards a larger desktop cap without oversizing large boards', () => {
+    const size = computeStableCellSize(1200, 900, 10, 10, 4, 4);
+
+    expect(size).toBe(72);
+  });
+
   it('returns a fixed point when the clue layout already converges', () => {
     const size = computeStableCellSize(800, 720, 20, 20, 4, 4);
 

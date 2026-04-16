@@ -146,7 +146,7 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
 
     const compute = () => {
       const availW = el.clientWidth;
-      const availH = window.innerHeight - 180;
+      const availH = el.clientHeight;
       setCellSize(
         computeStableCellSize(
           availW,
@@ -161,14 +161,20 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
 
     compute();
     let rafId = 0;
-    const onResize = () => {
+    const scheduleCompute = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(compute);
     };
-    window.addEventListener('resize', onResize);
+    const resizeObserver = typeof ResizeObserver === 'undefined'
+      ? null
+      : new ResizeObserver(scheduleCompute);
+
+    resizeObserver?.observe(el);
+    window.addEventListener('resize', scheduleCompute);
     return () => {
       cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', onResize);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleCompute);
     };
   }, [cols, rows, maxRowClueCount, maxColClueCount]);
   /* c8 ignore stop */
@@ -429,7 +435,10 @@ const NonogramBoardCanvasBase: React.FC<NonogramBoardCanvasProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="flex items-center justify-center select-none w-full overflow-hidden">
+    <div
+      ref={containerRef}
+      className="flex h-full min-h-0 w-full items-center justify-center overflow-hidden select-none"
+    >
       <div
         className="grid gap-0"
         style={{

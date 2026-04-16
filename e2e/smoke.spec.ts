@@ -167,9 +167,9 @@ test.describe('Play screen', () => {
 
   test('shows canvas, mode toggle, and toolbar buttons', async ({ page }) => {
     await expect(page.getByRole('main').locator('canvas')).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Puzzle status' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Heart' })).toBeVisible();
-    await expect(page.getByText(/\d{2}:\d{2}/)).toBeVisible();
+    await expect(
+      page.locator('button').filter({ hasText: /return to trails/i }).first(),
+    ).toBeVisible();
     await expect(
       page.getByRole('button', { name: /switch to (mark|fill) mode/i }),
     ).toBeVisible();

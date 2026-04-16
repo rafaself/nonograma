@@ -64,7 +64,6 @@ describe('PlayScreen', () => {
     );
 
     expect(screen.getByRole('region', { name: 'How to play' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Puzzle status' })).toBeInTheDocument();
     expect(screen.getByText('Learn the clue system.')).toBeInTheDocument();
     expect(screen.getByText('Read the clues.')).toBeInTheDocument();
   });
@@ -113,9 +112,6 @@ describe('PlayScreen', () => {
       />,
     );
 
-    expect(screen.getByText('P')).toBeInTheDocument();
-    expect(screen.getByText('00:00')).toBeInTheDocument();
-
     fireEvent.click(screen.getByText('fill cell'));
     fireEvent.click(screen.getByText('mark cell'));
     fireEvent.click(screen.getByRole('button', { name: 'Switch to mark mode' }));
@@ -126,6 +122,7 @@ describe('PlayScreen', () => {
     expect(onSetInputMode).toHaveBeenCalledWith(CellState.MARKED_X);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
+
 
   it('toggles back to fill mode from mark mode', () => {
     const onSetInputMode = vi.fn();

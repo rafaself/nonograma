@@ -33,6 +33,24 @@ export interface StableCellSizeOptions {
   maxIterations?: number;
 }
 
+function getDefaultMaxCellSize(gridCols: number, gridRows: number): number {
+  const largestDimension = Math.max(gridCols, gridRows);
+
+  if (largestDimension <= 5) {
+    return 96;
+  }
+
+  if (largestDimension <= 10) {
+    return 72;
+  }
+
+  if (largestDimension <= 15) {
+    return 56;
+  }
+
+  return 48;
+}
+
 const CLUE_SPACING = 5;
 const CLUE_ROW_PADDING = 8;
 const CLUE_COL_PADDING = 6;
@@ -65,12 +83,13 @@ export function computeStableCellSize(
   {
     initialCellSize = 32,
     minCell = 20,
-    maxCell = 48,
+    maxCell,
     maxIterations = 12,
   }: StableCellSizeOptions = {},
 ): number {
   const seenCellSizes = new Map<number, number>();
   const history: number[] = [];
+  const resolvedMaxCell = maxCell ?? getDefaultMaxCellSize(gridCols, gridRows);
   let cellSize = initialCellSize;
 
   for (let iteration = 0; iteration < maxIterations; iteration++) {
@@ -95,7 +114,7 @@ export function computeStableCellSize(
       rowClueWidth,
       colClueHeight,
       minCell,
-      maxCell,
+      resolvedMaxCell,
     );
 
     if (nextCellSize === cellSize) {

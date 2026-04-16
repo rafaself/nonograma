@@ -4,7 +4,6 @@ import { CellState } from '../lib/game-logic';
 import { ChevronLeft, X, Square } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { NonogramBoardCanvas } from '../components/NonogramBoardCanvas';
-import { PlayStatusHud } from '../components/PlayStatusHud';
 
 interface PlayScreenProps {
   gameState: GameState;
@@ -48,13 +47,6 @@ export const PlayScreen = memo(function PlayScreen({
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
-        <PlayStatusHud
-          title={gameState.puzzle.title}
-          width={gameState.puzzle.width}
-          height={gameState.puzzle.height}
-          elapsedTime={gameState.elapsedTime}
-        />
-
         {tutorial && (
           <section
             aria-label="How to play"
