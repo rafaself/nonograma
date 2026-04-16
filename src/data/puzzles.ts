@@ -1,4 +1,4 @@
-import type { Puzzle } from '../lib/game-logic';
+import { CellState, type Puzzle } from '../lib/game-logic';
 
 type RawPuzzle = Omit<Puzzle, 'width' | 'height'> & {
     width?: number;
@@ -59,6 +59,31 @@ function validateColorGridShape(
         const row = grid[r];
         if (row.length !== width) {
             throw new Error(`${puzzleId}: ${gridName} row width (${row.length}) does not match derived width (${width}) at row ${r}.`);
+        }
+    }
+}
+
+function validateInitialGridShape(
+    puzzleId: string,
+    grid: CellState[][],
+    width: number,
+    height: number
+): void {
+    if (grid.length !== height) {
+        throw new Error(`${puzzleId}: initialGrid height (${grid.length}) does not match derived height (${height}).`);
+    }
+
+    for (let r = 0; r < grid.length; r++) {
+        const row = grid[r];
+        if (row.length !== width) {
+            throw new Error(`${puzzleId}: initialGrid row width (${row.length}) does not match derived width (${width}) at row ${r}.`);
+        }
+
+        for (let c = 0; c < row.length; c++) {
+            const cell = row[c];
+            if (![CellState.EMPTY, CellState.FILLED, CellState.MARKED_X].includes(cell)) {
+                throw new Error(`${puzzleId}: initialGrid[${r}][${c}] must be a valid CellState.`);
+            }
         }
     }
 }
@@ -147,6 +172,10 @@ function validatePuzzleShape(puzzle: RawPuzzle, seenIds: Set<string>): { width: 
                 }
             }
         }
+    }
+
+    if (puzzle.initialGrid) {
+        validateInitialGridShape(puzzle.id, puzzle.initialGrid, width, height);
     }
 
     return { width, height };
@@ -275,10 +304,46 @@ const RAW_PUZZLES: RawPuzzle[] = [
 
 export const PUZZLES: Puzzle[] = normalizePuzzles(RAW_PUZZLES);
 
+const [TUTORIAL_PUZZLE] = normalizePuzzles([
+    {
+        id: '4x4-1',
+        title: 'Temple Lesson',
+        solution: [
+            [false, true, false, false],
+            [true, true, true, false],
+            [false, true, true, false],
+            [false, false, true, false],
+        ],
+        resultColors: [
+            [null, '#c9a227', null, null],
+            ['#ae2012', '#ae2012', '#ae2012', null],
+            [null, '#c9a227', '#c9a227', null],
+            [null, null, '#c9a227', null],
+        ],
+        initialGrid: [
+            [CellState.EMPTY, CellState.FILLED, CellState.EMPTY, CellState.MARKED_X],
+            [CellState.EMPTY, CellState.EMPTY, CellState.FILLED, CellState.MARKED_X],
+            [CellState.EMPTY, CellState.EMPTY, CellState.EMPTY, CellState.MARKED_X],
+            [CellState.EMPTY, CellState.EMPTY, CellState.FILLED, CellState.MARKED_X],
+        ],
+        tutorial: {
+            summary: 'Learn the clue system on a guided 4x4 board with a few correct fills and X marks already in place.',
+            steps: [
+                'The numbers outside the grid tell you how many filled cells belong in that row or column.',
+                'Column 4 shows 0, so every cell in that column should stay empty and be marked with an X.',
+                'Use fill mode to paint squares and X mode, or right click, to mark cells that must stay empty.',
+            ],
+        },
+    },
+]);
+
+export { TUTORIAL_PUZZLE };
+
 export const __puzzlesInternals = {
     DEFAULT_RESULT_COLOR,
     buildResultColors,
     buildBackgroundColors,
+    validateInitialGridShape,
     validatePuzzleShape,
     normalizePuzzles,
 };

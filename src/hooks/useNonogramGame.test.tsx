@@ -216,6 +216,59 @@ describe('useNonogramGame', () => {
     expect(result.current.canRedo).toBe(false);
   });
 
+  it('runs tutorial puzzles from their starter grid without saving or completing progression', () => {
+    const tutorialPuzzle: Puzzle = {
+      id: '4x4-1',
+      title: 'Temple Lesson',
+      width: 4,
+      height: 4,
+      solution: [
+        [false, true, false, false],
+        [true, true, true, false],
+        [false, true, true, false],
+        [false, false, true, false],
+      ],
+      initialGrid: [
+        [CellState.EMPTY, CellState.FILLED, CellState.EMPTY, CellState.MARKED_X],
+        [CellState.EMPTY, CellState.EMPTY, CellState.FILLED, CellState.MARKED_X],
+        [CellState.EMPTY, CellState.EMPTY, CellState.EMPTY, CellState.MARKED_X],
+        [CellState.EMPTY, CellState.EMPTY, CellState.FILLED, CellState.MARKED_X],
+      ],
+      tutorial: {
+        summary: 'Learn the basics.',
+        steps: ['One', 'Two', 'Three'],
+      },
+    };
+
+    mocks.setSaved('4x4-1', [[CellState.FILLED]], 99);
+
+    const confirmSpy = vi.spyOn(window, 'confirm');
+    const { result } = renderHook(() => useNonogramGame());
+
+    act(() => result.current.startPuzzle(tutorialPuzzle));
+
+    expect(mocks.loadGame).not.toHaveBeenCalled();
+    expect(result.current.gameState?.grid).toEqual(tutorialPuzzle.initialGrid);
+    expect(result.current.isLastPuzzle).toBe(true);
+
+    act(() => result.current.handleCellAction(1, 0));
+    act(() => result.current.handleCellAction(1, 1));
+    act(() => result.current.handleCellAction(2, 1));
+    act(() => result.current.handleCellAction(2, 2));
+
+    expect(result.current.gameState?.isSolved).toBe(true);
+    expect(result.current.showVictory).toBe(true);
+    expect(mocks.saveGame).not.toHaveBeenCalled();
+    expect(mocks.markCompleted).not.toHaveBeenCalled();
+    expect(result.current.completedIds).toEqual([]);
+
+    confirmSpy.mockReturnValue(true);
+    act(() => result.current.reset());
+
+    expect(result.current.gameState?.grid).toEqual(tutorialPuzzle.initialGrid);
+    expect(mocks.resetPuzzle).not.toHaveBeenCalled();
+  });
+
   it('clears all stored puzzle progress and returns home', () => {
     const { result } = renderHook(() => useNonogramGame());
 

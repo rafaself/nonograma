@@ -24,6 +24,8 @@ export const PlayScreen = memo(function PlayScreen({
   onDragStart,
   onDragEnd,
 }: PlayScreenProps) {
+  const tutorial = gameState.puzzle.tutorial;
+
   const handleBoardAction = useCallback(
     (row: number, col: number, action: 'fill' | 'mark_x') => {
       onCellAction(row, col, action === 'mark_x' ? 2 : 0);
@@ -44,6 +46,38 @@ export const PlayScreen = memo(function PlayScreen({
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-500 max-w-full min-h-0 relative">
+        {tutorial && (
+          <section
+            aria-label="How to play"
+            className="mb-6 w-full max-w-3xl border border-[#c9a227]/20 bg-[#120f0b]/90 p-5 shadow-2xl shadow-black/20"
+          >
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#c9a227]">
+                How to Play
+              </span>
+              <span className="rounded-sm border border-[#ae2012]/30 bg-[#ae2012]/10 px-2 py-1 text-[10px] font-bold tracking-[0.2em] uppercase text-[#ae2012]">
+                Guided Board
+              </span>
+            </div>
+            <p className="mb-4 max-w-2xl text-sm leading-7 text-[#c8bea9] font-['Noto_Serif_JP']">
+              {tutorial.summary}
+            </p>
+            <ol className="grid gap-3 md:grid-cols-3">
+              {tutorial.steps.map((step, index) => (
+                <li
+                  key={step}
+                  className="border border-[#c9a227]/15 bg-[#0f0c09]/80 p-4 text-sm leading-6 text-[#fdf5e6]"
+                >
+                  <span className="mb-2 inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#ae2012]/40 bg-[#ae2012]/10 text-xs font-bold text-[#ae2012]">
+                    {index + 1}
+                  </span>
+                  <p>{step}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
         <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 px-4 md:px-8 overflow-hidden">
           <NonogramBoardCanvas
             grid={gameState.grid}

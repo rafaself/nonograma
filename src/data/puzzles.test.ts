@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { CellState } from '../lib/game-logic';
 import type { Puzzle } from '../lib/game-logic';
-import { __puzzlesInternals, PUZZLES } from './puzzles';
+import { __puzzlesInternals, PUZZLES, TUTORIAL_PUZZLE } from './puzzles';
 
 const basePuzzle: Puzzle = {
   id: '2x2-1',
@@ -137,6 +138,29 @@ describe('puzzles internals', () => {
     ).toThrow('2x2-9: resultColors[0][0] must be a 6-digit hex color (#rrggbb).');
   });
 
+  it('throws for invalid initialGrid height mismatch', () => {
+    expect(() =>
+      __puzzlesInternals.validatePuzzleShape({
+        ...basePuzzle,
+        id: '2x2-10',
+        initialGrid: [[CellState.EMPTY, CellState.FILLED]],
+      }, new Set()),
+    ).toThrow('2x2-10: initialGrid height (1) does not match derived height (2).');
+  });
+
+  it('throws for invalid initialGrid cell values', () => {
+    expect(() =>
+      __puzzlesInternals.validatePuzzleShape({
+        ...basePuzzle,
+        id: '2x2-11',
+        initialGrid: [
+          [CellState.EMPTY, 9 as CellState],
+          [CellState.MARKED_X, CellState.FILLED],
+        ],
+      }, new Set()),
+    ).toThrow('2x2-11: initialGrid[0][1] must be a valid CellState.');
+  });
+
   it('derives width/height from solution during normalization', () => {
     const rawPuzzle = {
       id: '3x2-1',
@@ -171,5 +195,14 @@ describe('puzzles internals', () => {
       15: 25,
       20: 20,
     });
+  });
+
+  it('exports a guided tutorial puzzle outside the main catalog', () => {
+    expect(TUTORIAL_PUZZLE.id).toBe('4x4-1');
+    expect(TUTORIAL_PUZZLE.width).toBe(4);
+    expect(TUTORIAL_PUZZLE.height).toBe(4);
+    expect(TUTORIAL_PUZZLE.initialGrid).toBeDefined();
+    expect(TUTORIAL_PUZZLE.tutorial?.steps).toHaveLength(3);
+    expect(PUZZLES.some((puzzle) => puzzle.id === TUTORIAL_PUZZLE.id)).toBe(false);
   });
 });

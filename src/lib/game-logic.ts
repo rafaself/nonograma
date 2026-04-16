@@ -4,6 +4,11 @@ export enum CellState {
     MARKED_X = 2,
 }
 
+export interface PuzzleTutorial {
+    summary: string;
+    steps: string[];
+}
+
 export interface Puzzle {
     id: string;
     title: string;
@@ -12,6 +17,8 @@ export interface Puzzle {
     solution: boolean[][]; // [row][col]
     resultColors?: (string | null)[][]; // [row][col], normalized #rrggbb hex or null
     backgroundColors?: (string | null)[][]; // [row][col], solved-state backdrop colors (#rrggbb or null)
+    initialGrid?: CellState[][]; // [row][col], optional starter state for guided puzzles
+    tutorial?: PuzzleTutorial;
 }
 
 export interface Clues {

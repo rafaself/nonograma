@@ -5,6 +5,18 @@ import { persistence } from '../lib/persistence';
 import { PUZZLES } from '../data/puzzles';
 import { sounds } from '../lib/sounds';
 
+function cloneGrid(grid: CellState[][]): CellState[][] {
+  return grid.map((row) => [...row]);
+}
+
+function isTutorialPuzzle(puzzle: Puzzle): boolean {
+  return puzzle.tutorial !== undefined;
+}
+
+function createStartingGrid(puzzle: Puzzle): CellState[][] {
+  return puzzle.initialGrid ? cloneGrid(puzzle.initialGrid) : createEmptyGrid(puzzle.width, puzzle.height);
+}
+
 export function useNonogramGame() {
   const [screen, setScreen] = useState<'home' | 'play'>('home');
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -39,14 +51,16 @@ export function useNonogramGame() {
 
   const startPuzzle = useCallback((puzzle: Puzzle) => {
     const clues = deriveClues(puzzle.solution);
-    const saved = persistence.loadGame(puzzle.id);
+    const tutorial = isTutorialPuzzle(puzzle);
+    const saved = tutorial ? null : persistence.loadGame(puzzle.id);
+    const grid = saved ? cloneGrid(saved.grid) : createStartingGrid(puzzle);
 
     const initialState: GameState = {
       puzzle,
       clues,
-      grid: saved ? saved.grid : createEmptyGrid(puzzle.width, puzzle.height),
-      isSolved: saved ? checkWin(saved.grid, clues) : false,
-      elapsedTime: saved ? saved.elapsedTime : 0,
+      grid,
+      isSolved: checkWin(grid, clues),
+      elapsedTime: tutorial ? 0 : (saved ? saved.elapsedTime : 0),
     };
 
     setGameState(initialState);
@@ -78,6 +92,7 @@ export function useNonogramGame() {
     if (!gameState || gameState.isSolved) return;
 
     const prev = gameState;
+    const tutorial = isTutorialPuzzle(prev.puzzle);
 
     // During a drag batch, only push the undo snapshot once (on the first cell)
     if (!batchActiveRef.current || !batchSnapshotPushedRef.current) {
@@ -117,15 +132,19 @@ export function useNonogramGame() {
       : newGrid;
 
     if (solved) {
-      persistence.markCompleted(prev.puzzle.id);
-      setCompletedIds(persistence.getCompletedStatus());
+      if (!tutorial) {
+        persistence.markCompleted(prev.puzzle.id);
+        setCompletedIds(persistence.getCompletedStatus());
+      }
       setShowVictory(true);
       play(sounds.win);
     } else if ((!rowWasDone && rowNowDone) || (!colWasDone && colNowDone)) {
       play(sounds.lineComplete);
     }
 
-    persistence.saveGame(prev.puzzle.id, finalGrid, prev.elapsedTime);
+    if (!tutorial) {
+      persistence.saveGame(prev.puzzle.id, finalGrid, prev.elapsedTime);
+    }
     setGameState({ ...prev, grid: finalGrid, isSolved: solved });
   }, [gameState, inputMode, play]);
 
@@ -136,7 +155,9 @@ export function useNonogramGame() {
     setRedoHistory(h => [gameState.grid.map(row => [...row]), ...h].slice(0, 50));
     setGameState({ ...gameState, grid: lastGrid, isSolved: checkWin(lastGrid, gameState.clues) });
     setUndoHistory(rest);
-    persistence.saveGame(gameState.puzzle.id, lastGrid, gameState.elapsedTime);
+    if (!isTutorialPuzzle(gameState.puzzle)) {
+      persistence.saveGame(gameState.puzzle.id, lastGrid, gameState.elapsedTime);
+    }
   }, [undoHistory, gameState, play]);
 
   const redo = useCallback(() => {
@@ -146,17 +167,21 @@ export function useNonogramGame() {
     setUndoHistory(h => [gameState.grid.map(row => [...row]), ...h].slice(0, 50));
     setGameState({ ...gameState, grid: nextGrid, isSolved: checkWin(nextGrid, gameState.clues) });
     setRedoHistory(rest);
-    persistence.saveGame(gameState.puzzle.id, nextGrid, gameState.elapsedTime);
+    if (!isTutorialPuzzle(gameState.puzzle)) {
+      persistence.saveGame(gameState.puzzle.id, nextGrid, gameState.elapsedTime);
+    }
   }, [redoHistory, gameState, play]);
 
   const reset = useCallback(() => {
     if (!gameState || !window.confirm('Reset this puzzle?')) return;
     play(sounds.reset);
-    const empty = createEmptyGrid(gameState.puzzle.width, gameState.puzzle.height);
-    setGameState({ ...gameState, grid: empty, isSolved: false });
+    const startingGrid = createStartingGrid(gameState.puzzle);
+    setGameState({ ...gameState, grid: startingGrid, isSolved: false });
     setUndoHistory([]);
     setRedoHistory([]);
-    persistence.resetPuzzle(gameState.puzzle.id);
+    if (!isTutorialPuzzle(gameState.puzzle)) {
+      persistence.resetPuzzle(gameState.puzzle.id);
+    }
   }, [gameState, play]);
 
   const resetAllProgress = useCallback(() => {
@@ -170,9 +195,14 @@ export function useNonogramGame() {
     setShowVictory(false);
   }, [play]);
 
-  const isLastPuzzle = useMemo(() => gameState
-    ? PUZZLES.findIndex(p => p.id === gameState.puzzle.id) >= PUZZLES.length - 1
-    : false, [gameState]);
+  const isLastPuzzle = useMemo(() => {
+    if (!gameState) {
+      return false;
+    }
+
+    const currentIndex = PUZZLES.findIndex((p) => p.id === gameState.puzzle.id);
+    return currentIndex === -1 || currentIndex >= PUZZLES.length - 1;
+  }, [gameState]);
 
   /** Call before a drag stroke begins so all cells in the drag share one undo entry. */
   const beginBatch = useCallback(() => {

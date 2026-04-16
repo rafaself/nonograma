@@ -41,6 +41,33 @@ const gameState: GameState = {
 };
 
 describe('PlayScreen', () => {
+  it('renders tutorial guidance when the puzzle includes tutorial metadata', () => {
+    const tutorialState: GameState = {
+      ...gameState,
+      puzzle: {
+        ...gameState.puzzle,
+        tutorial: {
+          summary: 'Learn the clue system.',
+          steps: ['Read the clues.', 'Fill the right cells.', 'Mark empty cells with X.'],
+        },
+      },
+    };
+
+    render(
+      <PlayScreen
+        gameState={tutorialState}
+        inputMode={CellState.FILLED}
+        onSetInputMode={() => {}}
+        onCellAction={() => {}}
+        onBack={() => {}}
+      />,
+    );
+
+    expect(screen.getByRole('region', { name: 'How to play' })).toBeInTheDocument();
+    expect(screen.getByText('Learn the clue system.')).toBeInTheDocument();
+    expect(screen.getByText('Read the clues.')).toBeInTheDocument();
+  });
+
   it('forwards color grids only when present', () => {
     canvasPropsSpy.mockClear();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

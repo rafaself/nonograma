@@ -8,6 +8,17 @@ vi.mock('../data/puzzles', () => ({
     { id: 'b', title: 'Beta', width: 5, height: 5, solution: [[true]] },
     { id: 'c', title: 'Gamma', width: 10, height: 10, solution: [[true]] },
   ],
+  TUTORIAL_PUZZLE: {
+    id: 'tutorial',
+    title: 'Temple Lesson',
+    width: 4,
+    height: 4,
+    solution: [[true]],
+    tutorial: {
+      summary: 'Learn the basics.',
+      steps: ['One', 'Two', 'Three'],
+    },
+  },
 }));
 
 describe('HomeScreen', () => {
@@ -25,6 +36,7 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Trail of the Panda')).toBeInTheDocument();
     expect(screen.getByText('Trail of the Tiger')).toBeInTheDocument();
     expect(screen.getByText('1/3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start tutorial/i })).toBeInTheDocument();
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(screen.getAllByText(/王+/).length).toBeGreaterThan(0);
 
@@ -33,6 +45,28 @@ describe('HomeScreen', () => {
 
     const bar = container.querySelector('div[style="width: 33%;"]');
     expect(bar).toBeTruthy();
+  });
+
+  it('starts the tutorial from the dedicated button', () => {
+    const onStartPuzzle = vi.fn();
+
+    render(
+      <HomeScreen
+        canResetAllProgress={false}
+        completedIds={[]}
+        onResetAllProgress={() => {}}
+        onStartPuzzle={onStartPuzzle}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /start tutorial/i }));
+
+    expect(onStartPuzzle).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'tutorial',
+        title: 'Temple Lesson',
+      }),
+    );
   });
 
   it('collapses and expands a size group', async () => {
