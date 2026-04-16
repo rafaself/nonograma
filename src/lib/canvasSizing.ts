@@ -37,7 +37,7 @@ function getDefaultMaxCellSize(gridCols: number, gridRows: number): number {
   const largestDimension = Math.max(gridCols, gridRows);
 
   if (largestDimension <= 5) {
-    return 96;
+    return 88;
   }
 
   if (largestDimension <= 10) {

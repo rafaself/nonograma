@@ -31,7 +31,7 @@ describe('computeStableCellSize', () => {
   it('allows small desktop boards to grow beyond the legacy 48px cap', () => {
     const size = computeStableCellSize(1200, 900, 5, 5, 1, 1);
 
-    expect(size).toBe(96);
+    expect(size).toBe(88);
   });
 
   it('gives medium boards a larger desktop cap without oversizing large boards', () => {
