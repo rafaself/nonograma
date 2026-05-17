@@ -10,7 +10,7 @@ Static files served as-is by Vite.
 
 ## Rules
 
-- Keep canonical URLs, sitemap URLs, robots sitemap entry, and SEO tests aligned to the production domain `https://nonograma.alsogravity.com`
+- Keep canonical URLs, sitemap URLs, robots sitemap entry, and SEO tests aligned to the production domain `https://nonogram.alsogravity.com`
 - When changing metadata text, colors, icons, or URLs here, update the matching assertions in `e2e/seo.spec.ts`
 - Preserve stable asset paths once referenced by meta tags or CSS backgrounds; prefer replacing file contents over renaming files casually
 - Compress replacement images and keep dimensions intentional because these files ship directly to the client

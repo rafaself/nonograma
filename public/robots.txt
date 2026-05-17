@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nonograma.alsogravity.com/sitemap.xml
+Sitemap: https://nonogram.alsogravity.com/sitemap.xml

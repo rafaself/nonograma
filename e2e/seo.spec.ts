@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const SITE_URL = 'https://nonograma.alsogravity.com';
+const SITE_URL = 'https://nonogram.alsogravity.com';
 const DESCRIPTION =
   'Play Nonograma, a free oriental-themed Picross puzzle game. Solve 35 handcrafted nonogram puzzles in 5×5, 10×10 and 15×15 grids — right in your browser.';
 
