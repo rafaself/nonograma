@@ -3,9 +3,11 @@ import { CellState } from './game-logic';
 import { persistence } from './persistence';
 
 describe('persistence', () => {
+  const storage = window.localStorage;
+
   beforeEach(() => {
     persistence.flushSave();
-    localStorage.clear();
+    storage.clear();
   });
 
   it('saves and loads a game', () => {
@@ -128,62 +130,62 @@ describe('persistence', () => {
 
   describe('corrupted data handling', () => {
     it('returns null and cleans up when save data is corrupted JSON', () => {
-      localStorage.setItem('nonogram_save_p1', '{bad json');
+      storage.setItem('nonogram_save_p1', '{bad json');
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
 
     it('returns null and cleans up when save data has wrong shape', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ foo: 'bar' }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ foo: 'bar' }));
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
 
     it('returns null and cleans up when grid contains invalid cell values', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[99]], elapsedTime: 0 }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[99]], elapsedTime: 0 }));
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
 
     it('returns null and cleans up when elapsed time is negative', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[0]], elapsedTime: -1 }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[0]], elapsedTime: -1 }));
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
 
     it('returns null and cleans up when elapsed time is not finite', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[0]], elapsedTime: Infinity }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[0]], elapsedTime: Infinity }));
       expect(persistence.loadGame('p1')).toBeNull();
     });
 
     it('returns empty array and cleans up when completed data is corrupted JSON', () => {
-      localStorage.setItem('nonogram_completed', 'not-json');
+      storage.setItem('nonogram_completed', 'not-json');
       expect(persistence.getCompletedStatus()).toEqual([]);
-      expect(localStorage.getItem('nonogram_completed')).toBeNull();
+      expect(storage.getItem('nonogram_completed')).toBeNull();
     });
 
     it('returns empty array and cleans up when completed data is not a string array', () => {
-      localStorage.setItem('nonogram_completed', JSON.stringify([1, 2, 3]));
+      storage.setItem('nonogram_completed', JSON.stringify([1, 2, 3]));
       expect(persistence.getCompletedStatus()).toEqual([]);
-      expect(localStorage.getItem('nonogram_completed')).toBeNull();
+      expect(storage.getItem('nonogram_completed')).toBeNull();
     });
 
     it('returns null and cleans up when the last played id is invalid', () => {
-      localStorage.setItem('nonogram_last_played', '../etc/passwd');
+      storage.setItem('nonogram_last_played', '../etc/passwd');
       expect(persistence.getLastPlayedPuzzleId()).toBeNull();
-      expect(localStorage.getItem('nonogram_last_played')).toBeNull();
+      expect(storage.getItem('nonogram_last_played')).toBeNull();
     });
 
     it('returns null and cleans up when grid has empty rows', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[]], elapsedTime: 0 }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ grid: [[]], elapsedTime: 0 }));
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
 
     it('returns null and cleans up when grid is empty', () => {
-      localStorage.setItem('nonogram_save_p1', JSON.stringify({ grid: [], elapsedTime: 0 }));
+      storage.setItem('nonogram_save_p1', JSON.stringify({ grid: [], elapsedTime: 0 }));
       expect(persistence.loadGame('p1')).toBeNull();
-      expect(localStorage.getItem('nonogram_save_p1')).toBeNull();
+      expect(storage.getItem('nonogram_save_p1')).toBeNull();
     });
   });
 });

@@ -40,6 +40,17 @@ docker compose run --rm coverage   # unit test coverage
 docker compose run --rm e2e        # E2E tests (Playwright + Chromium)
 ```
 
+## ☁️ Deployment
+
+Cloudflare Pages Git integration must always have a deployable `dist/` directory in the repository.
+
+```bash
+pnpm build               # rebuild dist/
+pnpm check:pages-config  # verify wrangler.toml and that dist/ is committed and current
+```
+
+CI enforces that `dist/` stays in sync with the source so Pages can deploy even when its build command is not available from repository configuration alone.
+
 ## 📁 Project Structure
 
 | File | Description |
