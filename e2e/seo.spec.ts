@@ -40,7 +40,23 @@ test.describe('SEO: head meta tags', () => {
     const href = await page
       .locator('link[rel="apple-touch-icon"]')
       .getAttribute('href');
-    expect(href).toBe('/logo.png');
+    expect(href).toBe('/apple-touch-icon.png');
+  });
+
+  test('favicon assets are linked for browsers', async ({ page }) => {
+    const iconHref = await page
+      .locator('link[rel="icon"][sizes="any"]')
+      .getAttribute('href');
+    const icon32Href = await page
+      .locator('link[rel="icon"][sizes="32x32"]')
+      .getAttribute('href');
+    const icon16Href = await page
+      .locator('link[rel="icon"][sizes="16x16"]')
+      .getAttribute('href');
+
+    expect(iconHref).toBe('/favicon.ico');
+    expect(icon32Href).toBe('/favicon-32x32.png');
+    expect(icon16Href).toBe('/favicon-16x16.png');
   });
 
   test('manifest is linked', async ({ page }) => {
@@ -152,11 +168,31 @@ test.describe('SEO: static files', () => {
     expect(manifest.display).toBe('standalone');
     expect(manifest.theme_color).toBe('#1a1a2e');
     expect(manifest.icons.length).toBeGreaterThan(0);
+    expect(manifest.icons).toEqual([
+      {
+        src: '/android-chrome-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/android-chrome-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ]);
   });
 
   test('logo.png is accessible (used as OG image)', async ({ request }) => {
     const res = await request.get('/logo.png');
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toContain('image/png');
+  });
+
+  test('favicon.ico is accessible for browser fallback', async ({ request }) => {
+    const res = await request.get('/favicon.ico');
+    expect(res.status()).toBe(200);
+    expect(res.headers()['content-type']).toContain('image/');
   });
 });

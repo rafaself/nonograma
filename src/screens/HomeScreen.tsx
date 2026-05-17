@@ -86,7 +86,7 @@ export const HomeScreen = memo(function HomeScreen({
         <div className="flex flex-col items-center gap-6">
           <div className="relative">
             <img
-              src="/favicon.png"
+              src="/logo.png"
               alt="Logo"
               draggable={false}
               className="w-20 h-20 md:w-28 md:h-28 rounded-3xl shadow-2xl shadow-red-950/40 border border-[#c9a227]/30"

@@ -5,7 +5,7 @@ Static files served as-is by Vite.
 ## Scope
 
 - SEO and PWA metadata: `manifest.webmanifest`, `robots.txt`, `sitemap.xml`
-- Social/share and install assets: `logo.png`, `favicon.png`
+- Social/share and install assets: `logo.png`, `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png`, `android-chrome-512x512.png`
 - Background illustration images under `public/images/`
 
 ## Rules
