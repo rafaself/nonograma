@@ -1,6 +1,10 @@
 import { useState, useMemo, memo } from 'react';
-import type { Puzzle } from '../lib/game-logic';
-import { PUZZLES, TUTORIAL_PUZZLE } from '../data/puzzles';
+import {
+  getPuzzleSummaryById,
+  PUZZLES,
+  TUTORIAL_PUZZLE,
+  type PuzzleSummary,
+} from '../data/puzzle-catalog';
 import { Play, ChevronRight, ChevronDown, Github, BookOpen } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -8,8 +12,8 @@ interface HomeScreenProps {
   completedIds: string[];
   inProgressIds: string[];
   continuePuzzleId: string | null;
-  onStartPuzzle: (puzzle: Puzzle) => void;
-  onStartTutorial: () => void;
+  onStartPuzzle: (puzzle: PuzzleSummary) => Promise<void> | void;
+  onStartTutorial: () => Promise<void> | void;
   showTutorialCard: boolean;
 }
 
@@ -21,19 +25,25 @@ const TRAIL_NAMES: Record<string, string> = {
 };
 
 /** Group puzzles by grid size for visual sections */
-function groupBySize(puzzles: typeof PUZZLES) {
-  const groups: { label: string; size: string; puzzles: (typeof PUZZLES[number] & { globalIndex: number })[] }[] = [];
-  const map = new Map<string, (typeof groups)[number]>();
+interface PuzzleGroup {
+  label: string;
+  size: string;
+  puzzles: (PuzzleSummary & { globalIndex: number })[];
+}
+
+function groupBySize(puzzles: readonly PuzzleSummary[]) {
+  const groups: PuzzleGroup[] = [];
+  const map = new Map<string, PuzzleGroup>();
 
   puzzles.forEach((p, i) => {
     const key = `${p.width}×${p.height}`;
     if (!map.has(key)) {
       const label = TRAIL_NAMES[key] ?? key;
-      const group = { label, size: key, puzzles: [] as (typeof PUZZLES[number] & { globalIndex: number })[] };
+      const group: PuzzleGroup = { label, size: key, puzzles: [] };
       map.set(key, group);
       groups.push(group);
     }
-    map.get(key)!.puzzles.push({ ...p, globalIndex: i });
+    map.get(key)?.puzzles.push({ ...p, globalIndex: i });
   });
   return groups;
 }
@@ -48,8 +58,10 @@ export const HomeScreen = memo(function HomeScreen({
 }: HomeScreenProps) {
   const groups = useMemo(() => groupBySize(PUZZLES), []);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const completedIdSet = useMemo(() => new Set(completedIds), [completedIds]);
+  const inProgressIdSet = useMemo(() => new Set(inProgressIds), [inProgressIds]);
   const continuePuzzle = useMemo(
-    () => PUZZLES.find((puzzle) => puzzle.id === continuePuzzleId) ?? null,
+    () => continuePuzzleId === null ? null : getPuzzleSummaryById(continuePuzzleId),
     [continuePuzzleId],
   );
 
@@ -176,7 +188,7 @@ export const HomeScreen = memo(function HomeScreen({
       {/* ── Puzzle sections grouped by size ── */}
       <div className="w-full flex flex-col gap-16">
         {groups.map((group) => {
-          const groupCompleted = group.puzzles.filter(p => completedIds.includes(p.id)).length;
+          const groupCompleted = group.puzzles.filter((puzzle) => completedIdSet.has(puzzle.id)).length;
           const isCollapsed = collapsedGroups.has(group.size);
           return (
             <section key={group.size} className="w-full">
@@ -216,11 +228,11 @@ export const HomeScreen = memo(function HomeScreen({
               )}>
                 <div className="collapse-content">
                   {/* Cards grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 pb-4">
-                    {group.puzzles.map((p, idx) => {
-                      const isCompleted = completedIds.includes(p.id);
-                      const isInProgress = inProgressIds.includes(p.id);
-                      return (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 pb-4">
+                      {group.puzzles.map((p, idx) => {
+                        const isCompleted = completedIdSet.has(p.id);
+                        const isInProgress = inProgressIdSet.has(p.id);
+                        return (
                         <button
                           type="button"
                           key={p.id}

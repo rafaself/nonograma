@@ -28,6 +28,18 @@ const mocks = vi.hoisted(() => {
     solution: [[true, true]],
   };
 
+  const tutorialPuzzle: Puzzle = {
+    id: '4x4-1',
+    title: 'Temple Lesson',
+    width: 4,
+    height: 4,
+    solution: [[true]],
+    tutorial: {
+      summary: 'Learn the basics.',
+      steps: ['One', 'Two', 'Three'],
+    },
+  };
+
   let completedStore: string[] = [];
   let savedGames: Record<string, { grid: CellState[][]; elapsedTime: number }> = {};
   let tutorialCompleted = false;
@@ -102,6 +114,21 @@ const mocks = vi.hoisted(() => {
 
   return {
     puzzles: [puzzleA, puzzleB, puzzleC],
+    puzzleSummaries: [
+      { id: 'a', title: 'A', width: 1, height: 1 },
+      { id: 'b', title: 'B', width: 1, height: 2 },
+      { id: 'c', title: 'C', width: 2, height: 1 },
+    ],
+    tutorialPuzzle,
+    tutorialSummary: {
+      id: tutorialPuzzle.id,
+      title: tutorialPuzzle.title,
+      width: tutorialPuzzle.width,
+      height: tutorialPuzzle.height,
+      tutorial: {
+        summary: tutorialPuzzle.tutorial?.summary ?? '',
+      },
+    },
     puzzleA,
     puzzleB,
     puzzleC,
@@ -149,19 +176,31 @@ vi.mock('../lib/persistence', () => ({
   },
 }));
 
-vi.mock('../data/puzzles', () => ({
-  PUZZLES: mocks.puzzles,
-  TUTORIAL_PUZZLE: {
-    id: 'tutorial',
-    title: 'Temple Lesson',
-    width: 4,
-    height: 4,
-    solution: [[true]],
-    tutorial: {
-      summary: 'Learn the basics.',
-      steps: ['One', 'Two', 'Three'],
-    },
+vi.mock('../data/puzzle-catalog', () => ({
+  PUZZLES: mocks.puzzleSummaries,
+  TUTORIAL_PUZZLE: mocks.tutorialSummary,
+  getPuzzleSummaryById: (puzzleId: string) => (
+    mocks.puzzleSummaries.find((puzzle) => puzzle.id === puzzleId) ?? null
+  ),
+  getNextPuzzleId: (puzzleId: string) => {
+    const index = mocks.puzzleSummaries.findIndex((puzzle) => puzzle.id === puzzleId);
+    return index === -1 || index >= mocks.puzzleSummaries.length - 1
+      ? null
+      : mocks.puzzleSummaries[index + 1]?.id ?? null;
   },
+  loadPuzzleById: async (puzzleId: string) => {
+    if (puzzleId === mocks.tutorialPuzzle.id) {
+      return mocks.tutorialPuzzle;
+    }
+
+    const puzzle = mocks.puzzles.find((entry) => entry.id === puzzleId);
+    if (!puzzle) {
+      throw new Error(`Unknown puzzle id: ${puzzleId}`);
+    }
+
+    return puzzle;
+  },
+  preloadPuzzleCatalog: vi.fn(async () => {}),
 }));
 
 vi.mock('../lib/sounds', () => ({
@@ -186,7 +225,7 @@ describe('useNonogramGame', () => {
     vi.useRealTimers();
   });
 
-  it('starts puzzles, advances, and returns home from the last puzzle', () => {
+  it('starts puzzles, advances, and returns home from the last puzzle', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
     expect(result.current.screen).toBe('home');
@@ -195,35 +234,47 @@ describe('useNonogramGame', () => {
     expect(result.current.canResetAllProgress).toBe(false);
     expect(result.current.showTutorialShortcut).toBe(false);
 
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     expect(result.current.screen).toBe('play');
     expect(result.current.gameState?.puzzle.id).toBe('a');
     expect(result.current.lastPlayedPuzzleId).toBe('a');
 
-    act(() => result.current.nextPuzzle());
+    await act(async () => {
+      await result.current.nextPuzzle();
+    });
     expect(result.current.gameState?.puzzle.id).toBe('b');
 
-    act(() => result.current.nextPuzzle());
+    await act(async () => {
+      await result.current.nextPuzzle();
+    });
     expect(result.current.gameState?.puzzle.id).toBe('c');
 
-    act(() => result.current.nextPuzzle());
+    await act(async () => {
+      await result.current.nextPuzzle();
+    });
     expect(result.current.screen).toBe('home');
     expect(result.current.gameState).toBeNull();
   });
 
-  it('starts the dedicated tutorial puzzle from the shortcut action', () => {
+  it('starts the dedicated tutorial puzzle from the shortcut action', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startTutorial());
+    await act(async () => {
+      await result.current.startTutorial();
+    });
 
     expect(result.current.screen).toBe('play');
-    expect(result.current.gameState?.puzzle.id).toBe('tutorial');
+    expect(result.current.gameState?.puzzle.id).toBe('4x4-1');
   });
 
-  it('supports cell actions, solve flow, undo/redo, and completion cleanup', () => {
+  it('supports cell actions, solve flow, undo/redo, and completion cleanup', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(mocks.puzzleC));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[2]);
+    });
     expect(result.current.lastPlayedPuzzleId).toBe('c');
 
     act(() => result.current.handleCellAction(0, 0));
@@ -268,10 +319,12 @@ describe('useNonogramGame', () => {
     expect(mocks.sounds.undo).toHaveBeenCalledTimes(2);
   });
 
-  it('runs the timer only during active play and persists on ticks and visibility loss', () => {
+  it('runs the timer only during active play and persists on ticks and visibility loss', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     expect(result.current.gameState?.elapsedTime).toBe(0);
 
     act(() => {
@@ -328,17 +381,21 @@ describe('useNonogramGame', () => {
     expect(result.current.gameState).toBeNull();
   });
 
-  it('loads saved games and confirms reset through modal state', () => {
+  it('loads saved games and confirms reset through modal state', async () => {
     mocks.setSaved('a', [[CellState.FILLED]], 42);
 
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     expect(mocks.loadGame).toHaveBeenCalledWith('a');
     expect(result.current.gameState?.isSolved).toBe(true);
     expect(result.current.gameState?.elapsedTime).toBe(42);
 
-    act(() => result.current.startPuzzle(mocks.puzzleC));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[2]);
+    });
     act(() => result.current.handleCellAction(0, 0));
     act(() => {
       vi.advanceTimersByTime(1000);
@@ -366,12 +423,9 @@ describe('useNonogramGame', () => {
     expect(result.current.lastPlayedPuzzleId).toBeNull();
   });
 
-  it('runs tutorial puzzles from their starter grid without saving or progression side effects', () => {
+  it('runs tutorial puzzles from their starter grid without saving or progression side effects', async () => {
     const tutorialPuzzle: Puzzle = {
-      id: '4x4-1',
-      title: 'Temple Lesson',
-      width: 4,
-      height: 4,
+      ...mocks.tutorialPuzzle,
       solution: [
         [false, true, false, false],
         [true, true, true, false],
@@ -384,17 +438,15 @@ describe('useNonogramGame', () => {
         [CellState.EMPTY, CellState.EMPTY, CellState.EMPTY, CellState.MARKED_X],
         [CellState.EMPTY, CellState.EMPTY, CellState.FILLED, CellState.MARKED_X],
       ],
-      tutorial: {
-        summary: 'Learn the basics.',
-        steps: ['One', 'Two', 'Three'],
-      },
     };
-
+    mocks.tutorialPuzzle = tutorialPuzzle;
     mocks.setSaved('4x4-1', [[CellState.FILLED]], 99);
 
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(tutorialPuzzle));
+    await act(async () => {
+      await result.current.startTutorial();
+    });
 
     expect(mocks.loadGame).not.toHaveBeenCalledWith('4x4-1');
     expect(result.current.gameState?.grid).toEqual(tutorialPuzzle.initialGrid);
@@ -427,10 +479,12 @@ describe('useNonogramGame', () => {
     expect(mocks.resetPuzzle).not.toHaveBeenCalledWith('4x4-1');
   });
 
-  it('clears all stored puzzle progress and returns home', () => {
+  it('clears all stored puzzle progress and returns home', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     act(() => result.current.handleCellAction(0, 0));
 
     expect(result.current.canResetAllProgress).toBe(true);
@@ -449,11 +503,13 @@ describe('useNonogramGame', () => {
     expect(result.current.showTutorialShortcut).toBe(false);
   });
 
-  it('respects muted mode for sound playback', () => {
+  it('respects muted mode for sound playback', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
     act(() => result.current.toggleMuted());
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     act(() => result.current.handleCellAction(0, 0));
 
     expect(result.current.gameState?.isSolved).toBe(true);
@@ -461,10 +517,12 @@ describe('useNonogramGame', () => {
     expect(mocks.sounds.win).not.toHaveBeenCalled();
   });
 
-  it('keeps state stable when action and goHome happen in the same batch', () => {
+  it('keeps state stable when action and goHome happen in the same batch', async () => {
     const { result } = renderHook(() => useNonogramGame());
 
-    act(() => result.current.startPuzzle(mocks.puzzleA));
+    await act(async () => {
+      await result.current.startPuzzle(mocks.puzzleSummaries[0]);
+    });
     act(() => {
       result.current.handleCellAction(0, 0);
       result.current.goHome();

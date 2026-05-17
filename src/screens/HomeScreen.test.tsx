@@ -2,21 +2,24 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { HomeScreen } from './HomeScreen';
 
-vi.mock('../data/puzzles', () => ({
+vi.mock('../data/puzzle-catalog', () => ({
   PUZZLES: [
-    { id: 'a', title: 'Alpha', width: 5, height: 5, solution: [[true]] },
-    { id: 'b', title: 'Beta', width: 5, height: 5, solution: [[true]] },
-    { id: 'c', title: 'Gamma', width: 10, height: 10, solution: [[true]] },
+    { id: 'a', title: 'Alpha', width: 5, height: 5 },
+    { id: 'b', title: 'Beta', width: 5, height: 5 },
+    { id: 'c', title: 'Gamma', width: 10, height: 10 },
   ],
+  getPuzzleSummaryById: (puzzleId: string) => ({
+    a: { id: 'a', title: 'Alpha', width: 5, height: 5 },
+    b: { id: 'b', title: 'Beta', width: 5, height: 5 },
+    c: { id: 'c', title: 'Gamma', width: 10, height: 10 },
+  }[puzzleId] ?? null),
   TUTORIAL_PUZZLE: {
     id: 'tutorial',
     title: 'Temple Lesson',
     width: 4,
     height: 4,
-    solution: [[true]],
     tutorial: {
       summary: 'Learn the basics.',
-      steps: ['One', 'Two', 'Three'],
     },
   },
 }));

@@ -1,17 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('../data/puzzles', () => ({
+vi.mock('../data/puzzle-catalog', () => ({
   PUZZLES: [],
+  getPuzzleSummaryById: () => null,
   TUTORIAL_PUZZLE: {
     id: 'tutorial',
     title: 'Temple Lesson',
     width: 4,
     height: 4,
-    solution: [[true]],
     tutorial: {
       summary: 'Learn the basics.',
-      steps: ['One', 'Two', 'Three'],
     },
   },
 }));

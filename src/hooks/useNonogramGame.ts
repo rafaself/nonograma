@@ -1,8 +1,15 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { Puzzle, GameState } from '../lib/game-logic';
 import { CellState, deriveClues, createEmptyGrid, checkWin, isLineSatisfied } from '../lib/game-logic';
+import {
+  getNextPuzzleId,
+  getPuzzleSummaryById,
+  preloadPuzzleCatalog,
+  TUTORIAL_PUZZLE,
+  loadPuzzleById,
+  type PuzzleSummary,
+} from '../data/puzzle-catalog';
 import { persistence } from '../lib/persistence';
-import { PUZZLES, TUTORIAL_PUZZLE } from '../data/puzzles';
 import { sounds } from '../lib/sounds';
 
 function cloneGrid(grid: CellState[][]): CellState[][] {
@@ -39,6 +46,7 @@ export function useNonogramGame() {
   const batchActiveRef = useRef(false);
   const batchSnapshotPushedRef = useRef(false);
   const gameStateRef = useRef<GameState | null>(gameState);
+  const puzzleLoadRequestIdRef = useRef(0);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -47,6 +55,10 @@ export function useNonogramGame() {
   const play = useCallback((fn: (v: number) => void) => {
     if (!muted) fn(volume);
   }, [muted, volume]);
+
+  const cancelPendingPuzzleLoad = useCallback(() => {
+    puzzleLoadRequestIdRef.current += 1;
+  }, []);
 
   const syncInProgressIds = useCallback(() => {
     const nextIds = persistence.getInProgressPuzzleIds();
@@ -89,7 +101,7 @@ export function useNonogramGame() {
     persistence.setVolume(v);
   }, []);
 
-  const startPuzzle = useCallback((puzzle: Puzzle) => {
+  const openPuzzle = useCallback((puzzle: Puzzle) => {
     const clues = deriveClues(puzzle.solution);
     const tutorial = isTutorialPuzzle(puzzle);
     const saved = tutorial ? null : persistence.loadGame(puzzle.id);
@@ -117,7 +129,20 @@ export function useNonogramGame() {
     }
   }, [rememberLastPlayedPuzzle, syncInProgressIds]);
 
+  const startPuzzle = useCallback(async (puzzleSummary: PuzzleSummary) => {
+    const requestId = puzzleLoadRequestIdRef.current + 1;
+    puzzleLoadRequestIdRef.current = requestId;
+    const puzzle = await loadPuzzleById(puzzleSummary.id);
+
+    if (puzzleLoadRequestIdRef.current !== requestId) {
+      return;
+    }
+
+    openPuzzle(puzzle);
+  }, [openPuzzle]);
+
   const goHome = useCallback(() => {
+    cancelPendingPuzzleLoad();
     persistPuzzleSnapshot(gameStateRef.current, true);
     persistence.flushSave();
     setScreen('home');
@@ -126,20 +151,26 @@ export function useNonogramGame() {
     setUndoHistory([]);
     setRedoHistory([]);
     setShowResetPuzzleConfirm(false);
-  }, [persistPuzzleSnapshot]);
+  }, [cancelPendingPuzzleLoad, persistPuzzleSnapshot]);
 
-  const startTutorial = useCallback(() => {
-    startPuzzle(TUTORIAL_PUZZLE);
+  const startTutorial = useCallback(async () => {
+    await startPuzzle(TUTORIAL_PUZZLE);
   }, [startPuzzle]);
 
-  const nextPuzzle = useCallback(() => {
+  const nextPuzzle = useCallback(async () => {
     if (!gameState) return;
-    const currentIndex = PUZZLES.findIndex(p => p.id === gameState.puzzle.id);
-    if (currentIndex !== -1 && currentIndex < PUZZLES.length - 1) {
-      startPuzzle(PUZZLES[currentIndex + 1]);
-    } else {
+    const nextPuzzleId = getNextPuzzleId(gameState.puzzle.id);
+    if (nextPuzzleId === null) {
       goHome();
+      return;
     }
+
+    const nextPuzzleSummary = getPuzzleSummaryById(nextPuzzleId);
+    if (!nextPuzzleSummary) {
+      throw new Error(`Missing puzzle summary for ${nextPuzzleId}`);
+    }
+
+    await startPuzzle(nextPuzzleSummary);
   }, [gameState, startPuzzle, goHome]);
 
   const handleCellAction = useCallback((r: number, c: number, mouseButton?: number) => {
@@ -286,6 +317,7 @@ export function useNonogramGame() {
   }, [play, lastPlayedPuzzleId, clearRememberedPuzzle, syncInProgressIds]);
 
   const resetAllProgress = useCallback(() => {
+    cancelPendingPuzzleLoad();
     play(sounds.reset);
     persistence.resetAllProgress();
     setCompletedIds([]);
@@ -299,7 +331,11 @@ export function useNonogramGame() {
     setRedoHistory([]);
     setShowVictory(false);
     setShowResetPuzzleConfirm(false);
-  }, [play]);
+  }, [cancelPendingPuzzleLoad, play]);
+
+  useEffect(() => {
+    void preloadPuzzleCatalog();
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -355,8 +391,7 @@ export function useNonogramGame() {
       return false;
     }
 
-    const currentIndex = PUZZLES.findIndex((p) => p.id === gameState.puzzle.id);
-    return currentIndex === -1 || currentIndex >= PUZZLES.length - 1;
+    return getNextPuzzleId(gameState.puzzle.id) === null;
   }, [gameState]);
 
   /** Call before a drag stroke begins so all cells in the drag share one undo entry. */
