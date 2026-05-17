@@ -4,16 +4,16 @@ const wranglerConfig = readFileSync(new URL('../wrangler.toml', import.meta.url)
 
 const requiredPatterns = [
   {
+    description: 'pages project name',
+    pattern: /^name = "nonogram"$/m,
+  },
+  {
+    description: 'compatibility date',
+    pattern: /^compatibility_date = "\d{4}-\d{2}-\d{2}"$/m,
+  },
+  {
     description: 'pages build output directory',
     pattern: /^pages_build_output_dir = "\.\/dist"$/m,
-  },
-  {
-    description: 'pages build section',
-    pattern: /^\[build\]$/m,
-  },
-  {
-    description: 'pages build command',
-    pattern: /^command = "pnpm build"$/m,
   },
 ];
 
@@ -23,6 +23,10 @@ for (const { description, pattern } of requiredPatterns) {
   }
 }
 
+if (/^\[build\]$/m.test(wranglerConfig)) {
+  throw new Error('wrangler.toml contains an unsupported [build] section for Cloudflare Pages. Configure the Git-integrated Pages build command in the Cloudflare dashboard instead.');
+}
+
 if (!existsSync(new URL('../dist', import.meta.url))) {
-  throw new Error('dist/ was not generated. Run the configured Pages build command before validating.');
+  throw new Error('dist/ was not generated. Run pnpm build before validating, and set the Cloudflare Pages dashboard Build command to `pnpm build` for Git-integrated deployments.');
 }
