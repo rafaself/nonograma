@@ -7,6 +7,7 @@
   "homepage": "https://nonogram.alsogravity.com/",
   "packageManager": "pnpm@10.30.1",
   "scripts": {
+    "check:pages-config": "node ./scripts/check-pages-config.mjs",
     "dev": "vite",
     "build": "vitest run src/data/puzzles.test.ts src/data/puzzles-solvability.test.ts && tsc -b && vite build",
     "lint": "eslint .",

@@ -1,2 +1,6 @@
 name = "nonogram"
+compatibility_date = "2026-05-17"
 pages_build_output_dir = "./dist"
+
+[build]
+command = "pnpm build"
